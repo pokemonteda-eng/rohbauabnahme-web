@@ -3,8 +3,6 @@ name: codex-review
 on:
   pull_request:
     types: [opened, reopened, synchronize, ready_for_review]
-  issue_comment:
-    types: [created]
 
 permissions:
   contents: read
@@ -12,70 +10,48 @@ permissions:
   issues: write
 
 jobs:
-  review:
-    if: >-
-      (github.event_name == 'pull_request' && github.event.pull_request.draft == false) ||
-      (github.event_name == 'issue_comment' && github.event.issue.pull_request && contains(github.event.comment.body, '@codex review'))
+  codex_review:
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
 
     steps:
-      - name: Resolve PR data
-        id: pr
-        uses: actions/github-script@v7
-        with:
-          script: |
-            let pr;
-            if (context.eventName === 'pull_request') {
-              pr = context.payload.pull_request;
-            } else {
-              const issue_number = context.payload.issue.number;
-              const res = await github.rest.pulls.get({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                pull_number: issue_number,
-              });
-              pr = res.data;
-            }
-            core.setOutput('number', String(pr.number));
-            core.setOutput('base_sha', pr.base.sha);
-            core.setOutput('head_sha', pr.head.sha);
+      - name: Check OPENAI_API_KEY
+        run: |
+          if [ -z "${{ secrets.OPENAI_API_KEY }}" ]; then
+            echo "OPENAI_API_KEY secret fehlt." >&2
+            exit 1
+          fi
 
-      - name: Checkout PR HEAD
-        uses: actions/checkout@v4
+      - name: Checkout PR merge ref
+        uses: actions/checkout@v5
         with:
-          ref: ${{ steps.pr.outputs.head_sha }}
+          ref: refs/pull/${{ github.event.pull_request.number }}/merge
           fetch-depth: 0
 
-      - name: Build prompt
+      - name: Fetch base/head refs
         run: |
-          cat .github/codex/review_prompt.md > codex_prompt.md
-          echo "" >> codex_prompt.md
-          echo "PR #${{ steps.pr.outputs.number }}" >> codex_prompt.md
-          echo "Base: ${{ steps.pr.outputs.base_sha }}" >> codex_prompt.md
-          echo "Head: ${{ steps.pr.outputs.head_sha }}" >> codex_prompt.md
-          echo "" >> codex_prompt.md
-          echo "Geaenderte Dateien:" >> codex_prompt.md
-          git diff --name-only ${{ steps.pr.outputs.base_sha }} ${{ steps.pr.outputs.head_sha }} | sed 's/^/- /' >> codex_prompt.md
+          git fetch --no-tags origin \
+            ${{ github.event.pull_request.base.ref }} \
+            +refs/pull/${{ github.event.pull_request.number }}/head
 
       - name: Run Codex review
-        id: codex
+        id: run_codex
         uses: openai/codex-action@v1
         with:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
-          prompt-file: codex_prompt.md
+          prompt-file: .github/codex/review_prompt.md
 
       - name: Post review comment
+        if: steps.run_codex.outputs.final-message != ''
         uses: actions/github-script@v7
         env:
-          CODEX_TEXT: ${{ steps.codex.outputs.final-message }}
+          CODEX_FINAL_MESSAGE: ${{ steps.run_codex.outputs.final-message }}
         with:
+          github-token: ${{ github.token }}
           script: |
-            const body = process.env.CODEX_TEXT && process.env.CODEX_TEXT.trim().length
-              ? process.env.CODEX_TEXT
-              : 'Codex-Review abgeschlossen, aber ohne Text-Output. Bitte Workflow-Logs pruefen.';
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: Number('${{ steps.pr.outputs.number }}'),
-              body,
+              issue_number: context.payload.pull_request.number,
+              body: process.env.CODEX_FINAL_MESSAGE,
             });
