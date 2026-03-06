@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Node.js
+node_modules/
+dist/
+coverage/
+.npm/
+
+# Environment & editor
+.env
+.env.*
+.vscode/
+.idea/
+.DS_Store
+
+# Logs
+*.log
