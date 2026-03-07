@@ -11,6 +11,8 @@
 - **PR-Link:** https://github.com/pokemonteda-eng/rohbauabnahme-web/pull/10
 - **CI Status:** ⏳ ausstehend
 - **Notizen:** Neue JSONB-Spalte `protokolle.zubehoer_auswahl` inkl. Migration, Modell-Update und Tests
+- **Fehler (2026-03-07):** Lokaler Testlauf fehlgeschlagen, da `pytest` in der aktuellen Umgebung nicht installiert ist (`/bin/bash: pytest: command not found`).
+- **Fixplan:** 1) Backend-Abhaengigkeiten mit `pip install -r backend/requirements.txt` installieren. 2) R009-Tests erneut ausfuehren (`pytest -q tests/test_migration_20260307_0004_add_zubehoer_auswahl_jsonb.py tests/test_protokoll_model.py`). 3) Ergebnis in `CHANGE.md` nachziehen und CI-Status aktualisieren.
 
 ### CI006 - Lint + Type-Check Workflow
 - **Status:** Überprüfung
