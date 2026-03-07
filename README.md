@@ -6,11 +6,18 @@ Initiale Projektstruktur für die Web-Anwendung zur Rohbauabnahme.
 
 - `backend/` FastAPI-Basis (API, Business-Logik)
 - `frontend/` React + TypeScript Basis
-- `docker/` Container-Orchestrierung (PostgreSQL, Backend, Frontend)
+- `docker-compose.yml` Container-Orchestrierung (PostgreSQL, Backend, Frontend)
 
 ## Quickstart
 
 ### Mit Docker Compose
+
+```bash
+cp .env.example .env
+docker compose up --build
+```
+
+Alternative aus dem `docker/`-Ordner:
 
 ```bash
 docker compose -f docker/docker-compose.yml up --build
