@@ -5,7 +5,7 @@ Initiale Projektstruktur für die Web-Anwendung zur Rohbauabnahme.
 ## Architektur (Startpunkt)
 
 - `backend/` FastAPI-Basis (API, Business-Logik)
-- `frontend/` React + TypeScript Basis
+- `frontend/` React + TypeScript + Tailwind + shadcn/ui Basis
 - `docker/` Container-Orchestrierung (PostgreSQL, Backend, Frontend)
 
 ## Quickstart
