@@ -21,33 +21,21 @@ depends_on: Union[str, Sequence[str], None] = None
 def upgrade() -> None:
     op.create_table(
         "protokolle",
-        sa.Column("id", sa.Uuid(), nullable=False),
+        sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("auftrags_nr", sa.String(length=64), nullable=False),
         sa.Column("kunde_id", sa.Integer(), nullable=False),
-        sa.Column(
-            "aufbautyp",
-            sa.Enum("FB", "FZB", name="aufbautyp_enum", native_enum=False),
-            nullable=False,
-        ),
+        sa.Column("aufbautyp", sa.String(length=64), nullable=False),
         sa.Column("vertriebsgebiet", sa.String(length=128), nullable=False),
         sa.Column("projektleiter", sa.String(length=255), nullable=False),
         sa.Column("datum", sa.Date(), nullable=False),
-        sa.Column(
-            "status",
-            sa.Enum(
-                "entwurf",
-                "freigegeben",
-                "abgeschlossen",
-                name="protokoll_status_enum",
-                native_enum=False,
-            ),
-            nullable=False,
-        ),
-        sa.ForeignKeyConstraint(["kunde_id"], ["kunden.id"]),
+        sa.Column("status", sa.String(length=64), nullable=False),
+        sa.ForeignKeyConstraint(["kunde_id"], ["customers.id"]),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("auftrags_nr"),
     )
+    op.create_index(op.f("ix_protokolle_id"), "protokolle", ["id"], unique=False)
 
 
 def downgrade() -> None:
+    op.drop_index(op.f("ix_protokolle_id"), table_name="protokolle")
     op.drop_table("protokolle")
