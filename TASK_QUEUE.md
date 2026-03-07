@@ -11,6 +11,7 @@
 | R005 | Customer Table | Fertig | none | none | - | feature/R005-customer-table | #5 (merged) |
 | R006 | Protokoll-Kopfdaten | Überprüfung | none | none | Review abwarten | feature/R006-protokoll-kopfdaten | #6 (offen) |
 | R007 | DB Lackierungsdaten | Überprüfung | none | none | Review abwarten | feature/R007-lackierungsdaten | #7 (offen) |
+| R009 | DB Zubehör-Auswahl als JSONB | Überprüfung | none | R007 | Review abwarten | feature/R009-zubehoer-jsonb | https://github.com/pokemonteda-eng/rohbauabnahme-web/pull/10 |
 | CI001 | Backend Tests | Fertig | none | none | - | feature/CI001-backend-tests | (merged) |
 | CI002 | Frontend Tests | Fertig | none | none | - | feature/CI002-frontend-tests | #8 (merged) |
 | CI003 | Playwright E2E Tests | Fertig | none | none | - | feature/CI003-e2e-tests | #9 (merged) |
@@ -26,5 +27,5 @@
 ## Statistik
 - Offen (Backlog): 0
 - In Arbeit: 0
-- Überprüfung: 3 (PR #6, #7, CI006 offen)
+- Überprüfung: 4 (PR #6, #7, #10 und CI006 offen)
 - Fertig: 8

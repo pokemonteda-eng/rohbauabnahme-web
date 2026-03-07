@@ -2,6 +2,16 @@
 
 ## Aktive Tickets
 
+### R009 - DB Zubehör-Auswahl als JSONB
+- **Status:** Überprüfung
+- **Blocker:** none
+- **Voraussetzungen:** R007
+- **Nächster Schritt:** Review abwarten
+- **Branch:** feature/R009-zubehoer-jsonb
+- **PR-Link:** https://github.com/pokemonteda-eng/rohbauabnahme-web/pull/10
+- **CI Status:** ⏳ ausstehend
+- **Notizen:** Neue JSONB-Spalte `protokolle.zubehoer_auswahl` inkl. Migration, Modell-Update und Tests
+
 ### CI006 - Lint + Type-Check Workflow
 - **Status:** Überprüfung
 - **Blocker:** none
@@ -61,4 +71,4 @@
 ---
 
 ## Letzte Aktivität
-- 2026-03-07: Ticket CI006 umgesetzt, Branch erstellt, PR in Vorbereitung
+- 2026-03-07: Ticket R009 umgesetzt, Branch erstellt und PR #10 geöffnet
