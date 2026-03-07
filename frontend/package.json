@@ -4,8 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "start": "vite preview --host 0.0.0.0 --port 4173",
     "dev": "vite",
     "build": "vite build",
+    "test": "echo \"No frontend tests yet\"",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:report": "playwright show-report",

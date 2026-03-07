@@ -63,3 +63,9 @@ npm run test
 cp .env.example .env
 docker compose up --build
 ```
+
+Alternative aus dem `docker/`-Ordner:
+
+```bash
+docker compose -f docker/docker-compose.yml up --build
+```
