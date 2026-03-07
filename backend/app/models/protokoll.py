@@ -16,7 +16,7 @@ class Protokoll(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     auftrags_nr: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
-    kunde_id: Mapped[int] = mapped_column(Integer, ForeignKey("customers.id"), nullable=False)
+    kunde_id: Mapped[int] = mapped_column(Integer, ForeignKey("kunden.id"), nullable=False)
     aufbautyp: Mapped[str] = mapped_column(String(64), nullable=False)
     vertriebsgebiet: Mapped[str] = mapped_column(String(128), nullable=False)
     projektleiter: Mapped[str] = mapped_column(String(255), nullable=False)
