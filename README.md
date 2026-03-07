@@ -17,6 +17,17 @@ Web-App fuer Bauabnahme-Prozesse mit Frontend (React + Vite) und Backend (FastAP
 
 ## Installation
 
+```bash
+cp .env.example .env
+docker compose up --build
+```
+
+Alternative aus dem `docker/`-Ordner:
+
+```bash
+docker compose -f docker/docker-compose.yml up --build
+```
+
 1. Abhaengigkeiten fuer Frontend installieren:
 
 ```bash
