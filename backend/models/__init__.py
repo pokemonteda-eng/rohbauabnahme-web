@@ -1,3 +1,3 @@
-from .protokoll import Protokoll
+from .protokoll import AufbauTyp, Protokoll, ProtokollStatus
 
-__all__ = ["Protokoll"]
+__all__ = ["AufbauTyp", "Protokoll", "ProtokollStatus"]
