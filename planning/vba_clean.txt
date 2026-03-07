@@ -1,0 +1,3967 @@
+CLEANED VBA EXTRACT
+Source: planning/vba_full.txt
+
+' ===== MODULE: DieseArbeitsmappe.cls =====
+Option Explicit
+Dim WithEvents App As Application
+Attribute App.VB_VarHelpID = -1
+Private Sub Workbook_BeforeClose(Cancel As Boolean)
+On Error Resume Next
+
+Call beenden
+
+
+
+Sheets("FB_Rohbauabnahmeprotokoll").Range("Preis_Formatierung").NumberFormat = "#.##0,0 €;[Red]- #.##0,0 €"
+
+Application.MoveAfterReturnDirection = xlDown
+
+If Application.Workbooks.Count = 1 Then
+ActiveWorkbook.Saved = True
+Application.Quit
+Else
+ActiveWorkbook.Close SaveChanges:=True
+End If
+
+End Sub
+Private Sub Workbook_SheetActivate(ByVal sh As Object)
+If Not objRibbon Is Nothing Then objRibbon.Invalidate
+End Sub
+
+Private Sub Workbook_Open()
+Dim i As Integer
+Dim bAktion As Boolean
+
+
+Sheets("FB_Rohbauabnahmeprotokoll").Range("Preis_Formatierung").NumberFormat = "#.##0,0 €;[Red]- #.##0,0 €"
+
+ActiveSheet.Range("A2").Value = 0
+
+
+
+Set App = Application
+
+Application.MoveAfterReturnDirection = xlDown
+
+
+
+Select Case (VBA.Environ("Username"))
+Case "petersmeier"
+    bAktion = True
+Case "kuhlenkord"
+    bAktion = True
+Case "rinsche"
+    bAktion = True
+Case "brakweh"
+    bAktion = True
+Case "uceda"
+    bAktion = True
+Case "kschlueter"
+    bAktion = True
+Case "elkenkamp"
+    bAktion = True
+Case "mielchen"
+    bAktion = True
+Case Else
+    bAktion = False
+End Select
+
+If bAktion = True Then
+ActiveSheet.Range("A10").Value = 1
+End If
+
+If bAktion = False Then
+ActiveSheet.Range("A10").Value = ""
+End If
+
+
+Worksheets("FB_Rohbauabnahmeprotokoll").Shapes("PDF_intern").Visible = False
+
+
+
+
+Worksheets("FB_Rohbauabnahmeprotokoll").Activate
+Application.GoTo Reference:=Range("A1"), Scroll:=True
+
+Application.Wait (VBA.Time + TimeValue("00:00:01"))
+
+
+If Not ActiveSheet.Range("AM3").Value = "U:\" Then
+Else
+UserForm3.Show vbModeless
+End If
+
+
+
+End Sub
+
+
+' ===== MODULE: Tabelle1.cls =====
+Option Explicit
+Public Zeile As Integer
+Private mblnNoEvent As Boolean
+
+
+    X As Long
+    Y As Long
+End Type
+
+ 
+Sub Aufbautyp_Click()
+UserForm4.Show vbModeless
+End Sub
+
+Private Sub CommandButton1_Click()
+ Call BasicCalendar
+End Sub
+
+Private Sub Worksheet_BeforeRightClick(ByVal Target As Range, Cancel As Boolean)
+Cancel = True
+End Sub
+
+Private Sub Label1_Click()
+Call Cursor_Position 'Modul 11
+Call Netzwerkstatus_Fahrzeugbeschriftung 'Modul 12
+Application.ActiveWindow.ScrollRow = 22 'Sprung ScrollRow 22
+ufPicView.Show vbModeless
+End Sub
+
+Private Sub Worksheet_SelectionChange(ByVal Target As Range)
+
+Dim ZeileStart As Integer
+Dim ZeileEnde As Integer
+Dim ZeileStartX As Integer
+Dim ZeileEndeX As Integer
+Dim SpalteStart As Integer
+Dim SpalteEnde As Integer
+Dim SpalteBedienung As Integer
+Dim SpalteX As Integer
+
+Dim Bereich As Range
+Dim Summe As Integer
+
+
+On Error Resume Next
+
+If Not Intersect(Target, Range("Bereich_Gesamt")) Is Nothing Then
+    If UserForm3.Visible = True Then
+    Call UserForm3.OpenFiles 'Modul 13
+    End If
+    If Not ActiveSheet.Range("AM3").Value = "U:\" Then
+    Unload UserForm3
+    End If
+End If
+
+Worksheets("FB_Rohbauabnahmeprotokoll").Activate
+
+ZeileStart = Sheets("FB_Rohbauabnahmeprotokoll").Range("A3").Value + 1
+ZeileEnde = Sheets("FB_Rohbauabnahmeprotokoll").Range("A4").Value - 1
+
+ZeileStartX = Sheets("FB_Rohbauabnahmeprotokoll").Range("A5").Value + 1
+ZeileEndeX = Sheets("FB_Rohbauabnahmeprotokoll").Range("A6").Value - 1
+
+SpalteStart = 3
+SpalteEnde = 8
+SpalteBedienung = 21
+SpalteX = 24
+Set Bereich = Range(Cells(ZeileStart, SpalteStart), Cells(ZeileEnde, SpalteEnde)) ' Bereich der Wirksamkeit
+
+If Not Intersect(Range(Target.Address), Bereich) Is Nothing Then ' überprüfen ob Zelle im vorgegebenen Bereich, wenn ja dann UserForm1 starten
+                        If UserForm3.Visible = True Then
+                        Unload UserForm3
+                        Else
+                        End If
+                    UserForm1.Show vbModeless
+                    End If
+                    Set Bereich = Nothing                     ' Bereich der Variablen freigeben
+Set Bereich = Range(Cells(ZeileStart, SpalteBedienung), Cells(ZeileEnde, SpalteBedienung)) ' Bereich der Wirksamkeit
+
+If Not Intersect(Range(Target.Address), Bereich) Is Nothing Then ' überprüfen ob Zelle im vorgegebenen Bereich
+                    If ActiveCell.Offset(0, -20).Value = "" Then
+                    MsgBox "Es ist noch keine Fahrzeugbeleuchtung ausgewählt!", vbCritical
+                    Else
+                        If UserForm3.Visible = True Then
+                        Unload UserForm3
+                        Else
+                        End If
+                    UserForm2.Show vbModeless
+                    End If
+                    End If
+                    Set Bereich = Nothing                     ' Bereich der Variablen freigeben
+Set Bereich = Range(Cells(ZeileStartX, SpalteX), Cells(ZeileEndeX, SpalteX)) ' Bereich der Wirksamkeit
+
+If Not Intersect(Range(Target.Address), Bereich) Is Nothing Then ' überprüfen ob Zelle im vorgegebenen Bereich
+                    If ActiveCell.Offset(0, -21).Value = "" Then
+                    Else
+                    If Target.Value = "X" Then
+                    Target.Value = ""
+                    Else
+                    Target.Value = "X"
+                    End If
+                    End If
+ End If
+                    Set Bereich = Nothing ' Bereich der Variablen freigeben
+                    
+Set Bereich = Range(Cells(ZeileStartX, SpalteStart), Cells(ZeileEndeX, SpalteX)) ' Bereich der Wirksamkeit
+
+If Not Intersect(Range(Target.Address), Bereich) Is Nothing Then ' überprüfen ob Zelle im vorgegebenen Bereich
+                    Call Zaehler
+                    End If
+                    Set Bereich = Nothing                     ' Bereich der Variablen freigeben
+
+
+Dim Höhe As Integer
+
+If Not Intersect(Target, Range("BW")) Is Nothing Then
+        
+        If Target.RowHeight > Target.Top - Target.Offset(-1, 0).Top Then
+        Höhe = Target.RowHeight / 16
+        End If
+    
+        If ActiveCell.Offset(0, -22).Value = "" Then
+        ActiveSheet.Shapes("BW_Text").Visible = False
+        End If
+        
+        If UserForm3.Visible = True Then
+        Unload UserForm3
+        End If
+        
+        With ActiveSheet.Shapes("BW_Text")
+        .Visible = True
+        .Top = Target.Top + Höhe
+        .Left = Target.Offset(0, 1).Left
+        End With
+    Else
+        ActiveSheet.Shapes("BW_Text").Left = Cells(22, 37).Left
+        ActiveSheet.Shapes("BW_Text").Top = Cells(22, 37).Top
+        
+        UserForm3.Show vbModeless
+        Else
+        End If
+End If
+
+
+
+If Not Intersect(Target, Range("Preis")) Is Nothing Then
+        If ActiveCell.Offset(0, -18).Value = "" Then
+        ActiveSheet.Shapes("Preis_Text").Visible = False
+        End If
+        If ActiveSheet.Range("A10").Value = 1 Then
+        End If
+    With ActiveSheet.Shapes("Preis_Text")
+        .Visible = True
+        .Top = Target.Top
+        .Left = Target.Offset(0, 1).Left
+        End With
+    Else
+        ActiveSheet.Shapes("Preis_Text").Left = Cells(30, 37).Left
+        ActiveSheet.Shapes("Preis_Text").Top = Cells(30, 37).Top
+        
+
+End If
+
+
+
+
+If Not Application.Intersect(Range("Schutz_Kopf"), Target) Is Nothing Then
+End If
+
+If Not Application.Intersect(Range("Schutz_Lack"), Target) Is Nothing Then
+End If
+
+If Not Application.Intersect(Range("Schutz_Fahrzeug"), Target) Is Nothing Then
+End If
+
+If Not Application.Intersect(Range("Schutz_Zubehör"), Target) Is Nothing Then
+End If
+
+If Not Application.Intersect(Range("Schutz_Kabel"), Target) Is Nothing Then
+End If
+
+If Not Application.Intersect(Range("Schutz_Beleuchtung"), Target) Is Nothing Then
+End If
+
+If Not Application.Intersect(Range("Schutz_Änderungen"), Target) Is Nothing Then
+End If
+
+If Not Application.Intersect(Range("BW_Start"), Target) Is Nothing Then
+End If
+
+If Not Application.Intersect(Range("Schutz_Ende"), Target) Is Nothing Then
+End If
+
+If Not Application.Intersect(Range("Schutz_Spalte1"), Target) Is Nothing Then
+End If
+
+If Not Application.Intersect(Range("Schutz_Spalte2_oben"), Target) Is Nothing Then
+End If
+
+If Not Application.Intersect(Range("Schutz_Spalte2_unten"), Target) Is Nothing Then
+End If
+
+If Not Application.Intersect(Range("Schutz_Spalte_25"), Target) Is Nothing Then
+End If
+
+If Not Application.Intersect(Range("Schutz_Spalte26_34"), Target) Is Nothing Then
+End If
+
+If Not Application.Intersect(Range("Techn_Änderungen"), Target) Is Nothing Then
+ActiveWorkbook.Names.Add Name:="AktiveZeile", RefersToR1C1:=Target.Row
+Else
+On Error Resume Next
+ActiveWorkbook.Names("AktiveZeile").Delete
+On Error GoTo 0
+End If
+
+If Not Application.Intersect(Range("DatumFahrzeugbeschriftung"), Target) Is Nothing Then
+    If ActiveCell.Offset(-2, 0).Value = "---" Or ActiveCell.Offset(-1, 0).Value = "---" Or ActiveCell.Value = "---" Or _
+    ActiveCell.Offset(-2, 0).Value = "" Or ActiveCell.Offset(-1, 0).Value = "" Then
+    Else
+    End If
+End If
+
+If Not Application.Intersect(Range("DatumZubehör"), Target) Is Nothing Then
+End If
+
+If Not Application.Intersect(Range("DatumUnterschrift"), Target) Is Nothing Then
+End If
+
+If Not Application.Intersect(Range("Auftrags_Nr"), Target) Is Nothing Then
+Call Netzwerkstatus 'Modul 12
+End If
+
+
+If Not Application.Intersect(Range("Prüf_Kopfteil"), Target) Is Nothing Then
+Call Prüfung_Kopfteil ' Modul 10
+End If
+
+If Not Application.Intersect(Range("Prüf_Fahrzeugbeschriftung"), Target) Is Nothing Then
+Call Prüfung_Fahrzeugbeschriftung ' Modul 10
+End If
+
+
+If Not Intersect(Target, Range("Fahrzeugbeschriftung")) Is Nothing Then
+    With ActiveSheet.Shapes("Fahrzeuge1")
+        .Visible = True
+        End With
+    Else
+        If ActiveSheet.Shapes("Fahrzeuge1").Visible Then _
+            ActiveSheet.Shapes("Fahrzeuge1").Visible = False
+End If
+
+
+If Not Intersect(Target, Range("K31")) Is Nothing Then
+    With ActiveSheet.Shapes("Fahrzeugbeschriftung")
+        .Visible = True
+        End With
+    Else
+        If ActiveSheet.Shapes("Fahrzeugbeschriftung").Visible Then _
+            ActiveSheet.Shapes("Fahrzeugbeschriftung").Visible = False
+End If
+
+
+If Not Intersect(Target, Range("K32")) Is Nothing Then
+    With ActiveSheet.Shapes("Sonderbeschriftung")
+        .Visible = True
+        End With
+    Else
+        If ActiveSheet.Shapes("Sonderbeschriftung").Visible Then _
+            ActiveSheet.Shapes("Sonderbeschriftung").Visible = False
+End If
+
+
+On Error GoTo ErrExit 'Verhindert das markieren mehrerer Zellen
+
+End Sub
+
+Private Sub Worksheet_Change(ByVal Target As Range)
+
+
+
+    Dim rng As Range, colZ As New Collection, ii As Long
+
+    Dim rngstart1 As Integer
+    Dim rngende1 As Integer
+    Dim rngstart2 As Integer
+    Dim rngende2 As Integer
+    
+    Dim rngBereich As Range
+    Dim c As Range
+    Dim ZeileStart As Integer
+    Dim ZeileEnde As Integer
+    
+    rngstart1 = Range("A3").Value + 1
+    rngende1 = Range("A4").Value - 1
+    rngstart2 = Range("A5").Value + 1
+    rngende2 = Range("A6").Value - 1
+    
+    
+If Not Intersect(Target, Range("Bereich_Gesamt")) Is Nothing Then ActiveSheet.Range("A2").Value = 1
+    
+For Each rng In Target           ' falls mehrere Zellen auf einmal geändert
+    If (rng.Row >= 21 And rng.Row <= 27) Or _
+         (rng.Row >= 37 And rng.Row <= 43) Or _
+         (rng.Row >= rngstart1 And rng.Row <= rngende1) Or _
+         (rng.Row >= rngstart2 And rng.Row <= rngende2) Then       'überwachte Zeilennummern - anpassen
+         On Error Resume Next
+         colZ.Add rng.Row, CStr(rng.Row)     ' hier werden Dubletten vermieden
+         On Error GoTo 0
+   End If
+   Next rng
+   For ii = 1 To colZ.Count
+      ZeilenhoeheVerbundene colZ(ii) ' Höhen der gesammelten Zeilen optimieren (Modul 1)
+   Next ii
+   Set colZ = New Collection
+   
+
+On Error Resume Next
+   ZeileStart = Sheets("FB_Rohbauabnahmeprotokoll").Range("A5").Value + 1
+   ZeileEnde = Sheets("FB_Rohbauabnahmeprotokoll").Range("A6").Value - 1
+
+Set rngBereich = Range(Cells(ZeileStart, 3), Cells(ZeileEnde, 3))  ' Bereich der Wirksamkeit
+
+If Not Intersect(Range(Target.Address), rngBereich) Is Nothing Then
+            If Target.Value = "" Then
+            ActiveCell.Offset(0, 1).Value = ""
+            ActiveCell.Offset(0, 4).Value = ""
+            ActiveCell.Offset(0, 5).Value = ""
+End If
+End If
+
+On Error Resume Next
+   
+   ZeileStart = Sheets("FB_Rohbauabnahmeprotokoll").Range("A5").Value + 1
+   ZeileEnde = Sheets("FB_Rohbauabnahmeprotokoll").Range("A6").Value - 1
+   
+Set rngBereich = Range(Cells(ZeileStart, 3), Cells(ZeileEnde, 3))
+      
+If Not Intersect(Range(Target.Address), rngBereich) Is Nothing Then
+
+If Target.Font.ColorIndex = 50 Then ' Farbe Grün
+    Target.Font.Color = -5211136 'Farbe Blau
+    End If
+ 
+End If
+  
+      
+If Not Intersect(Target, Range("Preis_Formatierung")) Is Nothing Then
+   
+    Target.NumberFormat = "$#,##0.00_);[Red]($#,##0.00)"
+ 
+End If
+
+On Error Resume Next
+
+If Not Intersect(Target, Range("K32")) Is Nothing Then
+   
+        If Target.Value = "" Then
+        Call Beschriftung_prüfen_löschen1
+        Else
+        If Target.Value = "NEIN" Then
+        Call Beschriftung_prüfen_löschen1
+        Else
+        If Target.Value = "JA" Then
+        Call Beschriftung_prüfen_löschen1
+        Call Beschriftung_prüfen1
+        End If
+        End If
+        End If
+End If
+
+If Not Intersect(Target, Range("M33")) Is Nothing Then
+   
+        If Target.Value = "" Then
+        Target.Cells.Offset(1, 0).Value = ""
+        Target.Cells.Offset(2, 0).Value = ""
+        Call Beschriftung_prüfen_löschen2
+        Else
+        If Target.Value = "NEIN" Then
+        Target.Cells.Offset(1, 0).Value = "---"
+        Target.Cells.Offset(2, 0).Value = "---"
+        Call Beschriftung_prüfen_löschen2
+        Else
+        If Target.Value = "JA" Then
+        Target.Cells.Offset(1, 0).Value = ""
+        Target.Cells.Offset(2, 0).Value = ""
+        Call Beschriftung_prüfen_löschen2
+        Call Beschriftung_prüfen2
+        End If
+        End If
+        End If
+End If
+
+If Not Intersect(Target, Range("M34")) Is Nothing Then
+        If Target.Value = "" Then
+        Target.Cells.Offset(-1, 0).Value = ""
+        Target.Cells.Offset(1, 0).Value = ""
+        Else
+        If Target.Cells.Offset(-1, 0).Value = "NEIN" Then
+        Target.Value = "---"
+        Else
+        If Target.Value = "Kunde" Then
+        Target.Cells.Offset(1, 0).Value = "---"
+        Else
+        If Target.Value = "MU" Then
+        Target.Cells.Offset(1, 0).Value = "=today()+14"
+        End If
+        End If
+        End If
+        End If
+End If
+
+If Not Intersect(Target, Range("M35")) Is Nothing Then
+
+        If Target.Value = "" Then
+        Target.Cells.Offset(-2, 0).Value = ""
+        Target.Cells.Offset(-1, 0).Value = ""
+        Else
+        If Target.Cells.Offset(-2, 0).Value = "NEIN" Then
+        Target.Value = "---"
+        Else
+        If Target.Cells.Offset(-1, 0).Value = "Kunde" Then
+        Target.Value = "---"
+        End If
+        End If
+        End If
+End If
+
+On Error Resume Next
+
+If Not Intersect(Target, Range("Zub_1")) Is Nothing Then
+
+        If Target.Value = "" Then
+        Target.Offset(1, 0).Value = ""
+        Else
+        If Target.Value = "NEIN" Then
+        Target.Cells.Offset(1, 0).Value = "---"
+        Else
+        If Target.Value = "JA" Then
+        Target.Offset(1, 0).Value = ""
+        End If
+        End If
+        End If
+End If
+
+
+If Not Intersect(Target, Range("DatumZubehör")) Is Nothing Then
+
+        If Target.Value = "" Then
+        Target.Cells.Offset(-1, 0).Value = ""
+        Else
+        If Target.Cells.Offset(-1, 0).Value = "NEIN" Then
+        Target.Value = "---"
+        End If
+        End If
+End If
+
+
+On Error Resume Next
+
+If Not Intersect(Target, Range("Auftrags_Nr")) Is Nothing Then
+        If Len(Target.Text) <> 8 Then
+            MsgBox ("Die Eingabe der Auftrags- Nr. muss 8 Zeichen enthalten." & vbLf & vbLf & "Bitte Auftrags-Nr. prüfen."), vbInformation
+            Target.Cells.Offset(0, -13).Value = ""
+            Target.Cells.Offset(1, -13).Value = ""
+        End If
+
+    Call AuftragsOrdner_finden ' Modul 14
+    
+    
+    If Range("F4") Like "*Prof*" Or _
+        Range("F4") Like "*Pro*" Or _
+        Range("F4") Like "*type II*" Or _
+        Range("F4") Like "*typ II*" Or _
+        Range("F4") Like "*Typ 2*" Or _
+        Range("F4") Like "*type 2*" Or _
+        Range("F4") Like "*Typ II*" Then
+        
+    Call Prüfung_SeitlWassertanks_löschen ' Makro siehe unten
+    Call Prüfung_SeitlWassertanks ' Makro siehe unten
+    Else
+    Call Prüfung_SeitlWassertanks_löschen ' siehe Makro unten
+    End If
+
+    Call RAP_prüfen 'Modul14   prüft ob Dateilbereits vorhanden
+
+End If
+
+
+Dim r As Long
+
+
+    For r = 69 To Sheets("FB_Rohbauabnahmeprotokoll").Range("A4").Value - 1
+        If InStr(Cells(r, 10).Value, "") Then
+            Range(Cells(r, 10), Cells(r, 10)).Interior.Color = xlNone
+            Else
+            Range(Cells(r, 10), Cells(r, 10)).Interior.Color = RGB(235, 241, 222)
+        End If
+    Next
+
+    For r = 69 To Sheets("FB_Rohbauabnahmeprotokoll").Range("A4").Value - 1
+        If InStr(Cells(r, 3).Value, "") Then
+            Range(Cells(r, 2), Cells(r, 2)).Interior.Color = xlNone
+            Else
+            Range(Cells(r, 2), Cells(r, 2)).Interior.Color = RGB(235, 241, 222)
+        End If
+    Next
+
+    For r = 69 To Sheets("FB_Rohbauabnahmeprotokoll").Range("A4").Value - 1
+        If InStr(Cells(r, 21).Value, "") Then
+            Range(Cells(r, 21), Cells(r, 21)).Interior.Color = xlNone
+            Else
+            Range(Cells(r, 21), Cells(r, 21)).Interior.Color = RGB(235, 241, 222)
+        End If
+    Next
+
+
+
+
+If Not Application.Intersect(Range("Techn_Änderungen"), Target) Is Nothing Then
+ActiveWorkbook.Names.Add Name:="AktiveZeile", RefersToR1C1:=Target.Row
+Else
+On Error Resume Next
+ActiveWorkbook.Names("AktiveZeile").Delete
+On Error GoTo 0
+End If
+
+On Error Resume Next
+
+Dim Höhe As Single
+
+If Not Intersect(Target, Range("BW")) Is Nothing Then
+       
+        If Target.Offset(1, -22).Value = "" Then
+        ActiveCell.Offset(0, -5).Activate
+        ActiveWorkbook.Names.Add Name:="AktiveZeile", RefersToR1C1:=Target.Row
+        Target.Interior.ColorIndex = xlNone
+        Else
+                If Target.Offset(1, 0).Value = "" Then
+                Target.Interior.ColorIndex = xlNone
+                Else
+                Target.Interior.ColorIndex = xlNone
+                End If
+        End If
+
+
+        If Target.Offset(1, 0).RowHeight > Target.Offset(1, 0).Top - Target.Top Then
+        Höhe = Target.Offset(1, 0).RowHeight / 16
+        Else
+        Höhe = 0
+        End If
+    
+        With ActiveSheet.Shapes("BW_Text")
+            .Visible = True
+        .Top = Target.Top + Target.RowHeight + Höhe
+        .Left = Target.Offset(0, 1).Left
+        End With
+
+
+End If
+
+
+
+On Error Resume Next
+
+If Target.Cells.Offset(2, 0).Value = "LastRow2" Then
+    Call Zeile_einfügen
+End If
+
+Call Zaehler '(Modul 5)
+
+
+End Sub
+
+Private Sub Prüfung_SeitlWassertanks()
+
+
+On Error Resume Next
+
+   Dim rngBereich As Range
+   Dim c As Range
+   Dim ZeileStart As Integer
+   Dim ZeileEnde As Integer
+   
+   ZeileStart = Sheets("FB_Rohbauabnahmeprotokoll").Range("A5").Value + 1
+   ZeileEnde = Sheets("FB_Rohbauabnahmeprotokoll").Range("A6").Value - 1
+   
+   Set rngBereich = Range(Cells(ZeileStart, 3), Cells(ZeileEnde, 3))
+      
+   For Each c In rngBereich
+      If IsEmpty(c) Or c = "" Then
+         c.Value = "Seitliche Wassertanks mit Verkleidungsblech JA / NEIN ?"
+         c.Font.Color = -10053325 'Farbe Grün
+         Exit For
+      End If
+   Next c
+   
+
+End Sub
+
+Private Sub Prüfung_SeitlWassertanks_löschen()
+
+
+On Error Resume Next
+
+   Dim rngBereich As Range
+   Dim c As Range
+   Dim ZeileStart As Integer
+   Dim ZeileEnde As Integer
+   
+   ZeileStart = Sheets("FB_Rohbauabnahmeprotokoll").Range("A5").Value + 1
+   ZeileEnde = Sheets("FB_Rohbauabnahmeprotokoll").Range("A6").Value - 1
+   
+   Set rngBereich = Range(Cells(ZeileStart, 3), Cells(ZeileEnde, 3))
+      
+   For Each c In rngBereich
+      If c.Value = "Seitliche Wassertanks mit Verkleidungsblech JA / NEIN ?" Then
+         c.Value = ""
+         c.Font.Color = -5211136 'Farbe Blau
+     End If
+   Next c
+   
+
+End Sub
+
+Private Sub Beschriftung_prüfen2()
+
+
+On Error Resume Next
+
+   Dim rngBereich As Range
+   Dim c As Range
+   Dim ZeileStart As Integer
+   Dim ZeileEnde As Integer
+   
+   ZeileStart = Sheets("FB_Rohbauabnahmeprotokoll").Range("A5").Value + 1
+   ZeileEnde = Sheets("FB_Rohbauabnahmeprotokoll").Range("A6").Value - 1
+   
+   Set rngBereich = Range(Cells(ZeileStart, 3), Cells(ZeileEnde, 3))
+      
+   For Each c In rngBereich
+      If IsEmpty(c) Or c = "" Then
+         c.Value = "Kundenspezifische Beschriftung zum Liefertermin prüfen!"
+         c.Font.Color = -10053325 ' Farbe Grün
+         Exit For
+      End If
+   Next c
+   
+
+End Sub
+
+Private Sub Beschriftung_prüfen_löschen2()
+
+
+On Error Resume Next
+
+   Dim rngBereich As Range
+   Dim c As Range
+   Dim ZeileStart As Integer
+   Dim ZeileEnde As Integer
+     
+   ZeileStart = Sheets("FB_Rohbauabnahmeprotokoll").Range("A5").Value + 1
+   ZeileEnde = Sheets("FB_Rohbauabnahmeprotokoll").Range("A6").Value - 1
+   
+   Set rngBereich = Range(Cells(ZeileStart, 3), Cells(ZeileEnde, 3))
+      
+   For Each c In rngBereich
+      If c.Value = "Kundenspezifische Beschriftung zum Liefertermin prüfen!" Then
+         c.Value = ""
+         c.Font.Color = -5211136 'Farbe Blau
+     End If
+   Next c
+   
+
+End Sub
+
+Private Sub Beschriftung_prüfen1()
+
+
+On Error Resume Next
+
+   Dim rngBereich As Range
+   Dim c As Range
+   Dim ZeileStart As Integer
+   Dim ZeileEnde As Integer
+   
+   ZeileStart = Sheets("FB_Rohbauabnahmeprotokoll").Range("A5").Value + 1
+   ZeileEnde = Sheets("FB_Rohbauabnahmeprotokoll").Range("A6").Value - 1
+   
+   Set rngBereich = Range(Cells(ZeileStart, 3), Cells(ZeileEnde, 3))
+      
+   For Each c In rngBereich
+      If IsEmpty(c) Or c = "" Then
+         c.Value = "Sonderbeschriftung / MU prüfen!"
+         c.Font.Color = -10053325 ' Farbe Grün
+         Exit For
+      End If
+   Next c
+   
+
+End Sub
+
+Private Sub Beschriftung_prüfen_löschen1()
+
+
+On Error Resume Next
+
+   Dim rngBereich As Range
+   Dim c As Range
+   Dim ZeileStart As Integer
+   Dim ZeileEnde As Integer
+     
+   ZeileStart = Sheets("FB_Rohbauabnahmeprotokoll").Range("A5").Value + 1
+   ZeileEnde = Sheets("FB_Rohbauabnahmeprotokoll").Range("A6").Value - 1
+   
+   Set rngBereich = Range(Cells(ZeileStart, 3), Cells(ZeileEnde, 3))
+      
+   For Each c In rngBereich
+      If c.Value = "Sonderbeschriftung / MU prüfen!" Then
+         c.Value = ""
+         c.Font.Color = -5211136 'Farbe Blau
+     End If
+   Next c
+   
+
+End Sub
+
+
+' ===== MODULE: UserForm4.frm =====
+Option Explicit
+    (ByVal hwnd As Long, ByVal lpOperation As String, _
+    ByVal lpFile As String, ByVal lpParameters As String, _
+    ByVal lpDirectory As String, ByVal nShowCmd As Long) As Long
+
+Dim colFiles As Collection
+
+    ByVal lpClassName As String, _
+    ByVal lpWindowName As String) As Long
+    ByVal hwnd As Long, _
+    ByVal nIndex As Long) As Long
+    ByVal hwnd As Long, _
+    ByVal nIndex As Long, _
+    ByVal dwNewLong As Long) As Long
+    ByVal hwnd As Long) As Long
+    ByVal hwnd As Long, _
+    ByVal wMsg As Long, _
+    ByVal wParam As Long, _
+    ByRef lParam As Any) As Long
+
+Private Const GC_CLASSNAMEMSEXCELFORM = "ThunderDFrame"
+Private Const GWL_STYLE = -16
+Private Const WS_CAPTION = &HC00000
+Private Const HTCAPTION = 2
+Private Const WM_NCLBUTTONDOWN = &HA1
+
+Private hwndForm As Long
+
+Private Sub cbExit_Click()
+Unload UserForm4
+Call Cursor_Position_Aufbautyp 'Modul 11
+End Sub
+
+Private Sub Image1_Click()
+Call Aufbautyp1
+Unload UserForm4
+End Sub
+Private Sub Image2_Click()
+Call Aufbautyp2
+Unload UserForm4
+End Sub
+Private Sub Image3_Click()
+Call Aufbautyp3
+Unload UserForm4
+End Sub
+Private Sub Image4_Click()
+Call Aufbautyp4
+Unload UserForm4
+End Sub
+Private Sub Image5_Click()
+Call Aufbautyp5
+Unload UserForm4
+End Sub
+Private Sub Image6_Click()
+Call Aufbautyp6
+Unload UserForm4
+End Sub
+Private Sub Image7_Click()
+Call Aufbautyp7
+Unload UserForm4
+End Sub
+Private Sub Image8_Click()
+Call Aufbautyp8
+Unload UserForm4
+End Sub
+Private Sub Image9_Click()
+Call Aufbautyp9
+Unload UserForm4
+End Sub
+Private Sub Image10_Click()
+Call Aufbautyp10
+Unload UserForm4
+End Sub
+Private Sub Image11_Click()
+Call Aufbautyp11
+Unload UserForm4
+End Sub
+
+
+Private Sub UserForm_Initialize()
+
+On Error Resume Next
+
+
+        StartUpPosition = 0
+        With Application
+        Me.Top = Application.Top
+        Me.Left = Application.Left
+        Me.Height = Application.Height
+        Me.Width = Application.Width
+        End With
+
+
+        hwndForm = FindWindow(GC_CLASSNAMEMSEXCELFORM, Me.Caption)
+
+        If hwndForm <> 0 Then
+        SetWindowLong hwndForm, GWL_STYLE, GetWindowLong(hwndForm, GWL_STYLE) And Not WS_CAPTION
+        DrawMenuBar hwndForm
+        End If
+        
+        Image1.Picture = LoadPicture("U:\Bilder_RAP\Aufbautyp\1.jpg")
+        Image2.Picture = LoadPicture("U:\Bilder_RAP\Aufbautyp\2.jpg")
+        Image3.Picture = LoadPicture("U:\Bilder_RAP\Aufbautyp\3.jpg")
+        Image4.Picture = LoadPicture("U:\Bilder_RAP\Aufbautyp\4.jpg")
+        Image5.Picture = LoadPicture("U:\Bilder_RAP\Aufbautyp\5.jpg")
+        Image6.Picture = LoadPicture("U:\Bilder_RAP\Aufbautyp\6.jpg")
+        Image7.Picture = LoadPicture("U:\Bilder_RAP\Aufbautyp\7.jpg")
+        Image8.Picture = LoadPicture("U:\Bilder_RAP\Aufbautyp\8.jpg")
+        Image9.Picture = LoadPicture("U:\Bilder_RAP\Aufbautyp\9.jpg")
+        Image10.Picture = LoadPicture("U:\Bilder_RAP\Aufbautyp\10.jpg")
+        Image11.Picture = LoadPicture("U:\Bilder_RAP\Aufbautyp\11.jpg")
+        
+End Sub
+
+' ===== MODULE: Modul2.bas =====
+Option Explicit
+Sub Aufbautyp1()
+   Dim strPfad As String
+   Dim pic As Picture
+   strPfad = "U:\Bilder_RAP\1.png"
+   If Dir(strPfad) = "" Then Exit Sub
+   Set pic = ActiveSheet.Pictures.Insert(strPfad)
+   
+   With ActiveSheet.Range("B55")
+       pic.Left = .Left + 2
+       pic.Top = .Top
+       pic.BringToFront
+       pic.OnAction = "Aufbautyp_Schutz"
+   End With
+   
+Call Cursor_Position_Aufbautyp 'Modul 11
+
+End Sub
+Sub Aufbautyp2()
+   Dim strPfad As String
+   Dim pic As Picture
+   strPfad = "U:\Bilder_RAP\2.png"
+   If Dir(strPfad) = "" Then Exit Sub
+   Set pic = ActiveSheet.Pictures.Insert(strPfad)
+   
+   With ActiveSheet.Range("B55")
+       pic.Left = .Left + 2
+       pic.Top = .Top
+       pic.BringToFront
+       pic.OnAction = "Aufbautyp_Schutz"
+   End With
+   
+Call Cursor_Position_Aufbautyp 'Modul 11
+
+End Sub
+Sub Aufbautyp3()
+   Dim strPfad As String
+   Dim pic As Picture
+   strPfad = "U:\Bilder_RAP\3.png"
+   If Dir(strPfad) = "" Then Exit Sub
+   Set pic = ActiveSheet.Pictures.Insert(strPfad)
+   
+   With ActiveSheet.Range("B55")
+       pic.Left = .Left + 2
+       pic.Top = .Top
+       pic.BringToFront
+       pic.OnAction = "Aufbautyp_Schutz"
+   End With
+   
+Call Cursor_Position_Aufbautyp 'Modul 11
+
+End Sub
+Sub Aufbautyp4()
+   Dim strPfad As String
+   Dim pic As Picture
+   strPfad = "U:\Bilder_RAP\4.png"
+   If Dir(strPfad) = "" Then Exit Sub
+   Set pic = ActiveSheet.Pictures.Insert(strPfad)
+   
+   With ActiveSheet.Range("B55")
+       pic.Left = .Left + 2
+       pic.Top = .Top
+       pic.BringToFront
+       pic.OnAction = "Aufbautyp_Schutz"
+   End With
+   
+Call Cursor_Position_Aufbautyp 'Modul 11
+
+End Sub
+Sub Aufbautyp5()
+   Dim strPfad As String
+   Dim pic As Picture
+   strPfad = "U:\Bilder_RAP\5.png"
+   If Dir(strPfad) = "" Then Exit Sub
+   Set pic = ActiveSheet.Pictures.Insert(strPfad)
+   
+   With ActiveSheet.Range("B55")
+       pic.Left = .Left + 2
+       pic.Top = .Top
+       pic.BringToFront
+       pic.OnAction = "Aufbautyp_Schutz"
+   End With
+   
+Call Cursor_Position_Aufbautyp 'Modul 11
+
+End Sub
+Sub Aufbautyp6()
+   Dim strPfad As String
+   Dim pic As Picture
+   strPfad = "U:\Bilder_RAP\6.png"
+   If Dir(strPfad) = "" Then Exit Sub
+   Set pic = ActiveSheet.Pictures.Insert(strPfad)
+   
+   With ActiveSheet.Range("B55")
+       pic.Left = .Left + 2
+       pic.Top = .Top
+       pic.BringToFront
+       pic.OnAction = "Aufbautyp_Schutz"
+   End With
+   
+Call Cursor_Position_Aufbautyp 'Modul 11
+
+End Sub
+Sub Aufbautyp7()
+   Dim strPfad As String
+   Dim pic As Picture
+   strPfad = "U:\Bilder_RAP\7.png"
+   If Dir(strPfad) = "" Then Exit Sub
+   Set pic = ActiveSheet.Pictures.Insert(strPfad)
+   
+   With ActiveSheet.Range("B55")
+       pic.Left = .Left + 2
+       pic.Top = .Top
+       pic.BringToFront
+       pic.OnAction = "Aufbautyp_Schutz"
+   End With
+   
+Call Cursor_Position_Aufbautyp 'Modul 11
+
+End Sub
+Sub Aufbautyp8()
+   Dim strPfad As String
+   Dim pic As Picture
+   strPfad = "U:\Bilder_RAP\8.png"
+   If Dir(strPfad) = "" Then Exit Sub
+   Set pic = ActiveSheet.Pictures.Insert(strPfad)
+   
+   With ActiveSheet.Range("B55")
+       pic.Left = .Left + 2
+       pic.Top = .Top
+       pic.BringToFront
+       pic.OnAction = "Aufbautyp_Schutz"
+   End With
+   
+Call Cursor_Position_Aufbautyp 'Modul 11
+
+End Sub
+Sub Aufbautyp9()
+   Dim strPfad As String
+   Dim pic As Picture
+   strPfad = "U:\Bilder_RAP\9.png"
+   If Dir(strPfad) = "" Then Exit Sub
+   Set pic = ActiveSheet.Pictures.Insert(strPfad)
+   
+   With ActiveSheet.Range("B55")
+       pic.Left = .Left + 2
+       pic.Top = .Top
+       pic.BringToFront
+       pic.OnAction = "Aufbautyp_Schutz"
+   End With
+   
+Call Cursor_Position_Aufbautyp 'Modul 11
+
+End Sub
+Sub Aufbautyp10()
+   Dim strPfad As String
+   Dim pic As Picture
+   strPfad = "U:\Bilder_RAP\10.png"
+   If Dir(strPfad) = "" Then Exit Sub
+   Set pic = ActiveSheet.Pictures.Insert(strPfad)
+   
+   With ActiveSheet.Range("B55")
+       pic.Left = .Left + 2
+       pic.Top = .Top
+       pic.BringToFront
+       pic.OnAction = "Aufbautyp_Schutz"
+   End With
+   
+Call Cursor_Position_Aufbautyp 'Modul 11
+
+End Sub
+Sub Aufbautyp11()
+   Dim strPfad As String
+   Dim pic As Picture
+   strPfad = "U:\Bilder_RAP\11.png"
+   If Dir(strPfad) = "" Then Exit Sub
+   Set pic = ActiveSheet.Pictures.Insert(strPfad)
+   
+   With ActiveSheet.Range("B55")
+       pic.Left = .Left + 2
+       pic.Top = .Top
+       pic.BringToFront
+       pic.OnAction = "Aufbautyp_Schutz"
+   End With
+   
+Call Cursor_Position_Aufbautyp 'Modul 11
+
+End Sub
+
+
+
+
+
+
+' ===== MODULE: Tabelle8.cls =====
+(empty macro)
+
+' ===== MODULE: Tabelle3.cls =====
+(empty macro)
+
+' ===== MODULE: Tabelle4.cls =====
+(empty macro)
+
+' ===== MODULE: Tabelle5.cls =====
+(empty macro)
+
+' ===== MODULE: Tabelle6.cls =====
+(empty macro)
+
+' ===== MODULE: Tabelle7.cls =====
+(empty macro)
+
+' ===== MODULE: Tabelle9.cls =====
+(empty macro)
+
+' ===== MODULE: Modul7.bas =====
+Option Private Module
+Option Explicit
+Public objRibbon As IRibbonUI
+Public Sub onload(ribbon As IRibbonUI)
+Set objRibbon = ribbon
+End Sub
+Public Sub getEnabled_user(control As IRibbonControl, ByRef returnValue)
+     If Worksheets("FB_Rohbauabnahmeprotokoll").Range("A1").Value = "2" Then returnValue = False
+     If Worksheets("FB_Rohbauabnahmeprotokoll").Range("A1").Value = "1" Then returnValue = True
+End Sub
+Sub Datei_speichern(control As IRibbonControl)
+Call Datei__speichern '(Modul 8)
+End Sub
+Sub Datei_schließen(control As IRibbonControl)
+Call Datei__schließen '(Modul 8)
+End Sub
+Sub Drucken(control As IRibbonControl)
+Call Drucken__Ansicht '(Modul 8)
+End Sub
+Sub Speichern_pdf(control As IRibbonControl)
+Call Speichern__pdf '(Modul 8)
+End Sub
+Sub LinkPDF_versenden(control As IRibbonControl)
+Call LinkPDF__versenden '(Modul 8)
+End Sub
+Sub Link_versenden(control As IRibbonControl)
+Call LinkDatei__versenden '(Modul 8)
+End Sub
+Sub Deutsch_English(control As IRibbonControl)
+Call Deutsch_Englisch '(Modul 6)
+End Sub
+Sub English_Deutsch(control As IRibbonControl)
+Call Englisch_Deutsch '(Modul 6)
+End Sub
+Sub Zeile__einfügen(control As IRibbonControl)
+Call Zeile_einfügen '(Modul 3)
+End Sub
+Sub Zeile__löschen(control As IRibbonControl)
+Call Zeile_löschen '(Modul 3)
+End Sub
+Sub Kundenfreigabe__komplett(control As IRibbonControl)
+Call selektieren '(Modul 5)
+End Sub
+Sub Schrift__Rot(control As IRibbonControl)
+With Selection.Font
+        .Color = -16776961
+        .TintAndShade = 0
+    End With
+End Sub
+Sub Schrift__Fett(control As IRibbonControl)
+Selection.Font.Bold = True
+End Sub
+Sub Schrift__Normal(control As IRibbonControl)
+With Selection.Font
+        .Color = -5211136
+        .TintAndShade = 0
+        .Bold = False
+    End With
+End Sub
+Sub Auftrags__Ordner(control As IRibbonControl)
+Call Auftrags_Ordner 'Modul 13
+End Sub
+Sub Bilder__RBA(control As IRibbonControl)
+Call Bilder_RBA 'Modul 13
+End Sub
+
+
+' ===== MODULE: UserForm1.frm =====
+Option Explicit
+    (ByVal hwnd As Long, ByVal lpOperation As String, _
+    ByVal lpFile As String, ByVal lpParameters As String, _
+    ByVal lpDirectory As String, ByVal nShowCmd As Long) As Long
+
+Dim colFiles As Collection
+
+    ByVal lpClassName As String, _
+    ByVal lpWindowName As String) As Long
+    ByVal hwnd As Long, _
+    ByVal nIndex As Long) As Long
+    ByVal hwnd As Long, _
+    ByVal nIndex As Long, _
+    ByVal dwNewLong As Long) As Long
+    ByVal hwnd As Long) As Long
+    ByVal hwnd As Long, _
+    ByVal wMsg As Long, _
+    ByVal wParam As Long, _
+    ByRef lParam As Any) As Long
+
+Private Const GC_CLASSNAMEMSEXCELFORM = "ThunderDFrame"
+Private Const GWL_STYLE = -16
+Private Const WS_CAPTION = &HC00000
+Private Const HTCAPTION = 2
+Private Const WM_NCLBUTTONDOWN = &HA1
+
+Private hwndForm As Long
+
+Private Sub cblösch_Click()
+Dim i As String
+Dim AktivesBlatt As Variant
+Dim shp As Shape
+Dim Bilddatei As String
+Dim Zelle As Range
+
+AktivesBlatt = ActiveSheet.Name
+
+
+On Error Resume Next
+
+
+Zelle = ActiveCell
+
+For Each shp In ActiveSheet.Shapes
+If shp.TopLeftCell.Row = ActiveCell.Row Then
+            shp.Delete
+        End If
+    Next shp
+
+
+Bilddatei = ActiveCell.Offset(0, 22).Value
+
+For Each shp In ActiveSheet.Shapes
+If shp.Name = Bilddatei Then
+            shp.Delete
+        End If
+    Next shp
+
+Range(Cells(ActiveCell.Row, 3), Cells(ActiveCell.Row, 31)).ClearContents 'Der Inhalt von der Aktiven Zeile wird von Spalte 3 bis  geleert
+Range(Cells(ActiveCell.Row, 35), Cells(ActiveCell.Row, 39)).ClearContents
+
+If ActiveCell.Value = "" Then
+ActiveCell.Interior.Color = RGB(235, 241, 222)
+Else
+ActiveCell.Interior.Color = xlNone
+End If
+
+
+ActiveCell.Offset(0, 1).Value = ""
+
+Unload UserForm1
+
+End Sub
+
+Private Sub cbok_BeforeDragOver(ByVal Cancel As MSForms.ReturnBoolean, ByVal Data As MSForms.DataObject, ByVal X As Single, ByVal Y As Single, ByVal DragState As MSForms.fmDragState, ByVal Effect As MSForms.ReturnEffect, ByVal Shift As Integer)
+
+End Sub
+
+Private Sub cbok_Click()
+Dim shp As Shape
+Dim sText As String
+Dim intIndex1
+Dim intIndex2
+
+On Error Resume Next
+
+
+sText = ListBox2.Value
+intIndex1 = ListBox1.ListIndex
+intIndex2 = VBA.Mid(sText, 11)
+
+ActiveCell.Offset(0, 17) = ListBox1.ListIndex
+ActiveCell.Offset(0, 18) = ListBox2.ListIndex
+ActiveCell.Offset(0, 26) = ListBox1.List(intIndex1)
+ActiveCell.Offset(0, 27) = intIndex2
+ActiveCell.Value = CVar(TextBox1.Text)
+
+For Each shp In ActiveSheet.Shapes
+If shp.TopLeftCell.Row = ActiveCell.Row Then
+            shp.Delete
+        End If
+    Next shp
+
+
+If Label.Caption = VBA.Chr(254) Then
+ActiveCell.Offset(0, 19).Value = "JA"
+ActiveCell.Offset(0, 20).Value = TextBox_Grafik.Value
+Else
+ActiveCell.Offset(0, 19).Value = ""
+End If
+
+ 
+ If UserForm1.Image1.Picture = Tabelle11.ASW1.Picture Then
+ Sheets("FZB").Shapes("ASW").Copy
+ End If
+ If UserForm1.Image1.Picture = Tabelle11.FHB1.Picture Then
+ Sheets("FZB").Shapes("FHB").Copy
+ End If
+ If UserForm1.Image1.Picture = Tabelle11.RUK1.Picture Then
+ Sheets("FZB").Shapes("RUK").Copy
+ End If
+ If UserForm1.Image1.Picture = Tabelle11.SPO1.Picture Then
+ Sheets("FZB").Shapes("SPO").Copy
+ End If
+ If UserForm1.Image1.Picture = Tabelle11.LED1.Picture Then
+ Sheets("FZB").Shapes("LED").Copy
+ End If
+ If UserForm1.Image1.Picture = Tabelle11.RFK1.Picture Then
+ Sheets("FZB").Shapes("RFK").Copy
+ End If
+ If UserForm1.Image1.Picture = Tabelle11.UML1.Picture Then
+ Sheets("FZB").Shapes("UML").Copy
+ End If
+ If UserForm1.Image1.Picture = Tabelle11.SB1.Picture Then
+ Sheets("FZB").Shapes("SB").Copy
+ End If
+ If UserForm1.Image1.Picture = Tabelle11.BB1.Picture Then
+ Sheets("FZB").Shapes("BB").Copy
+ End If
+ If UserForm1.Image1.Picture = Tabelle11.RBL1.Picture Then
+ Sheets("FZB").Shapes("RBL").Copy
+ End If
+
+Call Shape_Tabelle_einfügen_umbenennen
+
+
+End Sub
+Private Sub cbExit_Click()
+ If ActiveCell.Offset(0, 16).Value = "0" Then
+  ActiveCell.Offset(0, 16).Value = ""
+  Else
+  End If
+Unload UserForm1
+Call UserForm3_open ' Modul 13
+End Sub
+Private Sub Label_Click()
+On Error Resume Next
+With Label
+If .Caption = VBA.Chr(168) Then .Caption = VBA.Chr(254) Else .Caption = VBA.Chr(168)
+End With
+If Label.Caption = VBA.Chr(254) Then
+UserForm1.TextBox_Grafik.Enabled = True
+UserForm1.Label4.Enabled = True
+UserForm1.SpinButton.Enabled = True
+Else
+UserForm1.TextBox_Grafik.Enabled = False
+UserForm1.Label4.Enabled = False
+UserForm1.SpinButton.Enabled = False
+End If
+End Sub
+
+Private Sub ListBox1_Click()
+Dim i As Integer
+Dim intIndex1
+
+ListBox2.Clear
+
+If Sheets("FB_Rohbauabnahmeprotokoll").Range("A1").Value = "1" Then
+For i = 2 To 5
+    ListBox2.AddItem Sheets("FZB").Cells(i, ListBox1.ListIndex + 1)
+Next
+Else
+For i = 21 To 24
+    ListBox2.AddItem Sheets("FZB").Cells(i, ListBox1.ListIndex + 1)
+Next
+End If
+
+ If ListBox1.Selected(0) Then
+ UserForm1.Image1.Picture = Tabelle11.ASW1.Picture
+ End If
+ If ListBox1.Selected(1) Then
+ UserForm1.Image1.Picture = Tabelle11.FHB1.Picture
+ End If
+ If ListBox1.Selected(2) Then
+ UserForm1.Image1.Picture = Tabelle11.RUK1.Picture
+ End If
+ If ListBox1.Selected(3) Then
+ UserForm1.Image1.Picture = Tabelle11.SPO1.Picture
+ End If
+ If ListBox1.Selected(4) Then
+ UserForm1.Image1.Picture = Tabelle11.ASW1.Picture
+ End If
+ If ListBox1.Selected(5) Then
+ UserForm1.Image1.Picture = Tabelle11.ASW1.Picture
+ End If
+ If ListBox1.Selected(6) Then
+ UserForm1.Image1.Picture = Tabelle11.LED1.Picture
+ End If
+ If ListBox1.Selected(7) Then
+ UserForm1.Image1.Picture = Tabelle11.RFK1.Picture
+ End If
+ If ListBox1.Selected(8) Then
+ UserForm1.Image1.Picture = Tabelle11.RFK1.Picture
+ End If
+ If ListBox1.Selected(9) Then
+ UserForm1.Image1.Picture = Tabelle11.UML1.Picture
+ End If
+ If ListBox1.Selected(10) Then
+ UserForm1.Image1.Picture = Tabelle11.SB1.Picture
+ End If
+ If ListBox1.Selected(11) Then
+ UserForm1.Image1.Picture = Tabelle11.BB1.Picture
+ End If
+ If ListBox1.Selected(12) Then
+ UserForm1.Image1.Picture = Tabelle11.RBL1.Picture
+ End If
+ 
+intIndex1 = ListBox1.ListIndex
+TextBox1 = ListBox1.List(intIndex1)
+
+
+If ListBox1.ListIndex = "11" Then
+ListBox2.ListIndex = 0
+End If
+
+If ListBox1.ListIndex = "12" Then
+ListBox2.ListIndex = 0
+End If
+
+If ListBox1.ListIndex = "6" Then
+Label6.Visible = False
+Label7.Visible = True
+    If ActiveCell.Offset(0, 24).Value = "" Then
+    Label7.Caption = ""
+    Else
+    Label7.Caption = ActiveCell.Offset(0, 24).Value & "."
+    End If
+ElseIf ListBox1.ListIndex = "11" Then
+Label6.Visible = False
+Label7.Visible = True
+    If ActiveCell.Offset(0, 24).Value = "" Then
+    Label7.Caption = ""
+    Else
+    Label7.Caption = ActiveCell.Offset(0, 24).Value & "."
+    End If
+Else
+Label6.Visible = True
+Label7.Visible = False
+End If
+
+End Sub
+
+Private Sub ListBox2_Click()
+Dim sText As String
+Dim intIndex1
+Dim intIndex2
+
+
+sText = ListBox2.Value
+
+intIndex1 = ListBox1.ListIndex
+intIndex2 = VBA.Mid(sText, 11)
+
+TextBox1 = ListBox1.List(intIndex1) & vbLf & intIndex2
+
+End Sub
+Private Sub SpinButton_Change()
+TextBox_Grafik.Text = SpinButton.Value
+End Sub
+
+Sub UserForm_Initialize()
+
+Dim sText As String
+Dim i As Integer
+Dim intIndex1
+Dim intIndex2
+
+
+
+On Error Resume Next
+
+ hwndForm = FindWindow(GC_CLASSNAMEMSEXCELFORM, Me.Caption)
+
+   If hwndForm <> 0 Then
+        SetWindowLong hwndForm, GWL_STYLE, GetWindowLong(hwndForm, GWL_STYLE) And Not WS_CAPTION
+        DrawMenuBar hwndForm
+    End If
+    
+    
+StartUpPosition = 0
+    With Application
+        Left = .Left + .Width / 2 - Width / 2
+        Top = .Top + .Height / 2 - Height / 2
+    End With
+    
+
+Label.Caption = VBA.Chr(168)
+UserForm1.TextBox_Grafik.Enabled = False
+UserForm1.Label4.Enabled = False
+UserForm1.SpinButton.Enabled = False
+SpinButton.Value = 1
+SpinButton.Max = 10
+SpinButton.Min = 1
+SpinButton.SmallChange = 1
+TextBox_Grafik.Locked = True
+
+
+If Sheets("FB_Rohbauabnahmeprotokoll").Range("A1").Value = "1" Then
+For i = 1 To Sheets("FZB").Cells(1, Cells.Columns.Count).End(xlToLeft).Column
+    ListBox1.AddItem Sheets("FZB").Cells(1, i)
+Next
+Else
+For i = 1 To Sheets("FZB").Cells(20, Cells.Columns.Count).End(xlToLeft).Column
+    ListBox1.AddItem Sheets("FZB").Cells(20, i)
+    
+Next
+End If
+
+If ActiveCell.Offset(0, 17).Value = "" Then
+ListBox1.ListIndex = 0
+Else
+ListBox1.ListIndex = ActiveCell.Offset(0, 17).Value
+    If ActiveCell.Offset(0, 18).Value = "" Then
+    ListBox1.ListIndex = 0
+    Else
+    ListBox2.ListIndex = ActiveCell.Offset(0, 18).Value
+    End If
+TextBox1.Text = ActiveCell.Value
+Label6.Visible = True
+Label6.Caption = ActiveCell.Offset(0, 24).Value & "."
+End If
+
+If ActiveCell.Offset(0, 17).Value = "6" Then
+Label6.Visible = False
+Label7.Visible = True
+Label7.Caption = ActiveCell.Offset(0, 24).Value & "."
+ElseIf ActiveCell.Offset(0, 17).Value = "11" Then
+Label6.Visible = False
+Label7.Visible = True
+Label7.Caption = ActiveCell.Offset(0, 24).Value & "."
+Else
+Label6.Visible = True
+Label7.Visible = False
+End If
+
+If ListBox1.ListIndex = 0 Then
+ UserForm1.Image1.Picture = Tabelle11.ASW1.Picture
+ End If
+If ListBox1.ListIndex = 1 Then
+ UserForm1.Image1.Picture = Tabelle11.FHB1.Picture
+End If
+ If ListBox1.ListIndex = 2 Then
+ UserForm1.Image1.Picture = Tabelle11.RUK1.Picture
+ End If
+ If ListBox1.ListIndex = 3 Then
+ UserForm1.Image1.Picture = Tabelle11.SPO1.Picture
+ End If
+ If ListBox1.ListIndex = 4 Then
+ UserForm1.Image1.Picture = Tabelle11.ASW1.Picture
+ End If
+ If ListBox1.ListIndex = 5 Then
+ UserForm1.Image1.Picture = Tabelle11.ASW1.Picture
+ End If
+ If ListBox1.ListIndex = 6 Then
+ UserForm1.Image1.Picture = Tabelle11.LED1.Picture
+ End If
+ If ListBox1.ListIndex = 7 Then
+ UserForm1.Image1.Picture = Tabelle11.RFK1.Picture
+ End If
+ If ListBox1.ListIndex = 8 Then
+ UserForm1.Image1.Picture = Tabelle11.RFK1.Picture
+ End If
+ If ListBox1.ListIndex = 9 Then
+ UserForm1.Image1.Picture = Tabelle11.UML1.Picture
+ End If
+ If ListBox1.ListIndex = 10 Then
+ UserForm1.Image1.Picture = Tabelle11.SB1.Picture
+ End If
+ If ListBox1.ListIndex = 11 Then
+ UserForm1.Image1.Picture = Tabelle11.BB1.Picture
+ End If
+ If ListBox1.ListIndex = 12 Then
+ UserForm1.Image1.Picture = Tabelle11.RBL1.Picture
+ End If
+ 
+End Sub
+
+
+' ===== MODULE: UserForm2.frm =====
+    (ByVal hwnd As Long, ByVal lpOperation As String, _
+    ByVal lpFile As String, ByVal lpParameters As String, _
+    ByVal lpDirectory As String, ByVal nShowCmd As Long) As Long
+
+Dim colFiles As Collection
+
+    ByVal lpClassName As String, _
+    ByVal lpWindowName As String) As Long
+    ByVal hwnd As Long, _
+    ByVal nIndex As Long) As Long
+    ByVal hwnd As Long, _
+    ByVal nIndex As Long, _
+    ByVal dwNewLong As Long) As Long
+    ByVal hwnd As Long) As Long
+    ByVal hwnd As Long, _
+    ByVal wMsg As Long, _
+    ByVal wParam As Long, _
+    ByRef lParam As Any) As Long
+
+Private Const GC_CLASSNAMEMSEXCELFORM = "ThunderDFrame"
+Private Const GWL_STYLE = -16
+Private Const WS_CAPTION = &HC00000
+Private Const HTCAPTION = 2
+Private Const WM_NCLBUTTONDOWN = &HA1
+
+Private hwndForm As Long
+Private Sub cbExit_Click()
+Unload UserForm2
+Call UserForm3_open ' Modul 13
+End Sub
+
+Private Sub cblösch_Click()
+ActiveCell.Value = ""
+If ActiveCell.Value = "" Then
+ActiveCell.Interior.Color = RGB(235, 241, 222)
+Else
+ActiveCell.Interior.Color = xlNone
+End If
+ActiveCell.Offset(0, 13).ClearContents
+ActiveCell.Offset(0, 14).ClearContents
+Unload UserForm2
+End Sub
+
+
+Private Sub cbok_BeforeDragOver(ByVal Cancel As MSForms.ReturnBoolean, ByVal Data As MSForms.DataObject, ByVal X As Single, ByVal Y As Single, ByVal DragState As MSForms.fmDragState, ByVal Effect As MSForms.ReturnEffect, ByVal Shift As Integer)
+
+End Sub
+
+Private Sub cbok_Click()
+Dim i As Integer
+Dim auswahl As Long
+Dim lngCnt As Long
+Dim txt As String
+
+
+
+ActiveCell.Offset(0, 13).ClearContents
+ActiveCell.Offset(0, 14).ClearContents
+
+lngCnt = 13
+
+ActiveCell = ""
+For auswahl = 0 To ListBox1.ListCount - 1
+       If ListBox1.Selected(auswahl) = True Then
+       ActiveCell = IIf(ActiveCell = "", ListBox1.List(auswahl), ActiveCell & vbLf & ListBox1.List(auswahl))
+       txt = ListBox1.List(auswahl)
+       ActiveCell.Offset(0, lngCnt).Value = txt
+       lngCnt = lngCnt + 1
+       End If
+Next
+
+If ActiveCell.Offset(0, 13).Value = "Rückwärtsgang" And ActiveCell.Offset(0, 11).Value = "Rundumkennleuchten" Then
+MsgBox "Diese Auswahl ist nicht möglich!", vbCritical
+ActiveCell.Value = ""
+End If
+
+If ActiveCell.Offset(0, 14).Value = "Rückwärtsgang" And ActiveCell.Offset(0, 11).Value = "Rundumkennleuchten" Then
+MsgBox "Diese Auswahl ist nicht möglich!", vbCritical
+ActiveCell.Value = ""
+End If
+
+If ActiveCell.Offset(0, 13).Value = "Rückwärtsgang" And ActiveCell.Offset(0, 11).Value = "Front- und Heckblitzer" Then
+MsgBox "Diese Auswahl ist nicht möglich!", vbCritical
+ActiveCell.Value = ""
+End If
+
+If ActiveCell.Offset(0, 14).Value = "Rückwärtsgang" And ActiveCell.Offset(0, 11).Value = "Front- und Heckblitzer" Then
+MsgBox "Diese Auswahl ist nicht möglich!", vbCritical
+ActiveCell.Value = ""
+End If
+
+If ActiveCell.Value = "" Then
+ActiveCell.Interior.Color = RGB(235, 241, 222)
+Else
+ActiveCell.Interior.Color = xlNone
+End If
+
+Unload UserForm2
+
+
+Call UserForm3_open ' Modul 13
+
+
+End Sub
+
+Private Sub ListBox1_Change()
+Dim iInd%
+Dim i As Integer, Cnt As Integer
+
+Cnt = 0
+iInd = ListBox1.ListIndex
+For i = 0 To ListBox1.ListCount - 1
+If ListBox1.Selected(i) = True Then
+Cnt = Cnt + 1
+End If
+Next i
+If Cnt > 2 Then
+ListBox1.Selected(iInd) = False
+MsgBox "Die Auswahl ist auf 2 begrenzt!"
+End If
+End Sub
+
+
+Private Sub UserForm_Initialize()
+Dim i As Integer
+
+ hwndForm = FindWindow(GC_CLASSNAMEMSEXCELFORM, Me.Caption)
+
+   If hwndForm <> 0 Then
+        SetWindowLong hwndForm, GWL_STYLE, GetWindowLong(hwndForm, GWL_STYLE) And Not WS_CAPTION
+        DrawMenuBar hwndForm
+    End If
+
+StartUpPosition = 0
+    With Application
+        Left = .Left + .Width / 2 - Width / 2 + 160
+        Top = .Top + .Height / 2 - Height / 2
+     End With
+
+
+If Sheets("FB_Rohbauabnahmeprotokoll").Range("A1").Value = "1" Then
+For i = 45 To 51
+    ListBox1.AddItem Sheets("1").Cells(i, 1)
+Next
+Else
+For i = 45 To 51
+    ListBox1.AddItem Sheets("1").Cells(i, 2)
+Next
+End If
+
+End Sub
+
+
+
+
+' ===== MODULE: Modul1.bas =====
+Option Explicit
+
+Sub ZeilenhoeheVerbundene(lngZeileNr As Long)
+   Dim sngHoehe As Single, cc As Integer, rngC As Range
+   Dim sngActWid As Single, rngM As Range, sngMergWid As Single
+
+   With Rows(lngZeileNr)
+      .AutoFit
+      sngHoehe = .RowHeight + 3 ' Mindesthöhe (insbes. nicht-verbundene Zellen)
+   End With
+   For cc = 1 To Cells(lngZeileNr, Columns.Count).End(xlToLeft).Column
+      If Cells(lngZeileNr, cc) > "" And Cells(lngZeileNr, cc).MergeCells Then
+         Set rngC = Cells(lngZeileNr, cc)
+         If Len(rngC) > 1000 Then
+            MsgBox "Der Text in " & rngC.Address(0, 0) & " hat über 1000 Zeichen !" _
+               & vbLf & vbLf & "Bitte kürzen!", vbCritical, "ZeilenhoeheVerbundene"
+            Exit Sub
+         End If
+         With rngC.MergeArea
+            If .Cells(1).Address = rngC.Address And .WrapText = True Then
+               sngActWid = rngC.ColumnWidth      ' Merken zum Wiederherstellen
+               For Each rngM In .Cells
+                  sngMergWid = rngM.ColumnWidth + sngMergWid
+               Next
+               sngMergWid = sngMergWid + (.Count - 1) * 0.71
+               .MergeCells = False
+               rngC.ColumnWidth = sngMergWid
+               .EntireRow.AutoFit
+               sngHoehe = Application.Max(sngHoehe, rngC.Height)
+               rngC.ColumnWidth = sngActWid
+               .MergeCells = True
+            End If
+         End With
+      End If
+   Next cc
+   Rows(lngZeileNr).RowHeight = sngHoehe        ' max. optim. Höhe einstellen
+   
+  
+  
+  
+End Sub
+
+
+
+' ===== MODULE: Modul3.bas =====
+Option Explicit
+Sub Zeile_einfügen()
+Dim i As String
+Dim AktivesBlatt As Variant
+Dim shp As Shape
+
+Dim ZeileStartB1 As Integer
+Dim ZeileEndeB1 As Integer
+Dim ZeileStartB2 As Integer
+Dim ZeileEndeB2 As Integer
+Dim SpalteStart1 As Integer
+Dim SpalteEnde1 As Integer
+Dim SpalteStart2 As Integer
+Dim SpalteEnde2 As Integer
+
+Dim Bereich1, Bereich2, myMultipleRange As Range
+
+
+ActiveSheet.Shapes("BW_Text").Left = Cells(22, 37).Left
+ActiveSheet.Shapes("BW_Text").Top = Cells(22, 37).Top
+ActiveSheet.Shapes("Preis_Text").Left = Cells(30, 37).Left
+ActiveSheet.Shapes("Preis_Text").Top = Cells(30, 37).Top
+
+On Error Resume Next
+
+Worksheets("FB_Rohbauabnahmeprotokoll").Activate
+
+ZeileStartB1 = Sheets("FB_Rohbauabnahmeprotokoll").Range("A3").Value + 1
+ZeileEndeB1 = Sheets("FB_Rohbauabnahmeprotokoll").Range("A4").Value - 1
+ZeileStartB2 = Sheets("FB_Rohbauabnahmeprotokoll").Range("A5").Value + 1
+ZeileEndeB2 = Sheets("FB_Rohbauabnahmeprotokoll").Range("A6").Value - 1
+
+
+SpalteStart1 = 3
+SpalteEnde1 = 25
+SpalteStart2 = 3
+SpalteEnde2 = 62
+
+Set Bereich1 = Range(Cells(ZeileStartB1, SpalteStart1), Cells(ZeileEndeB1, SpalteEnde1))
+Set Bereich2 = Range(Cells(ZeileStartB2, SpalteStart2), Cells(ZeileEndeB2, SpalteEnde2))
+Set myMultipleRange = Union(Bereich1, Bereich2)
+
+i = ActiveCell.Row
+
+If Not Intersect(Range(ActiveCell.Address), myMultipleRange) Is Nothing Then
+
+Selection.Copy
+Selection.Insert Shift:=xlDown
+Selection.PasteSpecial Paste:=xlPasteFormats, Operation:=xlNone, _
+SkipBlanks:=False, Transpose:=False
+Range(Cells(ActiveCell.Row, 3), Cells(ActiveCell.Row, 31)).ClearContents 'Der Inhalt von der Aktiven Zeile wird von Spalte 3 bis 31 geleert
+For Each shp In ActiveSheet.Shapes
+If shp.TopLeftCell.Row = ActiveCell.Row Then
+            shp.Delete
+        End If
+    Next shp
+Else
+MsgBox "In diesem Bereich ist das Einfügen einer Zeile nicht möglich !", vbCritical, "Warnung"
+End If
+
+If ActiveCell.Interior.Color = RGB(235, 241, 222) Then
+ActiveCell.Offset(0, -7).Interior.Color = RGB(235, 241, 222)
+Else
+ActiveCell.Offset(0, -7).Interior.Color = xlNone
+End If
+
+
+End Sub
+Sub Zeile_löschen()
+
+Dim ZeileStartB1 As Integer
+Dim ZeileEndeB1 As Integer
+Dim ZeileStartB2 As Integer
+Dim ZeileEndeB2 As Integer
+Dim SpalteStart As Integer
+Dim SpalteEnde As Integer
+
+Dim Bereich1, Bereich2, myMultipleRange As Range
+
+
+
+ActiveSheet.Shapes("BW_Text").Left = Cells(22, 37).Left
+ActiveSheet.Shapes("BW_Text").Top = Cells(22, 37).Top
+ActiveSheet.Shapes("Preis_Text").Left = Cells(30, 37).Left
+ActiveSheet.Shapes("Preis_Text").Top = Cells(30, 37).Top
+
+Worksheets("FB_Rohbauabnahmeprotokoll").Activate
+
+ZeileStartB1 = Sheets("FB_Rohbauabnahmeprotokoll").Range("A3").Value + 1
+ZeileEndeB1 = Sheets("FB_Rohbauabnahmeprotokoll").Range("A4").Value - 2
+ZeileStartB2 = Sheets("FB_Rohbauabnahmeprotokoll").Range("A5").Value + 2
+ZeileEndeB2 = Sheets("FB_Rohbauabnahmeprotokoll").Range("A6").Value - 2
+
+SpalteStart = 3
+SpalteEnde = 25
+
+Set Bereich1 = Range(Cells(ZeileStartB1, SpalteStart), Cells(ZeileEndeB1, SpalteEnde))
+Set Bereich2 = Range(Cells(ZeileStartB2, SpalteStart), Cells(ZeileEndeB2, SpalteEnde))
+Set myMultipleRange = Union(Bereich1, Bereich2)
+
+If Not Intersect(Range(ActiveCell.Address), myMultipleRange) Is Nothing Then
+Call Zeile_löschen_bereich
+Else
+MsgBox "Zeile löschen nicht möglich !" & vbLf & _
+ "Der Inhalt der Zeile kann gelöscht werden.", vbCritical, "Warnung"
+End If
+
+End Sub
+Sub Zeile_löschen_bereich()
+
+Dim ZeileStartB As Integer
+Dim ZeileEndeB As Integer
+Dim ZeileStartB2 As Integer
+Dim ZeileEndeB2 As Integer
+Dim SpalteStart As Integer
+Dim SpalteEnde As Integer
+
+Dim Bereich As Range
+
+
+ActiveSheet.Shapes("BW_Text").Left = Cells(22, 37).Left
+ActiveSheet.Shapes("BW_Text").Top = Cells(22, 37).Top
+ActiveSheet.Shapes("Preis_Text").Left = Cells(30, 37).Left
+ActiveSheet.Shapes("Preis_Text").Top = Cells(30, 37).Top
+
+Worksheets("FB_Rohbauabnahmeprotokoll").Activate
+
+ZeileStartB = Sheets("FB_Rohbauabnahmeprotokoll").Range("A3").Value + 1
+ZeileEndeB = Sheets("FB_Rohbauabnahmeprotokoll").Range("A4").Value - 1
+
+SpalteStart = 3
+SpalteEnde = 25
+
+Set Bereich = Range(Cells(ZeileStartB, SpalteStart), Cells(ZeileEndeB, SpalteEnde))
+
+If Not Intersect(Range(ActiveCell.Address), Bereich) Is Nothing Then
+Call Zeile_löschen_oben
+Else
+Call Zeile_löschen_unten
+End If
+
+End Sub
+Sub Zeile_löschen_oben()
+Dim i As String
+Dim AktivesBlatt As Variant
+Dim shp As Shape
+Dim Bilddatei As String
+Dim Zelle As Range
+
+Worksheets("FB_Rohbauabnahmeprotokoll").Activate
+
+ActiveSheet.Shapes("BW_Text").Left = Cells(22, 37).Left
+ActiveSheet.Shapes("BW_Text").Top = Cells(22, 37).Top
+ActiveSheet.Shapes("Preis_Text").Left = Cells(30, 37).Left
+ActiveSheet.Shapes("Preis_Text").Top = Cells(30, 37).Top
+
+On Error Resume Next
+
+
+For Each shp In ActiveSheet.Shapes
+If shp.TopLeftCell.Row = ActiveCell.Row Then
+            shp.Delete
+        End If
+    Next shp
+
+Bilddatei = ActiveCell.Value
+
+For Each shp In ActiveSheet.Shapes
+If shp.Name = Bilddatei Then
+            shp.Delete
+        End If
+    Next shp
+
+i = ActiveCell.Row
+Rows(CDbl(i)).Delete Shift:=xlUp
+
+End Sub
+Sub Zeile_löschen_unten()
+
+Dim i As String
+Dim AktivesBlatt As Variant
+Dim shp As Shape
+
+AktivesBlatt = ActiveSheet.Name
+
+ActiveSheet.Shapes("BW_Text").Left = Cells(22, 37).Left
+ActiveSheet.Shapes("BW_Text").Top = Cells(22, 37).Top
+ActiveSheet.Shapes("Preis_Text").Left = Cells(30, 37).Left
+ActiveSheet.Shapes("Preis_Text").Top = Cells(30, 37).Top
+
+On Error Resume Next
+
+i = ActiveCell.Row
+
+
+For Each shp In ActiveSheet.Shapes
+If shp.TopLeftCell.Row = ActiveCell.Row Then
+            shp.Delete
+        End If
+    Next shp
+    
+Rows(CDbl(i)).Delete Shift:=xlUp
+
+
+End Sub
+
+
+
+' ===== MODULE: Modul4.bas =====
+Option Explicit
+Sub Shape_Tabelle_einfügen_umbenennen()
+
+Dim Bild As Shape
+Dim Zelle As Range
+Dim Name As Integer
+
+On Error Resume Next
+
+
+    ActiveSheet.Paste
+
+With ActiveSheet
+Set Bild = .Shapes(.Shapes.Count)
+Set Zelle = ActiveCell
+End With
+   
+If ActiveCell.Offset(0, 23).Value = "0" Then
+Bild.Top = Zelle.Top + (Zelle.Height - Bild.Height) / 2
+Bild.Left = Zelle.Left + (Zelle.Width - Bild.Width) / 2
+Else
+Bild.Top = Zelle.Top + 7
+Bild.Left = Zelle.Left + (Zelle.Width - Bild.Width) / 2
+End If
+
+Selection.Formula = "=" & ActiveCell.Offset(0, 31).AddressLocal
+Selection.Name = Selection.Name & ActiveCell.Offset(0, 31).Value
+ActiveCell.Offset(0, 28).Value = Selection.Name
+
+If ActiveCell.Offset(0, 1).Value = "" Then
+ActiveCell.Offset(0, 1).Interior.Color = RGB(235, 241, 222)
+Else
+ActiveCell.Offset(0, 1).Interior.Color = xlNone
+End If
+
+If ActiveCell.Offset(0, 26).Value = "JA" Then
+Call Shape_Position_einfügen_umbenennen
+Else
+        If ActiveCell.Offset(2, 1).Value = "LastRow1" Then
+        Call Zeile_einfügen
+        ElseIf ActiveCell.Offset(1, 1).Value = "" Then
+        Else
+        Unload UserForm1
+        Call UserForm3_open ' Modul 13
+        End If
+End If
+
+
+End Sub
+Sub Shape_Position_einfügen_umbenennen()
+
+Dim Bild As Shape
+Dim Zelle As Range
+Dim Name As Integer
+Dim anzahl As Integer
+Dim i As Long
+
+On Error Resume Next
+
+
+If ActiveCell.Offset(0, 24).Value = "0" Then
+  Sheets("FB_Rohbauabnahmeprotokoll").Shapes("ASW0").Copy
+ ElseIf ActiveCell.Offset(0, 24).Value = "1" Then
+  Sheets("FB_Rohbauabnahmeprotokoll").Shapes("FHB0").Copy
+ ElseIf ActiveCell.Offset(0, 24).Value = "2" Then
+  Sheets("FB_Rohbauabnahmeprotokoll").Shapes("RUK0").Copy
+ ElseIf ActiveCell.Offset(0, 24).Value = "3" Then
+  Sheets("FB_Rohbauabnahmeprotokoll").Shapes("SPO0").Copy
+ ElseIf ActiveCell.Offset(0, 24).Value = "4" Then
+  Sheets("FB_Rohbauabnahmeprotokoll").Shapes("ASW0").Copy
+ ElseIf ActiveCell.Offset(0, 24).Value = "5" Then
+  Sheets("FB_Rohbauabnahmeprotokoll").Shapes("ASW0").Copy
+ ElseIf ActiveCell.Offset(0, 24).Value = "6" Then
+  Sheets("FB_Rohbauabnahmeprotokoll").Shapes("LED0").Copy
+ ElseIf ActiveCell.Offset(0, 24).Value = "7" Then
+  Sheets("FB_Rohbauabnahmeprotokoll").Shapes("RFK0").Copy
+ ElseIf ActiveCell.Offset(0, 24).Value = "8" Then
+  Sheets("FB_Rohbauabnahmeprotokoll").Shapes("RFK0").Copy
+ ElseIf ActiveCell.Offset(0, 24).Value = "9" Then
+  Sheets("FB_Rohbauabnahmeprotokoll").Shapes("UML0").Copy
+ ElseIf ActiveCell.Offset(0, 24).Value = "10" Then
+  Sheets("FB_Rohbauabnahmeprotokoll").Shapes("SB0").Copy
+ ElseIf ActiveCell.Offset(0, 24).Value = "11" Then
+  Sheets("FB_Rohbauabnahmeprotokoll").Shapes("BB0").Copy
+ ElseIf ActiveCell.Offset(0, 24).Value = "12" Then
+  Sheets("FB_Rohbauabnahmeprotokoll").Shapes("RBL0").Copy
+ Else
+End If
+
+anzahl = ActiveCell.Offset(0, 27).Value
+Name = ActiveCell.Offset(0, 32).Value
+
+With ActiveSheet
+Set Bild = .Shapes(.Shapes.Count)
+Set Zelle = ActiveCell
+End With
+
+For i = 1 To anzahl
+ActiveSheet.Paste
+Selection.Formula = "=" & Zelle.Offset(0, 31).AddressLocal
+Selection.Name = Selection.Name & Name
+Zelle.Offset(0, 29).Value = Selection.Name
+
+Next i
+
+Unload UserForm1
+Call UserForm3_open ' Modul 13
+    
+
+End Sub
+
+
+
+
+' ===== MODULE: Tabelle11.cls =====
+(empty macro)
+
+' ===== MODULE: Modul5.bas =====
+Option Explicit
+Sub selektieren()
+Dim ZeileStart As Integer
+Dim ZeileEnde As Long
+Dim i As Long
+
+On Error Resume Next
+
+
+ZeileStart = Sheets("FB_Rohbauabnahmeprotokoll").Range("A5").Value + 1
+ZeileEnde = Sheets("FB_Rohbauabnahmeprotokoll").Range("A6").Value - 1
+
+For i = ZeileStart To ZeileEnde
+    If Cells(i, 3).Value <> "" Then
+    Cells(i, 24) = "X"
+    End If
+Next i
+
+Call Zaehler
+
+End Sub
+Sub Zaehler()
+Dim ZeileStart As Integer
+Dim ZeileEnde As Integer
+Dim Bereich1 As Range
+Dim Spalte1 As Integer
+Dim Ergebnis1 As Integer
+Dim Bereich2 As Range
+Dim Spalte2 As Integer
+Dim Ergebnis2 As Integer
+
+Dim Zeile1 As Integer
+Dim Zeile2 As Integer
+
+Dim Zelle As Integer
+
+On Error Resume Next
+
+Zelle = Sheets("FB_Rohbauabnahmeprotokoll").Range("A1").Value
+
+ZeileStart = Sheets("FB_Rohbauabnahmeprotokoll").Range("A5").Value + 1
+ZeileEnde = Sheets("FB_Rohbauabnahmeprotokoll").Range("A6").Value - 1
+
+Spalte1 = 3
+Spalte2 = 24
+
+
+Set Bereich1 = Range(Cells(ZeileStart, Spalte1), Cells(ZeileEnde, Spalte1)) ' Bereich der Wirksamkeit
+Set Bereich2 = Range(Cells(ZeileStart, Spalte2), Cells(ZeileEnde, Spalte2)) ' Bereich der Wirksamkeit
+
+Ergebnis1 = Application.WorksheetFunction.CountIf(Bereich1, "<>")
+Ergebnis2 = Application.WorksheetFunction.CountIf(Bereich2, "<>")
+
+If Ergebnis1 > Ergebnis2 Then
+ActiveSheet.Shapes("Teilfreigabe").ZOrder (msoBringToFront)
+    If Zelle = 1 Then
+    ActiveSheet.Shapes("D_X").ZOrder (msoBringToFront)
+    Else
+    ActiveSheet.Shapes("E_X").ZOrder (msoBringToFront)
+    End If
+End If
+
+If Ergebnis1 = Ergebnis2 Then
+ActiveSheet.Shapes("Kompl._Freigabe").ZOrder (msoBringToFront)
+    If Zelle = 1 Then
+    ActiveSheet.Shapes("D_all").ZOrder (msoBringToFront)
+    Else
+    ActiveSheet.Shapes("E_all").ZOrder (msoBringToFront)
+    End If
+End If
+
+If Ergebnis1 > 0 And Ergebnis2 = 0 Then
+ActiveSheet.Shapes("Keine_Freigabe").ZOrder (msoBringToFront)
+ActiveSheet.Shapes("Blanko").ZOrder (msoBringToFront)
+End If
+
+If Ergebnis1 = 0 And Ergebnis2 = 0 Then
+ActiveSheet.Shapes("Leer").ZOrder (msoBringToFront)
+ActiveSheet.Shapes("Blanko").ZOrder (msoBringToFront)
+End If
+
+If Ergebnis2 > Ergebnis1 Then
+ActiveSheet.Shapes("Leer").ZOrder (msoBringToFront)
+MsgBox "Mehr Freigaben als Technische Änderungen nicht möglich!", vbCritical
+ActiveCell.Offset(0, 4).Value = ""
+End If
+
+End Sub
+Sub Kundenfreigabe_speichern()
+
+Dim ZeileStart As Integer
+Dim SpalteStart As Integer
+Dim ZeileEnde As Integer
+Dim SpalteEnde As Integer
+Dim Zelle As Integer
+
+Dim i As Long
+
+
+Call Netzwerkstatus 'Modul 5
+
+If ActiveSheet.Range("A7").Value = "NEIN" Then
+End If
+
+Zelle = Sheets("FB_Rohbauabnahmeprotokoll").Range("A1").Value
+ZeileStart = Sheets("FB_Rohbauabnahmeprotokoll").Range("A5").Value + 1
+ZeileEnde = Sheets("FB_Rohbauabnahmeprotokoll").Range("A6").Value - 1
+
+
+For i = ZeileStart To ZeileEnde
+    If Cells(i, 3).Value <> "" And Cells(i, 24) = "X" Then
+    Cells(i, 24).Font.Name = "Wingdings 2"
+    Cells(i, 24).Value = "P"
+    ElseIf Cells(i, 3).Value <> "" And Cells(i, 24) = "" Then
+    Cells(i, 24).Value = "X"
+    End If
+Next i
+
+ActiveSheet.Shapes("Leer").ZOrder (msoBringToFront)
+
+If Zelle = 1 Then
+    ActiveSheet.Shapes("D_X_frei").ZOrder (msoBringToFront)
+    Else
+    ActiveSheet.Shapes("E_X_frei").ZOrder (msoBringToFront)
+End If
+
+
+Call Kundenfreigabe_speichern_pdf
+
+
+End Sub
+Sub Kundenfreigabe_speichern_pdf()
+
+
+Dim Projektpfad As String
+Dim xlOpenAfterPublish As Boolean
+
+Dim Pfad As String, Nummer As Integer, Dateinummer As String
+Dim Dateiname As String
+
+Dim Antwort As Integer
+
+
+ActiveSheet.Shapes("Leer").ZOrder (msoBringToFront)
+
+Dateiname = "RAP_" & Range("S3") & "_("
+
+    
+Projektpfad = Dir(Pfad)
+Do While Projektpfad <> ""
+If VBA.Left(Projektpfad, 14) = Dateiname Then
+If Nummer < CInt(VBA.Mid(Projektpfad, 15, 2)) Then Nummer = CInt(VBA.Mid(Projektpfad, 15, 2))
+End If
+Projektpfad = Dir
+Loop
+Dateinummer = String(2 - Len(CStr(Nummer + 1)), "0") & CStr(Nummer + 1)
+
+
+Dateiname = "RAP_" & Range("S3") & "_(" & Dateinummer & ")_K.pdf"
+
+
+Antwort = MsgBox("Soll die PDF-Datei nach dem Erstellen angezeigt werden?", vbYesNoCancel + vbQuestion, "Frage")
+
+If Antwort = vbYes Then
+xlOpenAfterPublish = True
+End If
+
+If Antwort = vbNo Then
+End If
+
+If Antwort = vbCancel Then
+End If
+
+
+ActiveSheet.Shapes("Leer").ZOrder (msoBringToFront)
+
+ActiveSheet.ExportAsFixedFormat Type:=xlTypePDF, Filename:=Pfad & Dateiname _
+ , Quality:=xlQualityStandard, IncludeDocProperties:=True, IgnorePrintAreas:=False, OpenAfterPublish:=IIf(xlOpenAfterPublish, True, False)
+
+xlOpenAfterPublish = True
+
+
+If UserForm3.Visible = True Then
+Call UserForm3.OpenFiles 'Modul 13
+End If
+
+
+ActiveSheet.Shapes("Leer").ZOrder (msoBringToFront)
+
+
+Call Kundenfreigabe_alt
+
+End Sub
+Sub Kundenfreigabe_alt()
+
+Dim ZeileStart As Integer
+Dim SpalteStart As Integer
+Dim ZeileEnde As Integer
+Dim SpalteEnde As Integer
+Dim Zelle As Range
+
+Dim i As Long
+
+
+ZeileStart = Sheets("FB_Rohbauabnahmeprotokoll").Range("A5").Value + 1
+ZeileEnde = Sheets("FB_Rohbauabnahmeprotokoll").Range("A6").Value - 1
+
+Set Zelle = Range(Cells(ZeileStart, 3), Cells(ZeileStart, 20))
+
+For i = ZeileStart To ZeileEnde
+    If Cells(i, 3).Value <> "" And Cells(i, 24) = "X" Then
+    Cells(i, 24) = ""
+    ElseIf Cells(i, 3).Value <> "" And Cells(i, 24).Font.Name = "Wingdings 2" Then
+    Cells(i, 24).Font.Name = "Arial"
+    Cells(i, 24).Value = "X"
+    End If
+Next i
+
+
+Call Zaehler
+
+
+End Sub
+Sub Kundenfreigabe_versenden()
+
+Dim App   As Object
+Dim Dateiname As String
+Dim Projektpfad As String
+Dim isNew As Boolean
+Dim thema As String
+Dim AWS As String
+
+
+On Error GoTo Fehler
+
+Dateiname = UserForm3.ListBox1.Value
+
+If Not UserForm3.ListBox1.Value Like "*K*" Then
+MsgBox ("Diese Datei kann nicht versendet werden.") & vbLf & vbLf & ("Bitte eine .pdf Datei für Kundenfreigabe auswählen."), vbInformation
+End If
+
+On Error Resume Next
+   Set App = GetObject(, "Outlook.Application")
+   If App Is Nothing Then
+      Set App = CreateObject("Outlook.Application")
+      isNew = True
+   End If
+
+With App.CreateItem(0)
+.GetInspector ' sorgt für die Signatur
+.To = ""
+.Subject = ""
+.Attachments.Add Projektpfad & Dateiname
+.Display
+End With
+
+
+MsgBox ("Keine Datei ausgewählt.") & vbLf & vbLf & ("Bitte eine .pdf Datei für Kundenfreigabe auswählen."), vbInformation
+
+
+
+End Sub
+
+
+' ===== MODULE: Modul6.bas =====
+Option Explicit
+Private Function DateiGeoeffnet(DerPfad As String) As Boolean
+    On Error Resume Next
+    Open DerPfad For Binary Access Read Lock Read As #1
+    Close #1
+    If Err.Number <> 0 Then
+        DateiGeoeffnet = True
+        Err.Clear
+    End If
+End Function
+
+Sub Deutsch_Englisch()
+
+Dim find_str As String, repl_str As String
+Dim repl_arr As Variant
+Dim i As Variant
+Dim Pfad As String
+Dim Dateiname As String
+Dim sPfad As String
+
+Dim Zeile As Integer
+
+
+On Error Resume Next
+
+
+Call Netzwerkstatus
+
+If ActiveSheet.Range("A7").Value = "NEIN" Then
+End If
+
+If ActiveSheet.Range("S3").Value = "" Then
+MsgBox ("Bitte die Datei erst Speichern"), vbInformation
+End If
+
+If ActiveSheet.Range("A1").Value = 2 Then
+End If
+
+Dateiname = "RAP_" & Range("S3") & "_E" & ".xlsm"
+
+
+If Dir(Pfad & Dateiname) <> "" Then
+    sPfad = Pfad & Dateiname
+    If DateiGeoeffnet(sPfad) = True Then
+    Workbooks(Dateiname).Activate
+    Else
+    If MsgBox("Eine Englische Version existiert schon." & vbLf & vbLf & _
+    "Datei jetzt öffnen ?", vbYesNo + vbQuestion) = vbYes Then
+    ActiveWorkbook.Save
+    Else
+End If
+End If
+End If
+
+
+If ActiveSheet.Range("A2").Value = 1 Then
+MsgBox ("Bitte die Datei erst Speichern"), vbInformation
+End If
+
+  With ThisWorkbook.Worksheets("1")
+    repl_arr = .Range("repl_table").Value
+  End With
+
+  For i = 1 To UBound(repl_arr)
+    If Not IsEmpty(repl_arr(i, 1)) Then
+      ActiveSheet.Cells.Replace What:=repl_arr(i, 1), _
+                                Replacement:=repl_arr(i, 2)
+    End If
+  Next i
+
+Cells(1, 1).Value = "2"
+
+Zeile = Sheets("FB_Rohbauabnahmeprotokoll").Range("A6").Value + 2
+
+If Cells(1, 1).Value = "2" Then
+    Rows(Zeile).Hidden = True
+End If
+
+ActiveWorkbook.SaveCopyAs Filename:=Pfad & Dateiname
+
+  With ThisWorkbook.Worksheets("1")
+    repl_arr = .Range("repl_table").Value
+  End With
+
+  For i = 1 To UBound(repl_arr)
+    If Not IsEmpty(repl_arr(i, 2)) Then
+      ActiveSheet.Cells.Replace What:=repl_arr(i, 2), _
+                                Replacement:=repl_arr(i, 1)
+    End If
+  Next i
+
+Cells(1, 1).Value = "1"
+
+If Cells(1, 1).Value = "1" Then
+    Rows(Zeile).Hidden = False
+End If
+
+
+Call UserForm3.OpenFiles 'Modul 13
+End If
+
+
+
+Workbooks.Open Filename:=Pfad & Dateiname
+
+Application.Run "'" & Dateiname & "'!Modul13.UF_Start"  'Modul 13
+
+ActiveSheet.Range("A2").Value = 0
+
+On Error Resume Next
+
+
+
+
+End Sub
+Sub Englisch_Deutsch()
+Dim find_str As String, repl_str As String
+Dim repl_arr As Variant
+Dim i As Variant
+Dim Pfad As String
+Dim Dateiname As String
+Dim sPfad As String
+
+Dim Zeile As Integer
+
+
+On Error Resume Next
+
+
+Call Netzwerkstatus
+
+If ActiveSheet.Range("A7").Value = "NEIN" Then
+End If
+
+If ActiveSheet.Range("A1").Value = 1 Then
+End If
+
+Dateiname = "RAP_" & Range("S3") & ".xlsm"
+
+
+If Dir(Pfad & Dateiname) <> "" Then
+    sPfad = Pfad & Dateiname
+    If DateiGeoeffnet(sPfad) = True Then
+    Workbooks(Dateiname).Activate
+    Else
+        If ActiveSheet.Range("A2").Value = 1 Then
+        ActiveWorkbook.Save
+        Workbooks.Open Filename:=Pfad & Dateiname
+        Else
+        Workbooks.Open Filename:=Pfad & Dateiname
+        End If
+    End If
+Else
+MsgBox ("Eine Deutsche Version ist nicht vorhanden!"), vbInformation
+End If
+
+
+
+
+
+End Sub
+
+' ===== MODULE: Tabelle10.cls =====
+(empty macro)
+
+' ===== MODULE: Modul8.bas =====
+Option Explicit
+Public schließen As Boolean
+Private mblnNoEvent As Boolean
+Function Ping(strHost As String) As Boolean
+
+Dim oPing, oRetStatus
+
+Set oPing = GetObject("winmgmts:{impersonationLevel=impersonate}") _
+    .ExecQuery("SELECT *" _
+        & " FROM Win32_PingStatus" _
+            & " WHERE address='" & strHost & "'")
+For Each oRetStatus In oPing
+Ping = Not (IsNull(oRetStatus.StatusCode) _
+        Or oRetStatus.StatusCode <> 0)
+Next oRetStatus
+
+End Function
+
+
+Sub Datei__speichern()
+
+Dim Dateiname As String
+Dim Projektpfad As String
+Dim DesktopPfad As String
+Dim Antwort As Integer
+
+Dim FSO As Object
+Dim unterordner As Object
+Dim Ordner As Object
+Dim quellordner As String
+Dim suchname As String
+
+Dim strIP As String
+
+Dim sMldg As String
+Dim sTitel As String
+Dim iRes As Integer
+
+Dim r
+
+
+On Error Resume Next
+
+r = ActiveCell.Address
+
+If ThisWorkbook.Worksheets("FB_Rohbauabnahmeprotokoll").Range("S3").Value = "" Then 'angegebenes Blatt angegebener Bereich
+Call beenden
+MsgBox ("Die Datei kann ohne Auftrags-Nr. nicht gespeichert werden."), vbInformation
+End If
+
+strIP = "10.150.6.12"
+    
+If Ping(strIP) Then
+ActiveSheet.Range("A7").Value = "JA"
+Else
+ActiveSheet.Range("A7").Value = "NEIN"
+End If
+
+Set FSO = CreateObject("Scripting.FileSystemObject")
+
+
+
+Set unterordner = FSO.getfolder(quellordner).subfolders
+For Each Ordner In unterordner
+    If VBA.Left(Ordner.Name, Len(suchname)) = suchname Then _
+Next
+
+
+
+Application.GoTo Reference:=Range("A1"), Scroll:=True
+
+If Cells(1, 1).Value = "1" Then
+Dateiname = "RAP_" & Range("S3") & ".xlsm"
+End If
+
+If Cells(1, 1).Value = "2" Then
+Dateiname = "RAP_" & Range("S3") & "_E" & ".xlsm"
+End If
+
+
+    Application.DisplayAlerts = False
+    Call Zaehler 'Modul 5
+    Call Daten_auslesen ' Modul 9
+    ActiveWorkbook.SaveAs Filename:=Projektpfad & Dateiname
+    Application.DisplayAlerts = True
+    Else
+        If Dir(Projektpfad & Dateiname) <> "" Then
+        Antwort = MsgBox("Für diese Auftrags- Nr. ist bereits ein Rohbauabnahmeprotokoll vorhanden." _
+        & vbLf & vbLf & "Soll dieses ersetzt werden?", vbYesNo + vbCritical, "Achtung!")
+            If Antwort = vbNo Then
+            Else
+            If Antwort = vbYes Then
+            Application.DisplayAlerts = False
+            Call Zaehler 'Modul 5
+            Call Daten_auslesen ' Modul 9
+            ActiveWorkbook.SaveAs Filename:=Projektpfad & Dateiname
+            Application.DisplayAlerts = True
+            End If
+            End If
+        Else
+        Application.DisplayAlerts = False
+        Call Zaehler 'Modul 5
+        Call Daten_auslesen ' Modul 9
+        ActiveWorkbook.SaveAs Filename:=Projektpfad & Dateiname
+        Application.DisplayAlerts = True
+End If
+End If
+End If
+End If
+
+    If ActiveSheet.Range("A7").Value = "JA" Then
+    Call Zaehler 'Modul 5
+    Call Daten_auslesen ' Modul 9
+    Application.DisplayAlerts = False
+    ActiveWorkbook.SaveAs Filename:=Projektpfad & Dateiname
+    Application.DisplayAlerts = True
+     
+End If
+End If
+
+
+If ActiveSheet.Range("A7").Value = "NEIN" Then
+MsgBox ("... der Computer hat keine Verbindung mit dem Netzwerk.") & vbLf & vbLf & _
+("Die Daten werden jetzt in einer Datei auf Desktop gespeichert!") & vbLf & vbLf & _
+("Damit die Daten im Originaldokument gespeichert werden,") & vbLf & _
+("bitte zu einem späteren Zeitpunkt die Netzwerverbindung herstellen und diese Datei erneut speichern."), vbInformation
+Application.DisplayAlerts = False
+Call Zaehler 'Modul 5
+On Error Resume Next
+ActiveWorkbook.SaveAs Filename:=DesktopPfad & Dateiname
+Application.DisplayAlerts = True
+End If
+
+ActiveSheet.Range("A2").Value = 0
+
+Call UserForm3.OpenFiles 'Modul 13
+End If
+
+
+
+
+
+End Sub
+Sub Datei__schließen()
+
+Dim Antwort As Integer
+Dim dialog As Object
+Dim Pfad As String
+Dim Dateiname As String
+
+Dim ZeileStart As Integer
+Dim ZeileEnde As Integer
+Dim Spalte1 As Integer
+Dim Spalte2 As Integer
+Dim Bereich1 As Range
+Dim Bereich2 As Range
+Dim Ergebnis1 As Integer
+Dim Ergebnis2 As Integer
+
+Dim Zelle As Integer
+
+Dim ZeileStartBW As Integer
+
+Dim FreieZelle As Range
+
+Dim c As Range
+
+
+On Error Resume Next
+
+Call beenden
+
+    ActiveSheet.Shapes("BW_Text").Left = Cells(22, 37).Left
+    ActiveSheet.Shapes("BW_Text").Top = Cells(22, 37).Top
+    ActiveSheet.Shapes("Preis_Text").Left = Cells(30, 37).Left
+    ActiveSheet.Shapes("Preis_Text").Top = Cells(30, 37).Top
+Sheets("FB_Rohbauabnahmeprotokoll").Range("Preis_Formatierung").NumberFormat = "#.##0,0 €;[Red]- #.##0,0 €"
+
+ZeileStart = Sheets("FB_Rohbauabnahmeprotokoll").Range("A5").Value + 1
+ZeileEnde = Sheets("FB_Rohbauabnahmeprotokoll").Range("A6").Value - 1
+
+Spalte1 = 3
+Spalte2 = 25
+
+ZeileStartBW = Sheets("FB_Rohbauabnahmeprotokoll").Range("A4").Value
+
+
+If Sheets("FB_Rohbauabnahmeprotokoll").Range("A10").Value = "" Or Sheets("FB_Rohbauabnahmeprotokoll").Range("A1").Value = 2 Then
+Else
+
+Set Bereich1 = Range(Cells(ZeileStart, Spalte1), Cells(ZeileEnde, Spalte1)) ' Bereich der Wirksamkeit
+Set Bereich2 = Range(Cells(ZeileStart, Spalte2), Cells(ZeileEnde, Spalte2)) ' Bereich der Wirksamkeit
+
+Ergebnis1 = Application.WorksheetFunction.CountIf(Bereich1, "<>")
+Ergebnis2 = Application.WorksheetFunction.CountIf(Bereich1, "<>")
+
+If Ergebnis1 = Ergebnis2 Then
+End If
+
+If VBA.Environ("USERNAME") <> "mielchen" Then
+End If
+
+If VBA.Environ("USERNAME") = "elkenkamp" Then
+End If
+
+If Ergebnis1 > Ergebnis2 Then
+MsgBox ("Die Datei kann erst geschlossen werden wenn alle Bewertungen ausgefüllt sind."), vbInformation
+   
+    Application.ActiveWindow.ScrollRow = ZeileStartBW 'Sprung ScrollRow
+    For Each c In Range("BW")
+      If c.Value = "" And c.Offset(0, -22) <> "" Then
+      c.Interior.Color = RGB(242, 220, 219)
+    End If
+    Next c
+    End If
+    
+    Dim zelleFind As Range
+    Set zelleFind = Range("BW").Find(What:="", LookIn:=xlValues, lookat:=xlWhole)
+    If Not zelleFind Is Nothing Then
+    End If
+    
+End If
+
+Weiter_schließen:
+
+
+If Cells(1, 1).Value = "1" Then
+Dateiname = "RAP_" & Range("S3") & ".xlsm"
+End If
+
+If Cells(1, 1).Value = "2" Then
+Dateiname = "RAP_" & Range("S3") & "_E" & ".xlsm"
+End If
+
+
+    If Not ActiveSheet.Range("A7").Value = "NEIN" Or ActiveSheet.Range("A1").Value = 2 Then
+    Call Daten_RAP ' Modul 9
+    End If
+    Application.DisplayAlerts = False
+    schließen = True
+    ThisWorkbook.Close SaveChanges:=False
+    Application.DisplayAlerts = True
+End If
+
+    Application.DisplayAlerts = False
+    schließen = True
+    ThisWorkbook.Close SaveChanges:=False
+    Application.DisplayAlerts = True
+End If
+
+    Antwort = MsgBox("Der aktuelle Zustand der " & _
+    "Arbeitsmappe ist nicht gespeichert. " & vbLf & _
+    "Möchten Sie jetzt speichern?", vbYesNoCancel + vbInformation, _
+    "Speichern erforderlich")
+ If Antwort = vbNo Then
+    Application.DisplayAlerts = False
+    schließen = True
+    ThisWorkbook.Close SaveChanges:=False
+    Application.DisplayAlerts = True
+Else
+ If Antwort = vbYes Then
+    Call Datei__speichern
+    If Not ActiveSheet.Range("A7").Value = "NEIN" Or ActiveSheet.Range("A1").Value = 2 Then
+    Call Daten_RAP ' Modul 9
+    End If
+    Application.DisplayAlerts = False
+    schließen = True
+    ThisWorkbook.Close SaveChanges:=False
+    Application.DisplayAlerts = True
+End If
+End If
+End If
+
+    Antwort = MsgBox("Der aktuelle Zustand der " & _
+    "Arbeitsmappe ist nicht gespeichert. " & vbLf & _
+    "Möchten Sie jetzt speichern?", vbYesNoCancel + vbInformation, _
+    "Speichern erforderlich")
+ If Antwort = vbNo Then
+    Application.DisplayAlerts = False
+    schließen = True
+    ThisWorkbook.Close SaveChanges:=False
+    Application.DisplayAlerts = True
+Else
+ If Antwort = vbYes Then
+    Call Datei__speichern
+    If Not ActiveSheet.Range("A7").Value = "NEIN" Or ActiveSheet.Range("A1").Value = 2 Then
+    Call Daten_RAP ' Modul 9
+    End If
+    Application.DisplayAlerts = False
+    schließen = True
+    ThisWorkbook.Close SaveChanges:=False
+    Application.DisplayAlerts = True
+End If
+End If
+End If
+
+
+Ende_schließen:
+
+
+End Sub
+Sub Drucken__Ansicht()
+
+
+Call Netzwerkstatus 'Modul 12
+
+
+If ActiveSheet.Range("A7").Value = "NEIN" Then
+End If
+
+If UserForm3.Visible = True Then
+Unload UserForm3
+Else
+End If
+
+Application.CommandBars("Format Object").Visible = False
+
+
+With ActiveSheet.PageSetup
+    .LeftFooter = "Auftrags -Nr.: " & "&""Arial,Fett ""&11 " & Sheets("FB_Rohbauabnahmeprotokoll").Range("S3") & "&""Arial,Standard ""&10 " & vbLf & _
+                    "Aufbautyp: " & Sheets("FB_Rohbauabnahmeprotokoll").Range("F4") & " " & _
+                    Sheets("FB_Rohbauabnahmeprotokoll").Range("I4") & vbLf & _
+                    "Kunde: " & Sheets("FB_Rohbauabnahmeprotokoll").Range("F3")
+
+    .RightFooter = "&""Arial,Fett ""&11 " & "Seite: &P von &N"
+    
+End With
+
+Worksheets("FB_Rohbauabnahmeprotokoll").Shapes("PDF_intern").Visible = True
+
+With ActiveSheet
+.PrintPreview
+End With
+
+
+Worksheets("FB_Rohbauabnahmeprotokoll").Shapes("PDF_intern").Visible = False
+
+
+UserForm3.Show vbModeless
+End If
+
+
+
+
+End Sub
+Sub Speichern__pdf()
+
+Dim Dateiname As String
+Dim xlOpenAfterPublish As Boolean
+Dim Projektpfad As String
+Dim Antwort As Integer
+
+Dim ZeileStart As Integer
+Dim SpalteStart As Integer
+Dim ZeileEnde As Integer
+Dim SpalteEnde As Integer
+Dim ZeileEnde1 As Long
+Dim i As Long
+
+Dim Bereich1 As Range
+Dim Bereich2 As Range
+Dim Zelle As Range
+
+Call Netzwerkstatus 'Modul 12
+
+
+If ThisWorkbook.Worksheets("FB_Rohbauabnahmeprotokoll").Range("S3").Value = "" Then 'angegebenes Blatt angegebener Bereich
+MsgBox ("Die Datei kann ohne Auftrags-Nr. nicht gespeichert werden."), vbInformation
+End If
+
+If ActiveSheet.Range("A7").Value = "NEIN" Then
+End If
+
+On Error Resume Next
+
+Dateiname = "RAP_" & Range("S3") & ".pdf"
+
+
+If Dir(Projektpfad & Dateiname) <> "" Then
+Antwort = MsgBox("Für diesen Auftrag ist bereits eine Datei mit dem Namen " & Dateiname & " vorhanden." _
+& vbLf & vbLf & "Soll dieses ersetzt werden?", vbYesNo + vbQuestion, "Info")
+If Antwort = vbNo Then
+Else
+If Antwort = vbYes Then
+End If
+End If
+End If
+            
+
+Worksheets("FB_Rohbauabnahmeprotokoll").Shapes("PDF_intern").Visible = True
+
+
+Worksheets("FB_Rohbauabnahmeprotokoll").Activate
+
+ZeileStart = Sheets("FB_Rohbauabnahmeprotokoll").Range("A5").Value + 1
+SpalteStart = 21
+
+ZeileEnde = Sheets("FB_Rohbauabnahmeprotokoll").Range("A6").Value - 1
+SpalteEnde = 23
+
+ZeileEnde1 = Sheets("FB_Rohbauabnahmeprotokoll").Range("A6").Value - 1
+
+Set Bereich1 = Range(Cells(ZeileStart, SpalteStart), Cells(ZeileEnde, SpalteEnde))
+Set Bereich2 = Range(Cells(ZeileStart, 56), Cells(ZeileEnde, 58))
+Set Zelle = Range(Cells(ZeileStart, 21), Cells(ZeileStart, 23))
+
+Dim a%
+
+a = Application.WorksheetFunction.CountA([Bereich1])
+If a > 0 Then
+        Selection.Copy
+        Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+        :=False, Transpose:=False
+        Application.CutCopyMode = False
+        Selection.ClearContents
+    Else
+        mblnNoEvent = False
+End If
+
+Range("Bereich_Unterschrift").EntireRow.Hidden = True
+
+Dateiname = "RAP_" & Range("S3") & ".pdf"
+
+
+Call Zaehler 'Modul 5
+
+ActiveSheet.ExportAsFixedFormat Type:=xlTypePDF, Filename:=Projektpfad & Dateiname _
+ , Quality:=xlQualityStandard, IncludeDocProperties:=True, IgnorePrintAreas:=False, OpenAfterPublish:=False
+
+Selection.Copy
+Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+:=False, Transpose:=False
+Application.CutCopyMode = False
+Selection.ClearContents
+
+Call UserForm3.OpenFiles 'Modul 13
+End If
+
+
+Worksheets("FB_Rohbauabnahmeprotokoll").Shapes("PDF_intern").Visible = False
+
+Range("Bereich_Unterschrift").EntireRow.Hidden = False
+
+Call UserForm3.OpenFiles 'Modul 13
+End If
+
+
+
+End Sub
+
+Sub LinkPDF__versenden()
+
+Dim RAP As String
+Dim auftrag  As String
+Dim kunde  As String
+Dim aufbau  As String
+
+Dim olApp As Object
+Dim oDummyText As String
+
+Dim Dateiname As String
+Dim Projektpfad As String
+
+
+On Error Resume Next
+
+If ThisWorkbook.Worksheets("FB_Rohbauabnahmeprotokoll").Range("S3").Value = "" Then 'angegebenes Blatt angegebener Bereich
+MsgBox ("Keine.pdf Datei gefunden.") & vbLf & vbLf & ("Bitte erst eine Auftrags- Nr. vergeben und die Datei als .pdf speichern."), vbInformation
+End If
+
+Call Netzwerkstatus 'Modul 12
+
+If ActiveSheet.Range("A7").Value = "NEIN" Then
+End If
+
+
+
+RAP = "RAP_"
+auftrag = Range("S3")
+kunde = Range("F3")
+aufbau = Range("F4")
+
+Dateiname = "RAP_" & Range("S3") & ".pdf"
+
+If Dir(Projektpfad & Dateiname) <> "" Then
+Else
+MsgBox ("Für diesen Auftrag ist noch kein .pdf Dokument erstellt worden.") _
+        & vbLf & vbLf & ("Bitte erst als .pdf speichern."), vbCritical, "Achtung!"
+
+End If
+
+
+Application.Cursor = xlWait
+
+Set olApp = CreateObject("Outlook.Application")
+With olApp.CreateItem(0)
+.To = ""
+.Subject = RAP & kunde & "_" & auftrag
+.GetInspector.Display
+oDummyText = .HTMLBody
+.BodyFormat = 2
+.HTMLBody = "Zur Info!<br><br>" & _
+            "<br><br>" & "Kunde:" & VBA.Space(5) & kunde & "<br><br>" & "Aufbau:" & VBA.Space(5) & aufbau & "<br><br>" & "Bitte dem Link folgen:  " & VBA.Space(5) & _
+            "<a href=""file://" & Projektpfad & Dateiname & """>" & _
+                         RAP & auftrag & ".pdf" & .HTMLBody
+End With
+
+Application.Cursor = xlDefault
+
+
+
+
+
+End Sub
+
+Sub LinkDatei__versenden()
+
+Dim RAP As String
+Dim auftrag  As String
+Dim kunde  As String
+Dim aufbau  As String
+
+Dim olApp As Object
+Dim oDummyText As String
+
+Dim Dateiname As String
+
+
+On Error Resume Next
+
+If ThisWorkbook.Worksheets("FB_Rohbauabnahmeprotokoll").Range("S3").Value = "" Then 'angegebenes Blatt angegebener Bereich
+MsgBox ("Die Datei kann als Link noch nicht versendet werden.") & vbLf & vbLf & ("Bitte die Datei erst speichern."), vbInformation
+End If
+
+Call Netzwerkstatus 'Modul 12
+
+If ActiveSheet.Range("A7").Value = "NEIN" Then
+End If
+
+
+RAP = "RAP_"
+auftrag = Range("S3")
+kunde = Range("F3")
+aufbau = Range("F4")
+
+If Cells(1, 1).Value = "1" Then
+Dateiname = "RAP_" & Range("S3") & ".xlsm"
+End If
+
+If Cells(1, 1).Value = "2" Then
+Dateiname = "RAP_" & Range("S3") & "_E" & ".xlsm"
+End If
+
+Application.Cursor = xlWait
+
+Set olApp = CreateObject("Outlook.Application")
+With olApp.CreateItem(0)
+.To = ""
+.Subject = RAP & kunde & "_" & auftrag
+.GetInspector.Display
+oDummyText = .HTMLBody
+.BodyFormat = 2
+.HTMLBody = "Zur Info!<br><br>" & _
+            "<br><br>" & "Kunde:" & VBA.Space(5) & kunde & "<br><br>" & "Aufbau:" & VBA.Space(5) & aufbau & "<br><br>" & "Bitte dem Link folgen:  " & VBA.Space(5) & _
+            "<a href=""file://" & ActiveWorkbook.FullName & """>" & _
+                         RAP & auftrag & ".xlsm" & .HTMLBody
+End With
+
+Application.Cursor = xlDefault
+
+
+
+End Sub
+
+
+
+
+
+' ===== MODULE: Modul9.bas =====
+Sub Daten_RAP()
+Dim Datei As String
+Dim Pfad As String
+Dim wksTab As Worksheet
+ 
+
+On Error Resume Next
+
+Datei = "RAP_" & Range("S3")
+
+Pfad = "\\MUELLER-FILE-01\Auftraege\Sicherung_RAP"
+
+ThisWorkbook.Worksheets(Array("Ergebnis", "Lackierung u. Beschichtung", "Fahrzeugbeleuchtung", "Fahrzeugbeschriftung", _
+                        "Zubehör", "Kabel u. Funklayout", "Techn. Änderung")).Copy
+        
+Application.DisplayAlerts = False
+ActiveWorkbook.SaveCopyAs Filename:=Pfad & "/" & Datei & ".xlsx"
+ActiveWorkbook.Close
+Application.DisplayAlerts = True
+End Sub
+
+Sub Daten_auslesen()
+
+Dim wksQuell As Worksheet
+Dim wksZiel As Worksheet
+Dim lngZeileQuell As Long
+Dim lngZeileZiel As Long
+Dim ersteZeileQuell As Long
+Dim letzteZeileQuell As Long
+
+On Error Resume Next
+
+ActiveWorkbook.Worksheets("Fahrzeugbeleuchtung").Rows("2:100").Delete
+
+Set wksQuell = ActiveWorkbook.Worksheets("FB_Rohbauabnahmeprotokoll")
+Set wksZiel = ActiveWorkbook.Worksheets("Fahrzeugbeleuchtung")
+lngZeileZiel = 2
+ersteZeileQuell = Sheets("FB_Rohbauabnahmeprotokoll").Range("A3").Value + 1
+letzteZeileQuell = Sheets("FB_Rohbauabnahmeprotokoll").Range("A4").Value - 1
+For lngZeileQuell = ersteZeileQuell To letzteZeileQuell
+ If Not wksQuell.Cells(lngZeileQuell, 34).Text = "" Then
+  wksZiel.Cells(lngZeileZiel, 1).Value = wksQuell.Cells(lngZeileQuell, 34).Value
+  wksZiel.Cells(lngZeileZiel, 2).Value = wksQuell.Cells(lngZeileQuell, 35).Value
+  wksZiel.Cells(lngZeileZiel, 3).Value = wksQuell.Cells(lngZeileQuell, 36).Value
+  wksZiel.Cells(lngZeileZiel, 4).Value = wksQuell.Cells(lngZeileQuell, 37).Value
+  wksZiel.Cells(lngZeileZiel, 5).Value = wksQuell.Cells(lngZeileQuell, 38).Value
+  wksZiel.Cells(lngZeileZiel, 6).Value = wksQuell.Cells(lngZeileQuell, 39).Value
+  lngZeileZiel = lngZeileZiel + 1
+ End If
+Next
+Set wksQuell = Nothing
+Set wksZiel = Nothing
+
+On Error Resume Next
+
+ActiveWorkbook.Worksheets("Techn. Änderung").Rows("2:100").Delete
+
+Set wksQuell = ActiveWorkbook.Worksheets("FB_Rohbauabnahmeprotokoll")
+Set wksZiel = ActiveWorkbook.Worksheets("Techn. Änderung")
+lngZeileZiel = 2
+ersteZeileQuell = Sheets("FB_Rohbauabnahmeprotokoll").Range("A5").Value + 1
+letzteZeileQuell = Sheets("FB_Rohbauabnahmeprotokoll").Range("A6").Value - 1
+For lngZeileQuell = ersteZeileQuell To letzteZeileQuell
+ If Not wksQuell.Cells(lngZeileQuell, 32).Text = "" Then
+  wksZiel.Cells(lngZeileZiel, 1).Value = wksQuell.Cells(lngZeileQuell, 35).Value
+  wksZiel.Cells(lngZeileZiel, 2).Value = wksQuell.Cells(lngZeileQuell, 32).Value
+  wksZiel.Cells(lngZeileZiel, 3).Value = wksQuell.Cells(lngZeileQuell, 33).Value
+  wksZiel.Cells(lngZeileZiel, 4).Value = wksQuell.Cells(lngZeileQuell, 34).Value
+  lngZeileZiel = lngZeileZiel + 1
+ End If
+Next
+Set wksQuell = Nothing
+Set wksZiel = Nothing
+
+Sheets("Ergebnis").Range("A2") = Sheets("FB_Rohbauabnahmeprotokoll").Range("Kunde").Value
+Sheets("Ergebnis").Range("B2") = Sheets("FB_Rohbauabnahmeprotokoll").Range("Aufbautyp").Value
+Sheets("Ergebnis").Range("C2") = Sheets("FB_Rohbauabnahmeprotokoll").Range("Q9").Value
+Sheets("Ergebnis").Range("D2") = Sheets("FB_Rohbauabnahmeprotokoll").Range("Auftrags_Nr").Value
+Sheets("Ergebnis").Range("E2") = Sheets("FB_Rohbauabnahmeprotokoll").Range("S4").Value
+Sheets("Ergebnis").Range("F2") = Sheets("FB_Rohbauabnahmeprotokoll").Range("F9").Value
+Sheets("Ergebnis").Range("G2") = Sheets("FB_Rohbauabnahmeprotokoll").Range("F10").Value
+Sheets("Ergebnis").Range("H2") = Sheets("FB_Rohbauabnahmeprotokoll").Range("BK4").Value
+Sheets("Ergebnis").Range("I2") = Sheets("FB_Rohbauabnahmeprotokoll").Range("BL4").Value
+Sheets("Ergebnis").Range("J2") = Sheets("FB_Rohbauabnahmeprotokoll").Range("BM4").Value
+Sheets("Ergebnis").Range("K2") = Sheets("FB_Rohbauabnahmeprotokoll").Range("BN4").Value
+Sheets("Ergebnis").Range("L2") = Sheets("FB_Rohbauabnahmeprotokoll").Range("BO4").Value
+Sheets("Ergebnis").Range("M2") = Sheets("FB_Rohbauabnahmeprotokoll").Range("BP4").Value
+Sheets("Ergebnis").Range("N2") = Sheets("FB_Rohbauabnahmeprotokoll").Range("BQ4").Value
+Sheets("Lackierung u. Beschichtung").Range("A2") = Sheets("FB_Rohbauabnahmeprotokoll").Range("H13").Value
+Sheets("Lackierung u. Beschichtung").Range("B2") = Sheets("FB_Rohbauabnahmeprotokoll").Range("H14").Value
+Sheets("Lackierung u. Beschichtung").Range("C2") = Sheets("FB_Rohbauabnahmeprotokoll").Range("H15").Value
+Sheets("Lackierung u. Beschichtung").Range("D2") = Sheets("FB_Rohbauabnahmeprotokoll").Range("H16").Value
+Sheets("Lackierung u. Beschichtung").Range("E2") = Sheets("FB_Rohbauabnahmeprotokoll").Range("H17").Value
+Sheets("Lackierung u. Beschichtung").Range("F2") = Sheets("FB_Rohbauabnahmeprotokoll").Range("H18").Value
+Sheets("Lackierung u. Beschichtung").Range("G2") = Sheets("FB_Rohbauabnahmeprotokoll").Range("H19").Value
+Sheets("Lackierung u. Beschichtung").Range("H2") = Sheets("FB_Rohbauabnahmeprotokoll").Range("U13").Value
+Sheets("Lackierung u. Beschichtung").Range("I2") = Sheets("FB_Rohbauabnahmeprotokoll").Range("U14").Value
+Sheets("Lackierung u. Beschichtung").Range("J2") = Sheets("FB_Rohbauabnahmeprotokoll").Range("U15").Value
+Sheets("Lackierung u. Beschichtung").Range("K2") = Sheets("FB_Rohbauabnahmeprotokoll").Range("U16").Value
+Sheets("Lackierung u. Beschichtung").Range("L2") = Sheets("FB_Rohbauabnahmeprotokoll").Range("U17").Value
+Sheets("Lackierung u. Beschichtung").Range("M2") = Sheets("FB_Rohbauabnahmeprotokoll").Range("U18").Value
+Sheets("Fahrzeugbeschriftung").Range("A2") = Sheets("FB_Rohbauabnahmeprotokoll").Range("K30").Value
+Sheets("Fahrzeugbeschriftung").Range("B2") = Sheets("FB_Rohbauabnahmeprotokoll").Range("K31").Value
+Sheets("Fahrzeugbeschriftung").Range("C2") = Sheets("FB_Rohbauabnahmeprotokoll").Range("K32").Value
+Sheets("Fahrzeugbeschriftung").Range("D2") = Sheets("FB_Rohbauabnahmeprotokoll").Range("M33").Value
+Sheets("Fahrzeugbeschriftung").Range("E2") = Sheets("FB_Rohbauabnahmeprotokoll").Range("M34").Value
+Sheets("Fahrzeugbeschriftung").Range("F2") = Sheets("FB_Rohbauabnahmeprotokoll").Range("M35").Value
+Sheets("Zubehör").Range("A2") = Sheets("FB_Rohbauabnahmeprotokoll").Range("Zub_1").Value
+Sheets("Zubehör").Range("B2") = Sheets("FB_Rohbauabnahmeprotokoll").Range("DatumZubehör").Value
+Sheets("Kabel u. Funklayout").Range("A2") = Sheets("FB_Rohbauabnahmeprotokoll").Range("Funklayout").Value
+
+End Sub
+
+
+
+
+
+
+
+
+
+
+
+' ===== MODULE: Modul10.bas =====
+Option Explicit
+Public Nureinmal As Boolean
+Sub Prüfung_Kopfteil()
+Dim chkRange As Range, myC As Range
+Dim msg As String
+
+On Error Resume Next
+
+Set chkRange = Range("F3,F4,F9,F10,S3,S4")
+
+msg = ""
+For Each myC In chkRange
+    If IsEmpty(myC) Then
+        msg = msg & myC.Offset(0, -4).Text & vbCrLf
+    End If
+Next
+
+Set chkRange = Nothing
+
+If msg = "" Then
+   Exit Sub
+Else
+    MsgBox "Folgende Zellen sind leer:" & vbCrLf & vbCrLf & msg & vbCrLf & "Bitte ausfüllen!", vbInformation + vbOKOnly, "Prüfergebnis"
+End If
+End Sub
+
+Sub Prüfung_Fahrzeugbeschriftung()
+Dim chkRange As Range, myC As Range
+Dim chkRange1 As Range, myC1 As Range
+Dim msg As String
+Dim msg1 As String
+
+On Error Resume Next
+
+Set chkRange = Range("K30,K31,K32")
+Set chkRange1 = Range("M33,M34,M35")
+
+msg = ""
+For Each myC In chkRange
+    If IsEmpty(myC) Then
+        msg = msg & myC.Offset(0, -9).Text & vbCrLf
+    End If
+Next
+For Each myC1 In chkRange1
+    If IsEmpty(myC1) Then
+        msg1 = msg1 & myC1.Offset(0, -11).Text & vbCrLf
+    End If
+Next
+
+Set chkRange = Nothing
+
+If msg = "" And msg1 = "" Then
+   Exit Sub
+Else
+    MsgBox "Folgende Zellen im Bereich Fahrzeugbeschriftung sind leer:" & vbCrLf & vbCrLf & msg & msg1 & vbCrLf & "Bitte ausfüllen!", vbInformation + vbOKOnly, "Prüfergebnis"
+End If
+End Sub
+
+
+
+
+
+' ===== MODULE: Modul11.bas =====
+Option Explicit
+    ByVal X As Long, _
+    ByVal Y As Long) As Long
+Sub Textfeld_Schutz()
+End Sub
+Sub Freigabe_Schutz()
+End Sub
+Sub Fahrzeugbeschriftung_Schutz()
+End Sub
+Sub Aufbautyp_Schutz()
+End Sub
+Sub Logo_Schutz()
+End Sub
+Public Sub Cursor_Position()
+    SetCursorPos 500, 430
+End Sub
+Public Sub Cursor_Position_Aufbautyp()
+    SetCursorPos 800, 600
+End Sub
+Sub Einfärben()
+Dim Zelle As Range, Bereich As Range, Wort As String
+
+Wort = InputBox("Welches Wort rot färben?", "Text färben")
+If Wort = "" Then Exit Sub
+Set Bereich = ActiveCell
+For Each Zelle In Bereich
+If InStr(1, Zelle.Value, Wort) > 0 Then
+With Zelle.Characters(Start:=InStr(1, Zelle.Value, Wort), _
+Length:=Len(Wort)).Font
+.ColorIndex = 3 ' rot
+.Bold = True
+End With
+End If
+Next Zelle
+End Sub
+
+
+' ===== MODULE: ufPicView.frm =====
+Option Explicit
+Public ixPicNr As Integer
+
+    ByVal lpClassName As String, _
+    ByVal lpWindowName As String) As Long
+    ByVal hwnd As Long, _
+    ByVal nIndex As Long) As Long
+    ByVal hwnd As Long, _
+    ByVal nIndex As Long, _
+    ByVal dwNewLong As Long) As Long
+    ByVal hwnd As Long) As Long
+    ByVal hwnd As Long, _
+    ByVal wMsg As Long, _
+    ByVal wParam As Long, _
+    ByRef lParam As Any) As Long
+
+Private Const GC_CLASSNAMEMSEXCELFORM = "ThunderDFrame"
+Private Const GWL_STYLE = -16
+Private Const WS_CAPTION = &HC00000
+Private Const HTCAPTION = 2
+Private Const WM_NCLBUTTONDOWN = &HA1
+
+Private hwndForm As Long
+
+Private Sub cbExit_Click()
+    ActiveSheet.Range("AI1").Value = 1
+    Unload ufPicView
+End Sub
+
+Private Sub imgFrame_Click()
+Unload ufPicView
+ufPicView.Show vbModeless
+End Sub
+
+Private Sub UserForm_MouseDown(ByVal Button As Integer, _
+    ByVal Shift As Integer, ByVal X As Single, ByVal Y As Single)
+    If Button = 1 Then
+        ReleaseCapture
+        SendMessage hwndForm, WM_NCLBUTTONDOWN, HTCAPTION, 0&
+    End If
+End Sub
+Private Sub cbBck_Click()
+    If ixPicNr > 1 Then
+        ixPicNr = ixPicNr - 1
+        Call showPic
+    End If
+End Sub
+Private Sub cbFwd_Click()
+    ixPicNr = ixPicNr + 1
+   Call showPic
+End Sub
+
+Private Sub UserForm_Activate()
+
+Dim sngTop As Single, sngLeft As Single
+
+On Error Resume Next
+
+
+    StartUpPosition = 0
+    
+    With Application
+    sngLeft = 460
+    sngTop = 150
+
+    Me.Left = sngLeft + Application.Left
+    Me.Top = sngTop
+    
+    End With
+
+hwndForm = FindWindow(GC_CLASSNAMEMSEXCELFORM, Me.Caption)
+
+   If hwndForm <> 0 Then
+        SetWindowLong hwndForm, GWL_STYLE, GetWindowLong(hwndForm, GWL_STYLE) And Not WS_CAPTION
+        DrawMenuBar hwndForm
+    End If
+    
+    If IsError(ActiveSheet.Cells(3 + ixPicNr, 35).Value) Then
+        MsgBox "Es sind keine Bilder vorhanden"
+        Me.Hide
+    End If
+    
+    If ActiveSheet.Cells(1, 35).Value = 1 Then
+    ixPicNr = 1
+    Call showPic
+    Else
+    Call Start
+    End If
+End Sub
+Private Sub showPic()
+On Error Resume Next
+
+    lblDir.Caption = ActiveSheet.Range("Verzeichnis").Value 'Breich Verzeichnis
+    lblFile.Caption = ActiveSheet.Cells(3 + ixPicNr, 35).Value 'Ab Zeile 3 + 1 und Spalte 35
+    imgFrame.Picture = LoadPicture(lblDir.Caption & "\" & lblFile.Caption)
+    If IsError(ActiveSheet.Cells(4 + ixPicNr, 35).Value) Then cbFwd.Visible = False
+    If Not IsError(ActiveSheet.Cells(4 + ixPicNr, 35).Value) Then cbFwd.Visible = True
+
+    If ixPicNr = 1 Then
+    cbBck.Visible = False
+    Else
+    cbBck.Visible = True
+    End If
+
+    ActiveSheet.Range("AI1").Value = ixPicNr
+End Sub
+Private Sub Start()
+ixPicNr = ActiveSheet.Cells(1, 35).Value
+Call showPic
+End Sub
+
+' ===== MODULE: Modul12.bas =====
+Option Explicit
+Function Ping(strHost As String) As Boolean
+
+Dim oPing, oRetStatus
+
+Set oPing = GetObject("winmgmts:{impersonationLevel=impersonate}") _
+    .ExecQuery("SELECT *" _
+        & " FROM Win32_PingStatus" _
+            & " WHERE address='" & strHost & "'")
+For Each oRetStatus In oPing
+Ping = Not (IsNull(oRetStatus.StatusCode) _
+        Or oRetStatus.StatusCode <> 0)
+Next oRetStatus
+
+End Function
+
+Sub Netzwerkstatus()
+
+Dim strIP As String
+
+
+strIP = "10.150.6.12"
+ 
+If Ping(strIP) Then
+
+ActiveSheet.Range("A7").Value = "JA"
+
+Else
+
+ActiveSheet.Range("A7").Value = "NEIN"
+MsgBox ("... der Computer hat keine Verbindung mit dem Netzwerk.") & vbLf & vbLf & _
+("Funktion nicht möglich!"), vbInformation
+
+End If
+
+
+End Sub
+
+Sub Netzwerkstatus_Fahrzeugbeschriftung()
+
+Dim strIP As String
+
+strIP = "10.150.6.12"
+ 
+If Ping(strIP) Then
+
+Sheets("FB_Rohbauabnahmeprotokoll").Cells(2, 36).Value = "U:\Bilder_RAP"
+ActiveSheet.Range("A7").Value = "JA"
+
+Else
+
+Sheets("FB_Rohbauabnahmeprotokoll").Cells(2, 36).Value = "C:\RAP_Bilder"
+ActiveSheet.Range("A7").Value = "NEIN"
+
+End If
+
+End Sub
+
+
+
+
+' ===== MODULE: Modul13.bas =====
+Public strPath As String
+Option Explicit
+Private t As Boolean
+
+(ByVal hwnd As Long, ByVal lpOperation As String, ByVal lpFile As String, _
+ByVal lpParameters As String, ByVal lpDirectory As String, ByVal nShowCmd As Long) As Long
+Public Sub Open_File(strFileName As String, windowType As Integer)
+ShellExecute 0, "Open", strFileName, "", "", windowType
+End Sub
+
+
+Sub starten()
+Dim zeit As Date
+t = True
+zeit = Time + TimeSerial(0, 5, 0)
+Application.OnTime zeit, "generate_meldung"
+End Sub
+Sub generate_meldung()
+If ActiveSheet.Range("A10").Value = "" Then
+Call Datei__speichern
+End If
+If t = True Then starten
+End Sub
+Sub beenden()
+t = False
+End Sub
+Sub Auftrags_Ordner()
+
+
+If UserForm3.Visible = True Then
+Unload UserForm3
+Else
+    If ufPicView.Visible = True Or ufPicView_RBA.Visible = True Or _
+    UserForm1.Visible = True Or UserForm2.Visible = True Then
+    End If
+    If Not ActiveSheet.Range("AM3").Value = "U:\" Then
+    MsgBox ("Bitte die Datei erst im Netzwerk speichern.") & vbLf & vbLf & _
+    ("Funktion nicht möglich!"), vbInformation
+    End If
+    UserForm3.Show vbModeless
+End If
+
+
+
+End Sub
+Sub Test()
+
+MsgBox (Environ("Username")) 'Für Windows
+MsgBox (Application.UserName) 'Für Excel
+
+
+End Sub
+Sub beenden1()
+    Application.DisplayAlerts = False
+    schließen = True
+    ThisWorkbook.Close SaveChanges:=False
+    Application.DisplayAlerts = True
+End Sub
+Sub Bilder_RBA()
+ufPicView_RBA.Show vbModeless
+End Sub
+Sub UF_Start()
+UserForm3.Show vbModeless
+Call UserForm3.OpenFiles 'Modul 13
+ActiveSheet.Shapes("BW_Text").Left = Cells(22, 37).Left
+ActiveSheet.Shapes("BW_Text").Top = Cells(22, 37).Top
+ActiveSheet.Shapes("Preis_Text").Left = Cells(30, 37).Left
+ActiveSheet.Shapes("Preis_Text").Top = Cells(30, 37).Top
+Sheets("FB_Rohbauabnahmeprotokoll").Range("Preis_Formatierung").NumberFormat = "$#,##0.00_);[Red]($#,##0.00)"
+End Sub
+Sub UserForm3_open()
+UserForm3.Show vbModeless
+Else
+End If
+End Sub
+Sub BW_TEK()
+ActiveCell.Value = "TEK"
+End Sub
+Sub BW_TEA()
+ActiveCell.Value = "TEA"
+End Sub
+Sub BW_KMU()
+ActiveCell.Value = "KMU"
+End Sub
+Sub Mehrpreis()
+ActiveCell.Value = "Mehrpreis"
+End Sub
+Sub Minderpreis()
+ActiveCell.Value = "Minderpreis"
+End Sub
+Sub Info()
+ActiveCell.Value = "Info"
+End Sub
+
+
+
+
+
+
+
+' ===== MODULE: UserForm3.frm =====
+Option Explicit
+
+    (ByVal hwnd As Long, ByVal lpOperation As String, _
+    ByVal lpFile As String, ByVal lpParameters As String, _
+    ByVal lpDirectory As String, ByVal nShowCmd As Long) As Long
+    
+Dim colFiles As Collection
+
+    ByVal lpClassName As String, _
+    ByVal lpWindowName As String) As Long
+    ByVal hwnd As Long, _
+    ByVal nIndex As Long) As Long
+    ByVal hwnd As Long, _
+    ByVal nIndex As Long, _
+    ByVal dwNewLong As Long) As Long
+    ByVal hwnd As Long) As Long
+    ByVal hwnd As Long, _
+    ByVal wMsg As Long, _
+    ByVal wParam As Long, _
+    ByRef lParam As Any) As Long
+
+Private Const GC_CLASSNAMEMSEXCELFORM = "ThunderDFrame"
+Private Const GWL_STYLE = -16
+Private Const WS_CAPTION = &HC00000
+Private Const HTCAPTION = 2
+Private Const WM_NCLBUTTONDOWN = &HA1
+
+Private hwndForm As Long
+Private Sub cbExit_Click()
+Unload UserForm3
+End Sub
+Private Sub Image1_Click()
+Dim Pfad As String
+    Shell "explorer.exe /e, """ & Pfad & """", vbNormalFocus
+End Sub
+Private Sub Image2_Click()
+Call Kundenfreigabe_versenden '(Modul 5)
+End Sub
+Private Sub Image3_Click()
+Call Kundenfreigabe_speichern '(Modul 5)
+End Sub
+
+Private Sub Label2_Click()
+Dim Pfad As String
+    Shell "explorer.exe /e, """ & Pfad & """", vbNormalFocus
+End Sub
+
+Private Sub Label4_Click()
+Call Kundenfreigabe_versenden '(Modul 5)
+End Sub
+
+Private Sub Label5_Click()
+Call Kundenfreigabe_speichern '(Modul 5)
+End Sub
+
+Private Sub Label6_Click()
+Dim Pfad As String
+    Shell "explorer.exe /e, """ & Pfad & """", vbNormalFocus
+End Sub
+
+Private Sub ListBox1_DblClick(ByVal Cancel As MSForms.ReturnBoolean)
+    If ListBox1.Text <> "" Then _
+        ShellExecute Application.hwnd, "Open", colFiles.Item(ListBox1.Text), _
+        vbNullString, vbNullString, vbNormalFocus
+End Sub
+
+Private Sub UserForm_Activate()
+
+Dim sngTop As Single, sngLeft As Single
+
+On Error Resume Next
+
+Call OpenFiles ' Modul 13
+    
+
+
+    StartUpPosition = 0
+    
+    With Application
+    sngLeft = 775
+    sngTop = 160
+
+    Me.Left = sngLeft + Application.Left
+    Me.Top = sngTop
+    
+    End With
+    
+
+    hwndForm = FindWindow(GC_CLASSNAMEMSEXCELFORM, Me.Caption)
+
+   If hwndForm <> 0 Then
+        SetWindowLong hwndForm, GWL_STYLE, GetWindowLong(hwndForm, GWL_STYLE) And Not WS_CAPTION
+        DrawMenuBar hwndForm
+    End If
+
+Label4.Caption = " Kundenfreigabe" & vbLf & "als .pdf versenden"
+Label5.Caption = " Kundenfreigabe" & vbLf & "als .pdf speichern"
+
+
+End Sub
+
+Private Sub UserForm_Initialize()
+
+Label4.Caption = " Kundenfreigabe" & VBA.vbLf & "als .pdf versenden"
+Label5.Caption = " Kundenfreigabe" & VBA.vbLf & "als .pdf speichern"
+
+
+End Sub
+
+Private Sub UserForm_Terminate()
+Set colFiles = Nothing
+End Sub
+Public Sub OpenFiles()
+    Dim MyFile As String
+    Dim Path As String
+    
+    ListBox1.Clear
+
+    Set colFiles = New Collection
+    MyFile = Dir$(Path & "*.*")
+    Do Until MyFile = ""
+        ListBox1.AddItem MyFile
+        colFiles.Add Path & MyFile, MyFile
+        MyFile = Dir
+    Loop
+
+
+End Sub
+
+
+
+' ===== MODULE: Modul14.bas =====
+Option Explicit
+
+Sub AuftragsOrdner_finden()
+Dim FSO As Object
+Dim unterordner As Object
+Dim Ordner As Object
+Dim quellordner As String
+Dim quellordnerUF As String
+Dim suchname As String
+Dim Dateiname As String
+
+On Error Resume Next
+
+
+Set FSO = CreateObject("Scripting.FileSystemObject")
+
+
+
+
+Set unterordner = FSO.getfolder(quellordner).subfolders
+For Each Ordner In unterordner
+    If VBA.Left(Ordner.Name, Len(suchname)) = suchname Then _
+Next
+
+
+    MsgBox ("Kein Auftragsordner gefunden!" & vbLf & vbLf & "Bitte Auftrags- Nr. prüfen."), vbInformation
+    ActiveSheet.Range("F3").Value = ""
+    ActiveSheet.Range("F4").Value = ""
+    ActiveSheet.Range("S3").Value = ""
+Else
+End If
+
+    MsgBox ("Kein Auftragsordner gefunden!" & vbLf & vbLf & "Bitte Auftrags-Nr. prüfen."), vbInformation
+    ActiveSheet.Range("F3").Value = ""
+    ActiveSheet.Range("F4").Value = ""
+    ActiveSheet.Range("S3").Value = ""
+End If
+
+Call UserForm3.OpenFiles 'Modul 13
+End If
+
+
+End Sub
+
+Sub RAP_prüfen()
+
+Dim quelldatei As String
+
+
+
+
+If Dir(quelldatei) <> "" Then
+End If
+
+
+End Sub
+
+
+
+' ===== MODULE: ufPicView_RBA.frm =====
+
+Option Explicit
+Public ixPicNr As Integer
+
+    ByVal lpClassName As String, _
+    ByVal lpWindowName As String) As Long
+    ByVal hwnd As Long, _
+    ByVal nIndex As Long) As Long
+    ByVal hwnd As Long, _
+    ByVal nIndex As Long, _
+    ByVal dwNewLong As Long) As Long
+    ByVal hwnd As Long) As Long
+    ByVal hwnd As Long, _
+    ByVal wMsg As Long, _
+    ByVal wParam As Long, _
+    ByRef lParam As Any) As Long
+
+Private Const GC_CLASSNAMEMSEXCELFORM = "ThunderDFrame"
+Private Const GWL_STYLE = -16
+Private Const WS_CAPTION = &HC00000
+Private Const HTCAPTION = 2
+Private Const WM_NCLBUTTONDOWN = &HA1
+
+Private hwndForm As Long
+
+
+Private Sub cbExit_Click()
+    ActiveSheet.Range("AN1").Value = 1
+    Unload ufPicView_RBA
+End Sub
+
+Private Sub imgFrame_Click()
+Unload ufPicView_RBA
+ufPicView_RBA.Show vbModeless
+End Sub
+
+
+Private Sub UserForm_MouseDown(ByVal Button As Integer, _
+    ByVal Shift As Integer, ByVal X As Single, ByVal Y As Single)
+    If Button = 1 Then
+        ReleaseCapture
+        SendMessage hwndForm, WM_NCLBUTTONDOWN, HTCAPTION, 0&
+    End If
+End Sub
+Private Sub cbBck_Click()
+    If ixPicNr > 1 Then
+        ixPicNr = ixPicNr - 1
+        Call showPic
+    End If
+End Sub
+Private Sub cbFwd_Click()
+    ixPicNr = ixPicNr + 1
+   Call showPic
+End Sub
+
+Private Sub UserForm_Activate()
+
+Dim sngTop As Single, sngLeft As Single
+
+On Error Resume Next
+
+
+     StartUpPosition = 0
+    With Application
+        Me.Top = Application.Top
+        Me.Left = Application.Left
+        Me.Height = Application.Height
+        Me.Width = Application.Width
+     End With
+     
+hwndForm = FindWindow(GC_CLASSNAMEMSEXCELFORM, Me.Caption)
+
+   If hwndForm <> 0 Then
+        SetWindowLong hwndForm, GWL_STYLE, GetWindowLong(hwndForm, GWL_STYLE) And Not WS_CAPTION
+        DrawMenuBar hwndForm
+    End If
+    
+    If IsError(ActiveSheet.Cells(121 + ixPicNr, 79).Value) Then
+        MsgBox "Es sind keine Bilder vorhanden"
+        Me.Hide
+    End If
+    
+    If ActiveSheet.Cells(1, 40).Value = 1 Then
+    ixPicNr = 1
+    Call showPic
+    Else
+    Call Start_RBA
+    End If
+End Sub
+Private Sub showPic()
+On Error Resume Next
+
+    lblDir.Caption = ActiveSheet.Range("Verzeichnis_Bilder_RBA").Value 'Breich Verzeichnis
+    lblFile.Caption = ActiveSheet.Cells(121 + ixPicNr, 79).Value 'Ab Zeile 3 + 1 und Spalte 35
+    imgFrame1.Picture = LoadPicture(lblDir.Caption & "\" & lblFile.Caption)
+    If IsError(ActiveSheet.Cells(122 + ixPicNr, 79).Value) Then cbFwd.Visible = False
+    If Not IsError(ActiveSheet.Cells(122 + ixPicNr, 79).Value) Then cbFwd.Visible = True
+
+    If ixPicNr = 1 Then
+    cbBck.Visible = False
+    Else
+    cbBck.Visible = True
+    End If
+
+    ActiveSheet.Range("AN1").Value = ixPicNr
+End Sub
+Private Sub Start_RBA()
+ixPicNr = ActiveSheet.Cells(1, 35).Value
+Call showPic
+End Sub
+

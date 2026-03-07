@@ -17,6 +17,8 @@ node_modules/
 dist/
 coverage/
 .npm/
+.vite/
+*.tsbuildinfo
 
 # Environment & editor
 .env

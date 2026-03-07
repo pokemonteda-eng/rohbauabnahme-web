@@ -7,6 +7,7 @@ from app.config import settings
 from app.db import Base
 import app.models.kunde  # noqa: F401
 import app.models.protokoll  # noqa: F401
+import app.models.lackierungsdaten  # noqa: F401
 
 config = context.config
 config.set_main_option("sqlalchemy.url", settings.database_url)
