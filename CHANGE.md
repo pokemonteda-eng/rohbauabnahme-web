@@ -1,0 +1,64 @@
+# CHANGE.md - rohbauabnahme-web
+
+## Aktive Tickets
+
+### CI006 - Lint + Type-Check Workflow
+- **Status:** Überprüfung
+- **Blocker:** none
+- **Voraussetzungen:** none
+- **Nächster Schritt:** Review abwarten, dann mergen
+- **Branch:** feature/CI006-lint-typecheck
+- **PR-Link:** tbd
+- **CI Status:** ⏳ ausstehend
+- **Notizen:** Neuer GitHub Actions Workflow für ESLint, TypeScript Type-Check, Ruff und Pyright erstellt
+
+### CI002 - Frontend Tests
+- **Status:** Überprüfung
+- **Blocker:** none
+- **Voraussetzungen:** none
+- **Nächster Schritt:** Review abwarten, dann mergen
+- **Branch:** feature/CI002-frontend-tests
+- **PR-Link:** https://github.com/pokemonteda-eng/rohbauabnahme-web/pull/8
+- **CI Status:** ✅ SUCCESS (Frontend Tests)
+- **Notizen:** Bereit zum Merge (CLEAN, grün)
+
+### CI003 - Playwright E2E Tests
+- **Status:** Überprüfung
+- **Blocker:** none
+- **Voraussetzungen:** none
+- **Nächster Schritt:** Review abwarten, dann mergen
+- **Branch:** feature/CI003-e2e-tests
+- **PR-Link:** https://github.com/pokemonteda-eng/rohbauabnahme-web/pull/9
+- **CI Status:** ✅ SUCCESS (E2E Tests)
+- **Notizen:** Bereit zum Merge (CLEAN, grün)
+
+### R006 - Protokoll-Kopfdaten
+- **Status:** Überprüfung
+- **Blocker:** none
+- **Voraussetzungen:** none
+- **Nächster Schritt:** Review abwarten
+- **Branch:** feature/add-planning-folder
+- **PR-Link:** https://github.com/pokemonteda-eng/rohbauabnahme-web/pull/6
+- **CI Status:** - (keine Checks)
+- **Notizen:** Offen, wartet auf Review
+
+### R007 - DB Lackierungsdaten
+- **Status:** Überprüfung
+- **Blocker:** none
+- **Voraussetzungen:** none
+- **Nächster Schritt:** Review abwarten
+- **Branch:** feature/R007-lackierungsdaten
+- **PR-Link:** https://github.com/pokemonteda-eng/rohbauabnahme-web/pull/7
+- **CI Status:** - (keine Checks)
+- **Notizen:** Offen, wartet auf Review
+
+---
+
+## Fertige Tickets
+- R001-R005: Core Features (merged)
+- CI001: Backend Tests (merged)
+
+---
+
+## Letzte Aktivität
+- 2026-03-07: Ticket CI006 umgesetzt, Branch erstellt, PR in Vorbereitung
