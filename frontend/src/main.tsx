@@ -1,16 +1,10 @@
 import React from "react";
-import { createRoot } from "react-dom/client";
+import ReactDOM from "react-dom/client";
 
-function App() {
-  return (
-    <main>
-      <h1>Rohbauabnahme Web</h1>
-      <p>Frontend-Basis ist initialisiert.</p>
-    </main>
-  );
-}
+import App from "./App";
+import "./index.css";
 
-createRoot(document.getElementById("root")!).render(
+ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <App />
   </React.StrictMode>
