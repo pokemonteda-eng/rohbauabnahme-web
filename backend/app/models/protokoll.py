@@ -1,9 +1,14 @@
 from datetime import date
+from typing import Any
 
-from sqlalchemy import Date, ForeignKey, Integer, String
+from sqlalchemy import JSON, Date, ForeignKey, Integer, String
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db import Base
+
+
+zubehoer_auswahl_type = JSON().with_variant(JSONB(), "postgresql")
 
 
 class Protokoll(Base):
@@ -17,3 +22,7 @@ class Protokoll(Base):
     projektleiter: Mapped[str] = mapped_column(String(255), nullable=False)
     datum: Mapped[date] = mapped_column(Date, nullable=False)
     status: Mapped[str] = mapped_column(String(64), nullable=False)
+    zubehoer_auswahl: Mapped[dict[str, Any] | list[Any] | None] = mapped_column(
+        zubehoer_auswahl_type,
+        nullable=True,
+    )
