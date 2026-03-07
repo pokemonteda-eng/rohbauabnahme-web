@@ -13,6 +13,8 @@
 - **Notizen:** Neue JSONB-Spalte `protokolle.zubehoer_auswahl` inkl. Migration, Modell-Update und Tests
 - **Fehler (2026-03-07):** Lokaler Testlauf fehlgeschlagen, da `pytest` in der aktuellen Umgebung nicht installiert ist (`/bin/bash: pytest: command not found`).
 - **Fixplan:** 1) Backend-Abhaengigkeiten mit `pip install -r backend/requirements.txt` installieren. 2) R009-Tests erneut ausfuehren (`pytest -q tests/test_migration_20260307_0004_add_zubehoer_auswahl_jsonb.py tests/test_protokoll_model.py`). 3) Ergebnis in `CHANGE.md` nachziehen und CI-Status aktualisieren.
+- **Fehler (2026-03-07):** Push auf `origin/feature/R009-zubehoer-jsonb` fehlgeschlagen (`Could not resolve host: github.com`).
+- **Fixplan:** 1) Netzwerk/DNS fuer GitHub im Ausfuehrungsumfeld freischalten. 2) `git push origin feature/R009-zubehoer-jsonb` erneut ausfuehren. 3) Bestehende PR #10 pruefen und Ticket-Link im PR-Body verifizieren.
 
 ### CI006 - Lint + Type-Check Workflow
 - **Status:** Überprüfung
