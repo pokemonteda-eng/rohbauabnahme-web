@@ -146,3 +146,78 @@ def test_create_protokoll_allows_nullable_technical_fields() -> None:
     assert payload["datum"] is None
 
     app.dependency_overrides.clear()
+
+
+def test_update_protokoll_partial_success() -> None:
+    client = _client()
+    kunde_id = _create_kunde(client, kunden_nr="K-9003")
+
+    create_response = client.post(
+        "/protokolle",
+        json={
+            "auftrags_nr": "A-40001",
+            "kunde_id": kunde_id,
+            "aufbautyp": "Container",
+            "projektleiter": "PL-Alt",
+            "vertriebsgebiet": "Nord",
+            "kabel_funklayout_geaendert": False,
+            "techn_aenderungen": None,
+            "datum": "2026-03-08",
+            "anlage_datum": "2026-03-08",
+        },
+    )
+    assert create_response.status_code == 201
+    protokoll_id = create_response.json()["id"]
+
+    update_response = client.patch(
+        f"/protokolle/{protokoll_id}",
+        json={
+            "projektleiter": "PL-Neu",
+            "kabel_funklayout_geaendert": True,
+            "techn_aenderungen": "Nachtrag",
+        },
+    )
+    assert update_response.status_code == 200
+    updated = update_response.json()
+    assert updated["id"] == protokoll_id
+    assert updated["projektleiter"] == "PL-Neu"
+    assert updated["kabel_funklayout_geaendert"] is True
+    assert updated["techn_aenderungen"] == "Nachtrag"
+    assert updated["aufbautyp"] == "Container"
+    assert updated["vertriebsgebiet"] == "Nord"
+
+    app.dependency_overrides.clear()
+
+
+def test_update_protokoll_returns_404_when_missing() -> None:
+    client = _client()
+    response = client.patch("/protokolle/9999", json={"projektleiter": "Unbekannt"})
+    assert response.status_code == 404
+
+    app.dependency_overrides.clear()
+
+
+def test_update_protokoll_returns_400_for_empty_payload() -> None:
+    client = _client()
+    kunde_id = _create_kunde(client, kunden_nr="K-9004")
+    create_response = client.post(
+        "/protokolle",
+        json={
+            "auftrags_nr": "A-40002",
+            "kunde_id": kunde_id,
+            "aufbautyp": "Koffer",
+            "projektleiter": "PL-Test",
+            "vertriebsgebiet": "West",
+            "kabel_funklayout_geaendert": False,
+            "techn_aenderungen": None,
+            "datum": "2026-03-08",
+            "anlage_datum": "2026-03-08",
+        },
+    )
+    assert create_response.status_code == 201
+    protokoll_id = create_response.json()["id"]
+
+    response = client.patch(f"/protokolle/{protokoll_id}", json={})
+    assert response.status_code == 400
+
+    app.dependency_overrides.clear()
