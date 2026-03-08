@@ -29,7 +29,7 @@ def upgrade() -> None:
         sa.Column("projektleiter", sa.String(length=255), nullable=False),
         sa.Column("datum", sa.Date(), nullable=False),
         sa.Column("status", sa.String(length=64), nullable=False),
-        sa.ForeignKeyConstraint(["kunde_id"], ["customers.id"]),
+        sa.ForeignKeyConstraint(["kunde_id"], ["kunden.id"]),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("auftrags_nr"),
     )
