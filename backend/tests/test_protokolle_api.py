@@ -119,3 +119,30 @@ def test_list_protokolle_with_pagination_and_404() -> None:
     assert missing_response.status_code == 404
 
     app.dependency_overrides.clear()
+
+
+def test_create_protokoll_allows_nullable_technical_fields() -> None:
+    client = _client()
+    kunde_id = _create_kunde(client, kunden_nr="K-9002")
+
+    create_response = client.post(
+        "/protokolle",
+        json={
+            "auftrags_nr": "A-30001",
+            "kunde_id": kunde_id,
+            "aufbautyp": "Koffer",
+            "projektleiter": "PL-Nullable",
+            "vertriebsgebiet": "West",
+            "kabel_funklayout_geaendert": None,
+            "techn_aenderungen": None,
+            "datum": None,
+            "anlage_datum": "2026-03-08",
+        },
+    )
+    assert create_response.status_code == 201
+    payload = create_response.json()
+    assert payload["kabel_funklayout_geaendert"] is None
+    assert payload["techn_aenderungen"] is None
+    assert payload["datum"] is None
+
+    app.dependency_overrides.clear()

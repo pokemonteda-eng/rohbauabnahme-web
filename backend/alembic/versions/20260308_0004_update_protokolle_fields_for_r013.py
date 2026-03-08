@@ -26,12 +26,14 @@ def upgrade() -> None:
     op.add_column("protokolle", sa.Column("techn_aenderungen", sa.Text(), nullable=True))
     op.add_column("protokolle", sa.Column("anlage_datum", sa.Date(), nullable=True))
     op.execute("UPDATE protokolle SET anlage_datum = datum WHERE anlage_datum IS NULL")
-    op.alter_column("protokolle", "anlage_datum", nullable=False)
-    op.drop_column("protokolle", "status")
+    with op.batch_alter_table("protokolle") as batch_op:
+        batch_op.alter_column("anlage_datum", existing_type=sa.Date(), nullable=False)
+        batch_op.drop_column("status")
 
 
 def downgrade() -> None:
-    op.add_column("protokolle", sa.Column("status", sa.String(length=64), server_default="offen", nullable=False))
-    op.drop_column("protokolle", "anlage_datum")
-    op.drop_column("protokolle", "techn_aenderungen")
-    op.drop_column("protokolle", "kabel_funklayout_geaendert")
+    with op.batch_alter_table("protokolle") as batch_op:
+        batch_op.add_column(sa.Column("status", sa.String(length=64), server_default="offen", nullable=False))
+        batch_op.drop_column("anlage_datum")
+        batch_op.drop_column("techn_aenderungen")
+        batch_op.drop_column("kabel_funklayout_geaendert")
