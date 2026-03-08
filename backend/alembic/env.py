@@ -8,6 +8,9 @@ from app.db import Base
 import app.models.kunde  # noqa: F401
 import app.models.protokoll  # noqa: F401
 import app.models.lackierungsdaten  # noqa: F401
+import app.models.protokoll_kopfdaten  # noqa: F401
+import app.models.zubehoer_katalog  # noqa: F401
+import app.models.zubehoer_auswahl  # noqa: F401
 
 config = context.config
 config.set_main_option("sqlalchemy.url", settings.database_url)
