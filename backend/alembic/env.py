@@ -9,6 +9,7 @@ import app.models.kunde  # noqa: F401
 import app.models.protokoll  # noqa: F401
 import app.models.lackierungsdaten  # noqa: F401
 import app.models.protokoll_kopfdaten  # noqa: F401
+import app.models.technische_aenderung  # noqa: F401
 import app.models.zubehoer_katalog  # noqa: F401
 import app.models.zubehoer_auswahl  # noqa: F401
 
