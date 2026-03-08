@@ -1,3 +1,3 @@
-from app.schemas.kunde import KundeCreate, KundeRead
+from app.schemas.kunden import KundeCreate, KundeRead, KundeUpdate
 
-__all__ = ["KundeCreate", "KundeRead"]
+__all__ = ["KundeCreate", "KundeRead", "KundeUpdate"]
