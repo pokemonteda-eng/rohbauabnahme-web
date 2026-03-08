@@ -1,6 +1,6 @@
 from datetime import date
 
-from sqlalchemy import Date, ForeignKey, Integer, String
+from sqlalchemy import Boolean, Date, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db import Base
@@ -15,5 +15,7 @@ class Protokoll(Base):
     aufbautyp: Mapped[str] = mapped_column(String(64), nullable=False)
     vertriebsgebiet: Mapped[str] = mapped_column(String(128), nullable=False)
     projektleiter: Mapped[str] = mapped_column(String(255), nullable=False)
+    kabel_funklayout_geaendert: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    techn_aenderungen: Mapped[str | None] = mapped_column(Text, nullable=True)
     datum: Mapped[date] = mapped_column(Date, nullable=False)
-    status: Mapped[str] = mapped_column(String(64), nullable=False)
+    anlage_datum: Mapped[date] = mapped_column(Date, nullable=False)
