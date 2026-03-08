@@ -69,3 +69,21 @@ Alternative aus dem `docker/`-Ordner:
 ```bash
 docker compose -f docker/docker-compose.yml up --build
 ```
+
+Test-Datenbank fuer Integrationstests starten:
+
+```bash
+docker compose -f docker-compose.test.yml up -d
+```
+
+Verbindung fuer lokale Integrationstests:
+
+```bash
+export DATABASE_URL=postgresql://postgres:postgres@localhost:5433/rohbauabnahme_test
+```
+
+Test-Datenbank wieder stoppen:
+
+```bash
+docker compose -f docker-compose.test.yml down -v
+```

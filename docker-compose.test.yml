@@ -1,0 +1,35 @@
+name: rohbauabnahme-test
+
+services:
+  test-db:
+    image: postgres:15-alpine
+    pull_policy: if_not_present
+    command:
+      - postgres
+      - -c
+      - fsync=off
+      - -c
+      - synchronous_commit=off
+      - -c
+      - full_page_writes=off
+    environment:
+      POSTGRES_DB: ${TEST_POSTGRES_DB:-rohbauabnahme_test}
+      POSTGRES_USER: ${TEST_POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${TEST_POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "${TEST_POSTGRES_PORT:-5433}:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+      start_period: 2s
+    stop_grace_period: 3s
+    networks:
+      - test-net
+
+networks:
+  test-net:
+    driver: bridge
