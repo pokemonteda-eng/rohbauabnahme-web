@@ -1,4 +1,3 @@
-import { describe, expect, test } from "@jest/globals";
 import { fireEvent, render, screen } from "@testing-library/react";
 
 import App from "@/App";

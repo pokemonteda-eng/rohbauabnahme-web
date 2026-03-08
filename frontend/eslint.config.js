@@ -36,5 +36,18 @@ export default tseslint.config(
     rules: {
       "react-refresh/only-export-components": "off"
     }
+  },
+  {
+    files: ["src/**/*.test.{ts,tsx}"],
+    languageOptions: {
+      globals: {
+        ...globals.jest
+      }
+    },
+    rules: {
+      "@typescript-eslint/no-unsafe-assignment": "off",
+      "@typescript-eslint/no-unsafe-call": "off",
+      "@typescript-eslint/no-unsafe-member-access": "off"
+    }
   }
 );
