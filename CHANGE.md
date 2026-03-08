@@ -18,3 +18,15 @@
 - `backend/tests/test_protokolle_api.py`
   - Neuer Test `test_create_protokoll_allows_nullable_technical_fields`
   - Validiert Create-Request mit `null` in technischen Feldern
+
+# Ticket R011-Alembic
+
+## DB / Migration
+- Doppelte Alembic-Revision `20260308_0004` aufgeloest
+- Migration `add_technische_aenderungen_model` auf `20260308_0006` umgestellt
+- Revisionskette linearisiert: `... -> 20260308_0004 -> 20260308_0005 -> 20260308_0006`
+
+## Tests
+- Neuer Test `backend/tests/test_alembic_migrations.py`
+  - `test_alembic_upgrade_head_creates_all_expected_tables`
+  - `test_alembic_has_single_head`

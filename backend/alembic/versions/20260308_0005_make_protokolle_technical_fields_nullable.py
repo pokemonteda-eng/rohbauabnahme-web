@@ -19,9 +19,10 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.alter_column("protokolle", "kabel_funklayout_geaendert", existing_type=sa.Boolean(), nullable=True)
-    op.alter_column("protokolle", "techn_aenderungen", existing_type=sa.Text(), nullable=True)
-    op.alter_column("protokolle", "datum", existing_type=sa.Date(), nullable=True)
+    with op.batch_alter_table("protokolle") as batch_op:
+        batch_op.alter_column("kabel_funklayout_geaendert", existing_type=sa.Boolean(), nullable=True)
+        batch_op.alter_column("techn_aenderungen", existing_type=sa.Text(), nullable=True)
+        batch_op.alter_column("datum", existing_type=sa.Date(), nullable=True)
 
 
 def downgrade() -> None:
@@ -39,6 +40,7 @@ def downgrade() -> None:
         WHERE datum IS NULL
         """
     )
-    op.alter_column("protokolle", "datum", existing_type=sa.Date(), nullable=False)
-    op.alter_column("protokolle", "techn_aenderungen", existing_type=sa.Text(), nullable=True)
-    op.alter_column("protokolle", "kabel_funklayout_geaendert", existing_type=sa.Boolean(), nullable=False)
+    with op.batch_alter_table("protokolle") as batch_op:
+        batch_op.alter_column("datum", existing_type=sa.Date(), nullable=False)
+        batch_op.alter_column("techn_aenderungen", existing_type=sa.Text(), nullable=True)
+        batch_op.alter_column("kabel_funklayout_geaendert", existing_type=sa.Boolean(), nullable=False)
