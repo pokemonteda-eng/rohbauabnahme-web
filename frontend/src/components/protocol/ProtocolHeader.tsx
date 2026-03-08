@@ -18,7 +18,7 @@ export function ProtocolHeader({
     <section className="rounded-lg border bg-card p-4 shadow-sm sm:p-6">
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6">
         <div className="space-y-2">
-          <Label htmlFor="order-number">Auftragsnummer</Label>
+          <Label htmlFor="order-number">Auftrags-Nr.</Label>
           <Input
             id="order-number"
             name="orderNumber"

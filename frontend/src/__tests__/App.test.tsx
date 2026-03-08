@@ -8,6 +8,8 @@ describe("App", () => {
     render(<App />);
 
     expect(screen.queryByText("rohbauabnahme-web")).not.toBeNull();
+    expect(screen.queryByLabelText("Auftrags-Nr.")).not.toBeNull();
+    expect(screen.queryByLabelText("Protokolldatum")).not.toBeNull();
     expect(screen.queryByRole("heading", { name: "React Frontend Setup" })).not.toBeNull();
     expect(screen.queryByRole("button", { name: "Primary Action" })).not.toBeNull();
     expect(screen.queryByRole("button", { name: "Sekundär" })).not.toBeNull();
