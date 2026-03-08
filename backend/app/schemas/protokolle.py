@@ -19,6 +19,18 @@ class ProtokollCreate(ProtokollBase):
     pass
 
 
+class ProtokollUpdate(BaseModel):
+    auftrags_nr: str | None = Field(default=None, min_length=1, max_length=64)
+    kunde_id: int | None = Field(default=None, gt=0)
+    aufbautyp: str | None = Field(default=None, min_length=1, max_length=64)
+    projektleiter: str | None = Field(default=None, min_length=1, max_length=255)
+    vertriebsgebiet: str | None = Field(default=None, min_length=1, max_length=128)
+    kabel_funklayout_geaendert: bool | None = None
+    techn_aenderungen: str | None = None
+    datum: date | None = None
+    anlage_datum: date | None = None
+
+
 class ProtokollRead(ProtokollBase):
     id: int
 
