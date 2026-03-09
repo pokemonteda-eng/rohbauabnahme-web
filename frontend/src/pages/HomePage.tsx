@@ -2,7 +2,22 @@ import { useState } from "react";
 
 import { LackierungSection } from "@/components/protocol/LackierungSection";
 import { ProtocolHeader } from "@/components/protocol/ProtocolHeader";
+import {
+  type AufbauOptionKey,
+  type AufbauSelectionState,
+  ZubehoerAufbauSection
+} from "@/components/protocol/ZubehoerAufbauSection";
 import { Button } from "@/components/ui/button";
+
+const INITIAL_AUFBAU_SELECTION: AufbauSelectionState = {
+  uml: false,
+  fhb: false,
+  ruk: false,
+  asw: false,
+  rfk: false,
+  spo: false,
+  sb: false
+};
 
 export function HomePage() {
   const [customerQuery, setCustomerQuery] = useState("");
@@ -16,6 +31,14 @@ export function HomePage() {
   const [zinkstaubBemerkung, setZinkstaubBemerkung] = useState("");
   const [eKolben, setEKolben] = useState(false);
   const [eKolbenBemerkung, setEKolbenBemerkung] = useState("");
+  const [aufbauSelection, setAufbauSelection] = useState<AufbauSelectionState>(INITIAL_AUFBAU_SELECTION);
+
+  const handleAufbauChange = (key: AufbauOptionKey, checked: boolean) => {
+    setAufbauSelection((previousState) => ({
+      ...previousState,
+      [key]: checked
+    }));
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
@@ -51,6 +74,7 @@ export function HomePage() {
           onEKolbenChange={setEKolben}
           onEKolbenBemerkungChange={setEKolbenBemerkung}
         />
+        <ZubehoerAufbauSection values={aufbauSelection} onValueChange={handleAufbauChange} />
         <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
           <h1 className="text-2xl font-bold tracking-tight">React Frontend Setup</h1>
           <p className="mt-2 text-slate-600">
