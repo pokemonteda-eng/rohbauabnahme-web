@@ -4,6 +4,7 @@ import { ProtocolHeader } from "@/components/protocol/ProtocolHeader";
 import { Button } from "@/components/ui/button";
 
 export function HomePage() {
+  const [customerQuery, setCustomerQuery] = useState("");
   const [orderNumber, setOrderNumber] = useState("");
   const [protocolDate, setProtocolDate] = useState("");
 
@@ -16,8 +17,10 @@ export function HomePage() {
       </header>
       <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-10">
         <ProtocolHeader
+          customerQuery={customerQuery}
           orderNumber={orderNumber}
           protocolDate={protocolDate}
+          onCustomerQueryChange={setCustomerQuery}
           onOrderNumberChange={setOrderNumber}
           onProtocolDateChange={setProtocolDate}
         />
