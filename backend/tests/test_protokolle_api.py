@@ -221,3 +221,89 @@ def test_update_protokoll_returns_400_for_empty_payload() -> None:
     assert response.status_code == 400
 
     app.dependency_overrides.clear()
+
+
+def test_save_and_get_lackierungsdaten() -> None:
+    client = _client()
+    kunde_id = _create_kunde(client, kunden_nr="K-9005")
+    create_response = client.post(
+        "/protokolle",
+        json={
+            "auftrags_nr": "A-50001",
+            "kunde_id": kunde_id,
+            "aufbautyp": "Container",
+            "projektleiter": "PL-Lack",
+            "vertriebsgebiet": "Nord",
+            "kabel_funklayout_geaendert": False,
+            "techn_aenderungen": None,
+            "datum": "2026-03-08",
+            "anlage_datum": "2026-03-08",
+        },
+    )
+    assert create_response.status_code == 201
+    protokoll_id = create_response.json()["id"]
+
+    save_response = client.put(
+        f"/protokolle/{protokoll_id}/lackierungsdaten",
+        json={
+            "klarlackschicht": True,
+            "klarlackschicht_bemerkung": " Decklack aufgetragen ",
+            "zinkstaubbeschichtung": False,
+            "zinkstaub_bemerkung": None,
+            "e_kolben_beschichtung": True,
+            "e_kolben_bemerkung": "Erledigt",
+        },
+    )
+    assert save_response.status_code == 200
+    saved_payload = save_response.json()
+    assert saved_payload["protokoll_id"] == protokoll_id
+    assert saved_payload["klarlackschicht"] is True
+    assert saved_payload["klarlackschicht_bemerkung"] == "Decklack aufgetragen"
+    assert saved_payload["e_kolben_beschichtung"] is True
+    assert saved_payload["e_kolben_bemerkung"] == "Erledigt"
+
+    load_response = client.get(f"/protokolle/{protokoll_id}/lackierungsdaten")
+    assert load_response.status_code == 200
+    loaded_payload = load_response.json()
+    assert loaded_payload["id"] == saved_payload["id"]
+    assert loaded_payload["klarlackschicht_bemerkung"] == "Decklack aufgetragen"
+    assert loaded_payload["e_kolben_bemerkung"] == "Erledigt"
+
+    app.dependency_overrides.clear()
+
+
+def test_save_lackierungsdaten_rejects_note_without_checkbox() -> None:
+    client = _client()
+    kunde_id = _create_kunde(client, kunden_nr="K-9006")
+    create_response = client.post(
+        "/protokolle",
+        json={
+            "auftrags_nr": "A-50002",
+            "kunde_id": kunde_id,
+            "aufbautyp": "Koffer",
+            "projektleiter": "PL-Lack-Error",
+            "vertriebsgebiet": "West",
+            "kabel_funklayout_geaendert": False,
+            "techn_aenderungen": None,
+            "datum": "2026-03-08",
+            "anlage_datum": "2026-03-08",
+        },
+    )
+    assert create_response.status_code == 201
+    protokoll_id = create_response.json()["id"]
+
+    response = client.put(
+        f"/protokolle/{protokoll_id}/lackierungsdaten",
+        json={
+            "klarlackschicht": False,
+            "klarlackschicht_bemerkung": "Darf so nicht gesetzt sein",
+            "zinkstaubbeschichtung": False,
+            "zinkstaub_bemerkung": None,
+            "e_kolben_beschichtung": False,
+            "e_kolben_bemerkung": None,
+        },
+    )
+    assert response.status_code == 400
+    assert "klarlackschicht_bemerkung" in response.json()["detail"]
+
+    app.dependency_overrides.clear()
