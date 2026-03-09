@@ -7,6 +7,25 @@ from pathlib import Path
 import sqlalchemy as sa
 
 
+def _run_alembic(backend_dir: Path, *args: str, env: dict[str, str] | None = None) -> subprocess.CompletedProcess[str]:
+    command = [
+        "python3",
+        "-m",
+        "alembic",
+        "-c",
+        str(backend_dir / "alembic.ini"),
+        *args,
+    ]
+    return subprocess.run(
+        command,
+        cwd=backend_dir,
+        env=env,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+
 def test_alembic_upgrade_head_creates_all_expected_tables(tmp_path: Path) -> None:
     backend_dir = Path(__file__).resolve().parents[1]
     db_path = tmp_path / "alembic_test.db"
@@ -14,14 +33,7 @@ def test_alembic_upgrade_head_creates_all_expected_tables(tmp_path: Path) -> Non
     env = os.environ.copy()
     env["DATABASE_URL"] = f"sqlite:///{db_path}"
 
-    subprocess.run(
-        ["python3", "-m", "alembic", "upgrade", "head"],
-        cwd=backend_dir,
-        env=env,
-        check=True,
-        capture_output=True,
-        text=True,
-    )
+    _run_alembic(backend_dir, "upgrade", "head", env=env)
 
     engine = sa.create_engine(f"sqlite+pysqlite:///{db_path}")
     inspector = sa.inspect(engine)
@@ -44,13 +56,7 @@ def test_alembic_upgrade_head_creates_all_expected_tables(tmp_path: Path) -> Non
 def test_alembic_has_single_head() -> None:
     backend_dir = Path(__file__).resolve().parents[1]
 
-    result = subprocess.run(
-        ["python3", "-m", "alembic", "heads"],
-        cwd=backend_dir,
-        check=True,
-        capture_output=True,
-        text=True,
-    )
+    result = _run_alembic(backend_dir, "heads")
 
     head_lines = [line.strip() for line in result.stdout.splitlines() if line.strip()]
     assert len(head_lines) == 1, f"Expected exactly one head, got: {head_lines}"
@@ -63,14 +69,7 @@ def test_alembic_upgrade_head_matches_expected_schema_details(tmp_path: Path) ->
     env = os.environ.copy()
     env["DATABASE_URL"] = f"sqlite:///{db_path}"
 
-    subprocess.run(
-        ["python3", "-m", "alembic", "upgrade", "head"],
-        cwd=backend_dir,
-        env=env,
-        check=True,
-        capture_output=True,
-        text=True,
-    )
+    _run_alembic(backend_dir, "upgrade", "head", env=env)
 
     engine = sa.create_engine(f"sqlite+pysqlite:///{db_path}")
     inspector = sa.inspect(engine)
@@ -173,14 +172,7 @@ def test_alembic_upgrade_deduplicates_lackierungsdaten_before_unique_index(tmp_p
     env = os.environ.copy()
     env["DATABASE_URL"] = f"sqlite:///{db_path}"
 
-    subprocess.run(
-        ["python3", "-m", "alembic", "upgrade", "20260308_0006"],
-        cwd=backend_dir,
-        env=env,
-        check=True,
-        capture_output=True,
-        text=True,
-    )
+    _run_alembic(backend_dir, "upgrade", "20260308_0006", env=env)
 
     engine = sa.create_engine(f"sqlite+pysqlite:///{db_path}")
     with engine.begin() as conn:
@@ -238,14 +230,7 @@ def test_alembic_upgrade_deduplicates_lackierungsdaten_before_unique_index(tmp_p
             )
         )
 
-    subprocess.run(
-        ["python3", "-m", "alembic", "upgrade", "head"],
-        cwd=backend_dir,
-        env=env,
-        check=True,
-        capture_output=True,
-        text=True,
-    )
+    _run_alembic(backend_dir, "upgrade", "head", env=env)
 
     with engine.connect() as conn:
         remaining_rows = conn.execute(
