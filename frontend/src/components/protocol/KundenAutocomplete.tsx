@@ -11,7 +11,14 @@ type KundenAutocompleteProps = {
 };
 
 const MAX_RESULTS = 8;
-const normalizeSearchText = (text: string) => text.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+
+const normalizeSearchText = (text: string) =>
+  text
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .trim();
 
 export function KundenAutocomplete({ value, onChange, onSelectKunde }: KundenAutocompleteProps) {
   const rootRef = useRef<HTMLDivElement>(null);

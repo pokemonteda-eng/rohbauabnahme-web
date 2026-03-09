@@ -15,7 +15,7 @@ const kundenApiResponse = [
     id: 2,
     kunden_nr: "K-2000",
     name: "Rohbau AG",
-    adresse: "Marktplatz 2, 80331 Muenchen",
+    adresse: "Marktplatz 2, 80331 München",
     angelegt_am: "2026-03-07T11:00:00Z"
   }
 ];
@@ -113,6 +113,15 @@ describe("KundenAutocomplete", () => {
     fireEvent.focus(screen.getByLabelText("Kunde"));
 
     expect(await screen.findByText("Keine Kunden gefunden.")).not.toBeNull();
+  });
+
+  test("matches umlauts and diacritics in query and customer fields", async () => {
+    mockFetchSuccess();
+
+    render(<KundenAutocomplete value="Munchen" onChange={jest.fn()} />);
+    fireEvent.focus(screen.getByLabelText("Kunde"));
+
+    expect(await screen.findByRole("option", { name: /Rohbau AG/i })).not.toBeNull();
   });
 
   test("shows loading state while API is pending", async () => {
