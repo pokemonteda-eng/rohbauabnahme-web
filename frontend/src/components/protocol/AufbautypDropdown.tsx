@@ -57,7 +57,7 @@ export function AufbautypDropdown({ value, onChange }: AufbautypDropdownProps) {
         required
       >
         <option value=''>
-          {isLoading ? 'Lade Aufbautypen...' : error ? 'Fehler beim Laden' : 'Bitte ausw?hlen'}
+          {isLoading ? 'Lade Aufbautypen...' : error ? 'Fehler beim Laden' : 'Bitte auswählen'}
         </option>
         {options.map((entry) => (
           <option key={entry} value={entry}>

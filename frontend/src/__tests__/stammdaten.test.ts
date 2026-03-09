@@ -54,4 +54,15 @@ describe("listAufbautypen", () => {
 
     await expect(listAufbautypen()).resolves.toEqual([]);
   });
+
+  test("filters non-string entries from valid array payload", async () => {
+    setMockFetch(
+      jest.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(["FB", 12, null, "FZB"])
+      } as Response) as unknown as typeof fetch
+    );
+
+    await expect(listAufbautypen()).resolves.toEqual(["FB", "FZB"]);
+  });
 });

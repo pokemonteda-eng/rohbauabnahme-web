@@ -11,6 +11,10 @@ export async function listAufbautypen(signal?: AbortSignal): Promise<string[]> {
     throw new Error(`Aufbautypen konnten nicht geladen werden (${response.status}).`);
   }
 
-  const data = (await response.json()) as string[];
-  return Array.isArray(data) ? data : [];
+  const data: unknown = await response.json();
+  if (!Array.isArray(data)) {
+    return [];
+  }
+
+  return data.filter((entry): entry is string => typeof entry === 'string');
 }
