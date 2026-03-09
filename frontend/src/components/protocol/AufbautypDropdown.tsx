@@ -39,12 +39,6 @@ export function AufbautypDropdown({ value, onChange }: AufbautypDropdownProps) {
 
   const options = useMemo(() => items.filter((entry) => entry.trim().length > 0), [items]);
 
-  useEffect(() => {
-    if (value === '' && options.length > 0) {
-      onChange(options[0]);
-    }
-  }, [onChange, options, value]);
-
   return (
     <div className='space-y-2'>
       <Label htmlFor='aufbautyp'>Aufbautyp</Label>
@@ -56,8 +50,12 @@ export function AufbautypDropdown({ value, onChange }: AufbautypDropdownProps) {
         disabled={isLoading || error != null}
         required
       >
-        <option value=''>
-          {isLoading ? 'Lade Aufbautypen...' : error ? 'Fehler beim Laden' : 'Bitte auswählen'}
+        <option value='' disabled={!isLoading && error == null}>
+          {isLoading
+            ? 'Lade Aufbautypen...'
+            : error
+              ? 'Fehler beim Laden'
+              : 'Bitte Aufbautyp auswählen'}
         </option>
         {options.map((entry) => (
           <option key={entry} value={entry}>

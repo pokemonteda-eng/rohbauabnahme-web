@@ -61,9 +61,7 @@ describe("App", () => {
     const protocolDateInput = screen.getByLabelText<HTMLInputElement>("Protokolldatum");
 
     expect(customerInput.value).toBe("");
-    await waitFor(() => {
-      expect(aufbautypSelect.value).toBe("FB");
-    });
+    expect(aufbautypSelect.value).toBe("");
     expect(aufbautypSelect.required).toBe(true);
     expect(orderNumberInput.required).toBe(true);
     expect(protocolDateInput.required).toBe(true);
