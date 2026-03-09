@@ -59,7 +59,7 @@ describe("listAufbautypen", () => {
     setMockFetch(
       jest.fn().mockResolvedValue({
         ok: true,
-        json: () => Promise.resolve(["FB", 12, null, "FZB"])
+        json: () => Promise.resolve([" FB ", 12, null, "FZB", "FB", ""])
       } as Response) as unknown as typeof fetch
     );
 

@@ -16,5 +16,10 @@ export async function listAufbautypen(signal?: AbortSignal): Promise<string[]> {
     return [];
   }
 
-  return data.filter((entry): entry is string => typeof entry === 'string');
+  const sanitized = data
+    .filter((entry): entry is string => typeof entry === 'string')
+    .map((entry) => entry.trim())
+    .filter((entry) => entry.length > 0);
+
+  return [...new Set(sanitized)];
 }

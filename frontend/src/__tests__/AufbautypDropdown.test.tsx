@@ -64,7 +64,7 @@ describe("AufbautypDropdown", () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 
-  test("keeps select enabled when payload is malformed", async () => {
+  test("disables select when payload is malformed", async () => {
     setMockFetch(
       jest.fn().mockResolvedValue({
         ok: true,
@@ -77,7 +77,29 @@ describe("AufbautypDropdown", () => {
 
     const select = await screen.findByLabelText<HTMLSelectElement>("Aufbautyp");
     await waitFor(() => {
-      expect(select.disabled).toBe(false);
+      expect(select.disabled).toBe(true);
+    });
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  test("shows empty-state hint and disables select when no options are available", async () => {
+    setMockFetch(
+      jest.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve([])
+      } as Response) as unknown as typeof fetch
+    );
+
+    const onChange = jest.fn();
+    render(<AufbautypDropdown value="" onChange={onChange} />);
+
+    const select = await screen.findByLabelText<HTMLSelectElement>("Aufbautyp");
+    await waitFor(() => {
+      expect(select.disabled).toBe(true);
+      expect(screen.getByRole("option", { name: "Keine Aufbautypen verfügbar" })).not.toBeNull();
+      expect(
+        screen.getByText("Für diesen Mandanten sind keine Aufbautypen hinterlegt.")
+      ).not.toBeNull();
     });
     expect(onChange).not.toHaveBeenCalled();
   });

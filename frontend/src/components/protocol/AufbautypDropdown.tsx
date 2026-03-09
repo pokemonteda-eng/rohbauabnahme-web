@@ -37,7 +37,16 @@ export function AufbautypDropdown({ value, onChange }: AufbautypDropdownProps) {
     return () => abortController.abort();
   }, []);
 
-  const options = useMemo(() => items.filter((entry) => entry.trim().length > 0), [items]);
+  const options = useMemo(() => items, [items]);
+  const hasNoOptions = !isLoading && error == null && options.length === 0;
+
+  const placeholderText = isLoading
+    ? 'Lade Aufbautypen...'
+    : error
+      ? 'Fehler beim Laden'
+      : hasNoOptions
+        ? 'Keine Aufbautypen verfügbar'
+        : 'Bitte Aufbautyp auswählen';
 
   return (
     <div className='space-y-2'>
@@ -47,15 +56,11 @@ export function AufbautypDropdown({ value, onChange }: AufbautypDropdownProps) {
         name='aufbautyp'
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        disabled={isLoading || error != null}
+        disabled={isLoading || error != null || hasNoOptions}
         required
       >
         <option value='' disabled={!isLoading && error == null}>
-          {isLoading
-            ? 'Lade Aufbautypen...'
-            : error
-              ? 'Fehler beim Laden'
-              : 'Bitte Aufbautyp auswählen'}
+          {placeholderText}
         </option>
         {options.map((entry) => (
           <option key={entry} value={entry}>
@@ -64,6 +69,9 @@ export function AufbautypDropdown({ value, onChange }: AufbautypDropdownProps) {
         ))}
       </Select>
       {error != null && <p className='text-xs text-red-600'>{error}</p>}
+      {hasNoOptions && (
+        <p className='text-xs text-slate-500'>Für diesen Mandanten sind keine Aufbautypen hinterlegt.</p>
+      )}
     </div>
   );
 }
