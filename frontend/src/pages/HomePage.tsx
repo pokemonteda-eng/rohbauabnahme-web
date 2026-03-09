@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { LackierungSection } from "@/components/protocol/LackierungSection";
 import { ProtocolHeader } from "@/components/protocol/ProtocolHeader";
 import { Button } from "@/components/ui/button";
 
@@ -9,6 +10,12 @@ export function HomePage() {
   const [protocolDate, setProtocolDate] = useState("");
   const [aufbautyp, setAufbautyp] = useState("");
   const [vertriebsgebiet, setVertriebsgebiet] = useState("");
+  const [klarlackschicht, setKlarlackschicht] = useState(false);
+  const [klarlackschichtBemerkung, setKlarlackschichtBemerkung] = useState("");
+  const [zinkstaub, setZinkstaub] = useState(false);
+  const [zinkstaubBemerkung, setZinkstaubBemerkung] = useState("");
+  const [eKolben, setEKolben] = useState(false);
+  const [eKolbenBemerkung, setEKolbenBemerkung] = useState("");
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
@@ -29,6 +36,20 @@ export function HomePage() {
           onProtocolDateChange={setProtocolDate}
           onAufbautypChange={setAufbautyp}
           onVertriebsgebietChange={setVertriebsgebiet}
+        />
+        <LackierungSection
+          klarlackschicht={klarlackschicht}
+          klarlackschichtBemerkung={klarlackschichtBemerkung}
+          zinkstaub={zinkstaub}
+          zinkstaubBemerkung={zinkstaubBemerkung}
+          eKolben={eKolben}
+          eKolbenBemerkung={eKolbenBemerkung}
+          onKlarlackschichtChange={setKlarlackschicht}
+          onKlarlackschichtBemerkungChange={setKlarlackschichtBemerkung}
+          onZinkstaubChange={setZinkstaub}
+          onZinkstaubBemerkungChange={setZinkstaubBemerkung}
+          onEKolbenChange={setEKolben}
+          onEKolbenBemerkungChange={setEKolbenBemerkung}
         />
         <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
           <h1 className="text-2xl font-bold tracking-tight">React Frontend Setup</h1>
