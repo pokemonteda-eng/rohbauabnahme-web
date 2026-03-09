@@ -85,13 +85,13 @@ export function KundenAutocomplete({ value, onChange, onSelectKunde }: KundenAut
   }, [kunden, normalizedQuery]);
 
   useEffect(() => {
-    if (!isOpen || filteredKunden.length === 0) {
+    if (!isOpen) {
       setActiveIndex(-1);
       return;
     }
 
-    setActiveIndex(0);
-  }, [isOpen, filteredKunden.length]);
+    setActiveIndex(filteredKunden.length > 0 ? 0 : -1);
+  }, [isOpen, normalizedQuery, filteredKunden.length]);
 
   const selectKunde = (kunde: Kunde) => {
     onChange(`${kunde.kunden_nr} - ${kunde.name}`);

@@ -260,6 +260,31 @@ describe("KundenAutocomplete", () => {
     expect(secondOption.getAttribute("aria-selected")).toBe("false");
   });
 
+  test("resets active option when query changes without changing result count", async () => {
+    mockFetchSuccess();
+
+    const Wrapper = () => {
+      const [value, setValue] = React.useState("");
+      return <KundenAutocomplete value={value} onChange={setValue} />;
+    };
+
+    render(<Wrapper />);
+
+    const input = screen.getByLabelText("Kunde");
+    fireEvent.focus(input);
+    expect(await screen.findByText("Muster Bau GmbH")).not.toBeNull();
+
+    fireEvent.keyDown(input, { key: "ArrowDown" });
+    const firstOption = screen.getByRole("option", { name: /Muster Bau GmbH/i });
+    const secondOption = screen.getByRole("option", { name: /Rohbau AG/i });
+    expect(secondOption.getAttribute("aria-selected")).toBe("true");
+
+    fireEvent.change(input, { target: { value: "bau" } });
+
+    expect(firstOption.getAttribute("aria-selected")).toBe("true");
+    expect(secondOption.getAttribute("aria-selected")).toBe("false");
+  });
+
   test("closes dropdown when tabbing focus outside the autocomplete", async () => {
     mockFetchSuccess();
 
