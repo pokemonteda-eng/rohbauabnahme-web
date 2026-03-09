@@ -1,5 +1,6 @@
 import { AufbautypDropdown } from "@/components/protocol/AufbautypDropdown";
 import { KundenAutocomplete } from "@/components/protocol/KundenAutocomplete";
+import { VertriebsgebietDropdown } from "@/components/protocol/VertriebsgebietDropdown";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -8,10 +9,12 @@ type ProtocolHeaderProps = {
   orderNumber: string;
   protocolDate: string;
   aufbautyp: string;
+  vertriebsgebiet: string;
   onCustomerQueryChange: (value: string) => void;
   onOrderNumberChange: (value: string) => void;
   onProtocolDateChange: (value: string) => void;
   onAufbautypChange: (value: string) => void;
+  onVertriebsgebietChange: (value: string) => void;
 };
 
 export function ProtocolHeader({
@@ -19,17 +22,21 @@ export function ProtocolHeader({
   orderNumber,
   protocolDate,
   aufbautyp,
+  vertriebsgebiet,
   onCustomerQueryChange,
   onOrderNumberChange,
   onProtocolDateChange,
-  onAufbautypChange
+  onAufbautypChange,
+  onVertriebsgebietChange
 }: ProtocolHeaderProps) {
   return (
     <section className="rounded-lg border bg-card p-4 shadow-sm sm:p-6">
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-4 md:gap-6">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-5 md:gap-6">
         <KundenAutocomplete value={customerQuery} onChange={onCustomerQueryChange} />
 
         <AufbautypDropdown value={aufbautyp} onChange={onAufbautypChange} />
+
+        <VertriebsgebietDropdown value={vertriebsgebiet} onChange={onVertriebsgebietChange} />
 
         <div className="space-y-2">
           <Label htmlFor="order-number">Auftrags-Nr.</Label>
