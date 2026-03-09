@@ -65,4 +65,77 @@ describe("KundenAutocomplete", () => {
       expect(screen.getByText("Kundenliste konnte nicht geladen werden.")).not.toBeNull();
     });
   });
+
+  test("closes dropdown on outside click and keeps it open on inside click", async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(kundenApiResponse)
+    } as Response);
+
+    render(<KundenAutocomplete value="Muster" onChange={jest.fn()} />);
+
+    fireEvent.focus(screen.getByLabelText("Kunde"));
+    expect(await screen.findByText("Muster Bau GmbH")).not.toBeNull();
+
+    fireEvent.mouseDown(screen.getByRole("button", { name: /Muster Bau GmbH/i }));
+    expect(screen.getByText("Muster Bau GmbH")).not.toBeNull();
+
+    fireEvent.mouseDown(document.body);
+    await waitFor(() => {
+      expect(screen.queryByText("Muster Bau GmbH")).toBeNull();
+    });
+  });
+
+  test("shows empty-state when no customer matches", async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(kundenApiResponse)
+    } as Response);
+
+    render(<KundenAutocomplete value="Unbekannt" onChange={jest.fn()} />);
+    fireEvent.focus(screen.getByLabelText("Kunde"));
+
+    expect(await screen.findByText("Keine Kunden gefunden.")).not.toBeNull();
+  });
+
+  test("shows loading state while API is pending", async () => {
+    let resolveFetch: ((value: Response) => void) | null = null;
+    global.fetch = jest.fn().mockImplementation(
+      () =>
+        new Promise<Response>((resolve) => {
+          resolveFetch = resolve;
+        })
+    );
+
+    render(<KundenAutocomplete value="" onChange={jest.fn()} />);
+    fireEvent.focus(screen.getByLabelText("Kunde"));
+    expect(screen.getByText("Lade Kunden...")).not.toBeNull();
+
+    resolveFetch?.({
+      ok: true,
+      json: () => Promise.resolve(kundenApiResponse)
+    } as Response);
+
+    expect(await screen.findByText("Muster Bau GmbH")).not.toBeNull();
+  });
+
+  test("supports selecting a customer without onSelect callback", async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(kundenApiResponse)
+    } as Response);
+
+    const handleChange = jest.fn();
+
+    render(<KundenAutocomplete value="Muster" onChange={handleChange} />);
+    fireEvent.focus(screen.getByLabelText("Kunde"));
+    expect(await screen.findByText("Muster Bau GmbH")).not.toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: /Muster Bau GmbH/i }));
+
+    expect(handleChange).toHaveBeenCalledWith("K-1000 - Muster Bau GmbH");
+    await waitFor(() => {
+      expect(screen.queryByText("Muster Bau GmbH")).toBeNull();
+    });
+  });
 });
