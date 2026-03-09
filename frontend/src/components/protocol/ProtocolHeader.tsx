@@ -36,7 +36,7 @@ export function ProtocolHeader({
 }: ProtocolHeaderProps) {
   return (
     <section className="rounded-lg border bg-card p-4 shadow-sm sm:p-6">
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-5 md:gap-6">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-6 md:gap-6">
         <KundenAutocomplete value={customerQuery} onChange={onCustomerQueryChange} />
         <ProjektleiterDropdown value={projektleiter} onChange={onProjektleiterChange} />
 
