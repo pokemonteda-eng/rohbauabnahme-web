@@ -9,7 +9,7 @@ describe("App", () => {
         typeof input === "string"
           ? input
           : input instanceof URL
-            ? input.toString()
+            ? input.href
             : input.url;
       if (url === "/api/v1/kunden") {
         return Promise.resolve({
