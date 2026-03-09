@@ -1,16 +1,19 @@
 import { AufbautypDropdown } from "@/components/protocol/AufbautypDropdown";
 import { KundenAutocomplete } from "@/components/protocol/KundenAutocomplete";
 import { VertriebsgebietDropdown } from "@/components/protocol/VertriebsgebietDropdown";
+import { ProjektleiterDropdown } from "@/components/protocol/ProjektleiterDropdown";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 type ProtocolHeaderProps = {
   customerQuery: string;
+  projektleiter: string;
   orderNumber: string;
   protocolDate: string;
   aufbautyp: string;
   vertriebsgebiet: string;
   onCustomerQueryChange: (value: string) => void;
+  onProjektleiterChange: (value: string) => void;
   onOrderNumberChange: (value: string) => void;
   onProtocolDateChange: (value: string) => void;
   onAufbautypChange: (value: string) => void;
@@ -19,11 +22,13 @@ type ProtocolHeaderProps = {
 
 export function ProtocolHeader({
   customerQuery,
+  projektleiter,
   orderNumber,
   protocolDate,
   aufbautyp,
   vertriebsgebiet,
   onCustomerQueryChange,
+  onProjektleiterChange,
   onOrderNumberChange,
   onProtocolDateChange,
   onAufbautypChange,
@@ -33,6 +38,7 @@ export function ProtocolHeader({
     <section className="rounded-lg border bg-card p-4 shadow-sm sm:p-6">
       <div className="grid grid-cols-1 gap-4 md:grid-cols-5 md:gap-6">
         <KundenAutocomplete value={customerQuery} onChange={onCustomerQueryChange} />
+        <ProjektleiterDropdown value={projektleiter} onChange={onProjektleiterChange} />
 
         <AufbautypDropdown value={aufbautyp} onChange={onAufbautypChange} />
 
