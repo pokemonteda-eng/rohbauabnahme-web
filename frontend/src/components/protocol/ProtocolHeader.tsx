@@ -2,18 +2,12 @@ import { AufbautypDropdown } from "@/components/protocol/AufbautypDropdown";
 import { KundenAutocomplete } from "@/components/protocol/KundenAutocomplete";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
 
 type ProtocolHeaderProps = {
-  aufbautyp: string;
-  aufbautypen: string[];
   customerQuery: string;
-  isLoadingAufbautypen: boolean;
   orderNumber: string;
   protocolDate: string;
   aufbautyp: string;
-  aufbautypenError: string | null;
-  onAufbautypChange: (value: string) => void;
   onCustomerQueryChange: (value: string) => void;
   onOrderNumberChange: (value: string) => void;
   onProtocolDateChange: (value: string) => void;
@@ -21,45 +15,21 @@ type ProtocolHeaderProps = {
 };
 
 export function ProtocolHeader({
-  aufbautyp,
-  aufbautypen,
   customerQuery,
-  isLoadingAufbautypen,
   orderNumber,
   protocolDate,
-  aufbautypenError,
-  onAufbautypChange,
+  aufbautyp,
   onCustomerQueryChange,
   onOrderNumberChange,
-  onProtocolDateChange
+  onProtocolDateChange,
+  onAufbautypChange
 }: ProtocolHeaderProps) {
   return (
     <section className="rounded-lg border bg-card p-4 shadow-sm sm:p-6">
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4 md:gap-6">
         <KundenAutocomplete value={customerQuery} onChange={onCustomerQueryChange} />
 
-        <div className="space-y-2">
-          <Label htmlFor="aufbautyp">Aufbautyp</Label>
-          <Select
-            id="aufbautyp"
-            name="aufbautyp"
-            value={aufbautyp}
-            onChange={(event) => onAufbautypChange(event.target.value)}
-            required
-            disabled={isLoadingAufbautypen || aufbautypenError !== null}
-          >
-            <option value="" disabled>
-              {isLoadingAufbautypen
-                ? "Lade Aufbautypen..."
-                : aufbautypenError ?? "Aufbautyp wählen"}
-            </option>
-            {aufbautypen.map((value) => (
-              <option key={value} value={value}>
-                {value}
-              </option>
-            ))}
-          </Select>
-        </div>
+        <AufbautypDropdown value={aufbautyp} onChange={onAufbautypChange} />
 
         <div className="space-y-2">
           <Label htmlFor="order-number">Auftrags-Nr.</Label>
@@ -73,8 +43,6 @@ export function ProtocolHeader({
             required
           />
         </div>
-
-        <AufbautypDropdown value={aufbautyp} onChange={onAufbautypChange} />
 
         <div className="space-y-2">
           <Label htmlFor="protocol-date">Protokolldatum</Label>
