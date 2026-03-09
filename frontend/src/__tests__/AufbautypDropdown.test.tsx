@@ -36,6 +36,7 @@ describe("AufbautypDropdown", () => {
     await waitFor(() => {
       expect(screen.getByRole("option", { name: "FB" })).not.toBeNull();
     });
+    expect(screen.getByRole("option", { name: "Bitte auswählen" })).not.toBeNull();
     expect(onChange).toHaveBeenCalledWith("FB");
 
     fireEvent.change(screen.getByLabelText("Aufbautyp"), { target: { value: "FZB" } });
