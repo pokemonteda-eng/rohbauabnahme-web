@@ -4,10 +4,29 @@ import App from "@/App";
 
 describe("App", () => {
   beforeEach(() => {
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve([])
-    } as Response);
+    global.fetch = jest.fn().mockImplementation((input: RequestInfo | URL) => {
+      const url =
+        typeof input === "string"
+          ? input
+          : input instanceof URL
+            ? input.toString()
+            : input.url;
+      if (url === "/api/v1/kunden") {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve([])
+        } as Response);
+      }
+
+      if (url === "/api/v1/stammdaten/aufbautypen") {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(["FB", "FZB", "Koffer"])
+        } as Response);
+      }
+
+      return Promise.reject(new Error(`Unexpected fetch URL in test: ${url}`));
+    }) as unknown as typeof fetch;
   });
 
   afterEach(() => {
@@ -22,6 +41,7 @@ describe("App", () => {
 
     expect(screen.getByText("rohbauabnahme-web")).not.toBeNull();
     expect(screen.getByLabelText("Kunde")).not.toBeNull();
+    expect(screen.getByLabelText("Aufbautyp")).not.toBeNull();
     expect(screen.getByLabelText("Auftrags-Nr.")).not.toBeNull();
     expect(screen.getByLabelText("Protokolldatum")).not.toBeNull();
     expect(screen.getByRole("heading", { name: "React Frontend Setup" })).not.toBeNull();
@@ -36,20 +56,27 @@ describe("App", () => {
     });
 
     const customerInput = screen.getByLabelText<HTMLInputElement>("Kunde");
+    const aufbautypSelect = screen.getByLabelText<HTMLSelectElement>("Aufbautyp");
     const orderNumberInput = screen.getByLabelText<HTMLInputElement>("Auftrags-Nr.");
     const protocolDateInput = screen.getByLabelText<HTMLInputElement>("Protokolldatum");
 
     expect(customerInput.value).toBe("");
+    await waitFor(() => {
+      expect(aufbautypSelect.value).toBe("FB");
+    });
+    expect(aufbautypSelect.required).toBe(true);
     expect(orderNumberInput.required).toBe(true);
     expect(protocolDateInput.required).toBe(true);
     expect(orderNumberInput.value).toBe("");
     expect(protocolDateInput.value).toBe("");
 
     fireEvent.change(customerInput, { target: { value: "Test AG" } });
+    fireEvent.change(aufbautypSelect, { target: { value: "FZB" } });
     fireEvent.change(orderNumberInput, { target: { value: "A-2026-015" } });
     fireEvent.change(protocolDateInput, { target: { value: "2026-03-08" } });
 
     expect(customerInput.value).toBe("Test AG");
+    expect(aufbautypSelect.value).toBe("FZB");
     expect(orderNumberInput.value).toBe("A-2026-015");
     expect(protocolDateInput.value).toBe("2026-03-08");
   });

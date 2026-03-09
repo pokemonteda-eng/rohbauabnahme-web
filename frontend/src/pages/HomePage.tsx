@@ -1,12 +1,53 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
+import { listAufbautypen } from "@/api/stammdaten";
 import { ProtocolHeader } from "@/components/protocol/ProtocolHeader";
 import { Button } from "@/components/ui/button";
 
 export function HomePage() {
+  const [aufbautyp, setAufbautyp] = useState("");
+  const [aufbautypen, setAufbautypen] = useState<string[]>([]);
+  const [aufbautypenError, setAufbautypenError] = useState<string | null>(null);
+  const [isLoadingAufbautypen, setIsLoadingAufbautypen] = useState(true);
   const [customerQuery, setCustomerQuery] = useState("");
   const [orderNumber, setOrderNumber] = useState("");
   const [protocolDate, setProtocolDate] = useState("");
+  const [aufbautyp, setAufbautyp] = useState("");
+
+  useEffect(() => {
+    let isMounted = true;
+    const abortController = new AbortController();
+
+    const loadAufbautypen = async () => {
+      setIsLoadingAufbautypen(true);
+      setAufbautypenError(null);
+      try {
+        const values = await listAufbautypen(abortController.signal);
+        if (!isMounted) {
+          return;
+        }
+
+        setAufbautypen(values);
+        setAufbautyp((currentValue) => currentValue || values[0] || "");
+      } catch {
+        if (!isMounted || abortController.signal.aborted) {
+          return;
+        }
+        setAufbautypenError("Aufbautypen konnten nicht geladen werden.");
+      } finally {
+        if (isMounted) {
+          setIsLoadingAufbautypen(false);
+        }
+      }
+    };
+
+    void loadAufbautypen();
+
+    return () => {
+      isMounted = false;
+      abortController.abort();
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
@@ -17,9 +58,14 @@ export function HomePage() {
       </header>
       <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-10">
         <ProtocolHeader
+          aufbautyp={aufbautyp}
+          aufbautypen={aufbautypen}
           customerQuery={customerQuery}
+          isLoadingAufbautypen={isLoadingAufbautypen}
           orderNumber={orderNumber}
           protocolDate={protocolDate}
+          aufbautypenError={aufbautypenError}
+          onAufbautypChange={setAufbautyp}
           onCustomerQueryChange={setCustomerQuery}
           onOrderNumberChange={setOrderNumber}
           onProtocolDateChange={setProtocolDate}
