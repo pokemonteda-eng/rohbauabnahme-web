@@ -3,8 +3,23 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { ProjektleiterDropdown } from "@/components/protocol/ProjektleiterDropdown";
 
 describe("ProjektleiterDropdown", () => {
+  const originalFetch = global.fetch;
+
+  const setMockFetch = (mock: typeof fetch) => {
+    Object.defineProperty(global, "fetch", {
+      configurable: true,
+      writable: true,
+      value: mock
+    });
+  };
+
   afterEach(() => {
     jest.restoreAllMocks();
+    if (originalFetch == null) {
+      delete (global as { fetch?: typeof fetch }).fetch;
+    } else {
+      setMockFetch(originalFetch);
+    }
   });
 
   test("loads options and propagates selection", async () => {
@@ -12,7 +27,7 @@ describe("ProjektleiterDropdown", () => {
       ok: true,
       json: () => Promise.resolve(["Max Mustermann", "Erika Musterfrau"])
     } as Response);
-    global.fetch = fetchMock;
+    setMockFetch(fetchMock as unknown as typeof fetch);
 
     const onChange = jest.fn();
     render(<ProjektleiterDropdown value="" onChange={onChange} />);
@@ -39,10 +54,12 @@ describe("ProjektleiterDropdown", () => {
   });
 
   test("shows error state when API call fails", async () => {
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: false,
-      status: 500
-    } as Response);
+    setMockFetch(
+      jest.fn().mockResolvedValue({
+        ok: false,
+        status: 500
+      } as Response) as unknown as typeof fetch
+    );
 
     render(<ProjektleiterDropdown value="" onChange={jest.fn()} />);
 
@@ -54,10 +71,12 @@ describe("ProjektleiterDropdown", () => {
   });
 
   test("shows empty state when API returns no entries", async () => {
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve([])
-    } as Response);
+    setMockFetch(
+      jest.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve([])
+      } as Response) as unknown as typeof fetch
+    );
 
     render(<ProjektleiterDropdown value="" onChange={jest.fn()} />);
 
