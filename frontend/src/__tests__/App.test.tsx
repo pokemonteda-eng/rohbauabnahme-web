@@ -17,8 +17,8 @@ describe("App", () => {
   test("keeps protocol header fields controlled and updates values on change", () => {
     render(<App />);
 
-    const orderNumberInput = screen.getByLabelText("Auftrags-Nr.") as HTMLInputElement;
-    const protocolDateInput = screen.getByLabelText("Protokolldatum") as HTMLInputElement;
+    const orderNumberInput = screen.getByLabelText<HTMLInputElement>("Auftrags-Nr.");
+    const protocolDateInput = screen.getByLabelText<HTMLInputElement>("Protokolldatum");
 
     expect(orderNumberInput.value).toBe("");
     expect(protocolDateInput.value).toBe("");
