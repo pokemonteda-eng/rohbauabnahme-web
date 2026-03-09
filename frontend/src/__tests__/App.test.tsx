@@ -52,6 +52,13 @@ describe("App", () => {
     expect(screen.getByLabelText("Vertriebsgebiet")).not.toBeNull();
     expect(screen.getByLabelText("Auftrags-Nr.")).not.toBeNull();
     expect(screen.getByLabelText("Protokolldatum")).not.toBeNull();
+    expect(screen.getByRole("heading", { name: "Lackierung" })).not.toBeNull();
+    expect(screen.getByLabelText("Klarlackschicht")).not.toBeNull();
+    expect(screen.getByLabelText("Zinkstaub")).not.toBeNull();
+    expect(screen.getByLabelText("E-Kolben")).not.toBeNull();
+    expect(screen.queryByLabelText("Bemerkung Klarlackschicht")).toBeNull();
+    expect(screen.queryByLabelText("Bemerkung Zinkstaub")).toBeNull();
+    expect(screen.queryByLabelText("Bemerkung E-Kolben")).toBeNull();
     expect(screen.getByRole("heading", { name: "React Frontend Setup" })).not.toBeNull();
     expect(screen.getByRole("button", { name: "Primary Action" })).not.toBeNull();
     expect(screen.getByRole("button", { name: "Sekundär" })).not.toBeNull();
@@ -68,6 +75,9 @@ describe("App", () => {
     const vertriebsgebietSelect = screen.getByLabelText<HTMLSelectElement>("Vertriebsgebiet");
     const orderNumberInput = screen.getByLabelText<HTMLInputElement>("Auftrags-Nr.");
     const protocolDateInput = screen.getByLabelText<HTMLInputElement>("Protokolldatum");
+    const klarlackschichtCheckbox = screen.getByLabelText<HTMLInputElement>("Klarlackschicht");
+    const zinkstaubCheckbox = screen.getByLabelText<HTMLInputElement>("Zinkstaub");
+    const eKolbenCheckbox = screen.getByLabelText<HTMLInputElement>("E-Kolben");
 
     expect(customerInput.value).toBe("");
     expect(aufbautypSelect.value).toBe("");
@@ -78,17 +88,40 @@ describe("App", () => {
     expect(protocolDateInput.required).toBe(true);
     expect(orderNumberInput.value).toBe("");
     expect(protocolDateInput.value).toBe("");
+    expect(klarlackschichtCheckbox.checked).toBe(false);
+    expect(zinkstaubCheckbox.checked).toBe(false);
+    expect(eKolbenCheckbox.checked).toBe(false);
+    expect(screen.queryByLabelText("Bemerkung Klarlackschicht")).toBeNull();
+    expect(screen.queryByLabelText("Bemerkung Zinkstaub")).toBeNull();
+    expect(screen.queryByLabelText("Bemerkung E-Kolben")).toBeNull();
 
     fireEvent.change(customerInput, { target: { value: "Test AG" } });
     fireEvent.change(aufbautypSelect, { target: { value: "FZB" } });
     fireEvent.change(vertriebsgebietSelect, { target: { value: "Nord" } });
     fireEvent.change(orderNumberInput, { target: { value: "A-2026-015" } });
     fireEvent.change(protocolDateInput, { target: { value: "2026-03-08" } });
+    fireEvent.click(klarlackschichtCheckbox);
+    fireEvent.click(zinkstaubCheckbox);
+    fireEvent.click(eKolbenCheckbox);
+
+    const klarlackschichtBemerkung = screen.getByLabelText<HTMLInputElement>("Bemerkung Klarlackschicht");
+    const zinkstaubBemerkung = screen.getByLabelText<HTMLInputElement>("Bemerkung Zinkstaub");
+    const eKolbenBemerkung = screen.getByLabelText<HTMLInputElement>("Bemerkung E-Kolben");
+
+    fireEvent.change(klarlackschichtBemerkung, { target: { value: "Decklack nacharbeiten" } });
+    fireEvent.change(zinkstaubBemerkung, { target: { value: "Schichtdicke pruefen" } });
+    fireEvent.change(eKolbenBemerkung, { target: { value: "Anschluss kontrollieren" } });
 
     expect(customerInput.value).toBe("Test AG");
     expect(aufbautypSelect.value).toBe("FZB");
     expect(vertriebsgebietSelect.value).toBe("Nord");
     expect(orderNumberInput.value).toBe("A-2026-015");
     expect(protocolDateInput.value).toBe("2026-03-08");
+    expect(klarlackschichtCheckbox.checked).toBe(true);
+    expect(zinkstaubCheckbox.checked).toBe(true);
+    expect(eKolbenCheckbox.checked).toBe(true);
+    expect(klarlackschichtBemerkung.value).toBe("Decklack nacharbeiten");
+    expect(zinkstaubBemerkung.value).toBe("Schichtdicke pruefen");
+    expect(eKolbenBemerkung.value).toBe("Anschluss kontrollieren");
   });
 });
