@@ -6,12 +6,12 @@ describe("App", () => {
   test("renders homepage content", () => {
     render(<App />);
 
-    expect(screen.queryByText("rohbauabnahme-web")).not.toBeNull();
-    expect(screen.queryByLabelText("Auftrags-Nr.")).not.toBeNull();
-    expect(screen.queryByLabelText("Protokolldatum")).not.toBeNull();
-    expect(screen.queryByRole("heading", { name: "React Frontend Setup" })).not.toBeNull();
-    expect(screen.queryByRole("button", { name: "Primary Action" })).not.toBeNull();
-    expect(screen.queryByRole("button", { name: "Sekundär" })).not.toBeNull();
+    expect(screen.getByText("rohbauabnahme-web")).not.toBeNull();
+    expect(screen.getByLabelText("Auftrags-Nr.")).not.toBeNull();
+    expect(screen.getByLabelText("Protokolldatum")).not.toBeNull();
+    expect(screen.getByRole("heading", { name: "React Frontend Setup" })).not.toBeNull();
+    expect(screen.getByRole("button", { name: "Primary Action" })).not.toBeNull();
+    expect(screen.getByRole("button", { name: "Sekundär" })).not.toBeNull();
   });
 
   test("keeps protocol header fields controlled and updates values on change", () => {
@@ -20,6 +20,8 @@ describe("App", () => {
     const orderNumberInput = screen.getByLabelText<HTMLInputElement>("Auftrags-Nr.");
     const protocolDateInput = screen.getByLabelText<HTMLInputElement>("Protokolldatum");
 
+    expect(orderNumberInput.required).toBe(true);
+    expect(protocolDateInput.required).toBe(true);
     expect(orderNumberInput.value).toBe("");
     expect(protocolDateInput.value).toBe("");
 

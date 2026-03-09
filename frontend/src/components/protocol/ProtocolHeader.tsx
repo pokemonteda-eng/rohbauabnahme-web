@@ -38,6 +38,7 @@ export function ProtocolHeader({
             type="date"
             value={protocolDate}
             onChange={(event) => onProtocolDateChange(event.target.value)}
+            required
           />
         </div>
       </div>
