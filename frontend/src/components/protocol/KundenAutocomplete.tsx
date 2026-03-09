@@ -11,6 +11,7 @@ type KundenAutocompleteProps = {
 };
 
 const MAX_RESULTS = 8;
+const normalizeSearchText = (text: string) => text.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 
 export function KundenAutocomplete({ value, onChange, onSelectKunde }: KundenAutocompleteProps) {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -59,7 +60,7 @@ export function KundenAutocomplete({ value, onChange, onSelectKunde }: KundenAut
     };
   }, []);
 
-  const normalizedQuery = value.trim().toLowerCase();
+  const normalizedQuery = normalizeSearchText(value);
 
   const filteredKunden = useMemo(() => {
     if (normalizedQuery.length === 0) {
@@ -68,7 +69,9 @@ export function KundenAutocomplete({ value, onChange, onSelectKunde }: KundenAut
 
     return kunden
       .filter((kunde) => {
-        const searchableText = `${kunde.kunden_nr} ${kunde.name} ${kunde.adresse}`.toLowerCase();
+        const searchableText = normalizeSearchText(
+          `${kunde.kunden_nr} ${kunde.name} ${kunde.adresse} ${kunde.kunden_nr} - ${kunde.name}`
+        );
         return searchableText.includes(normalizedQuery);
       })
       .slice(0, MAX_RESULTS);

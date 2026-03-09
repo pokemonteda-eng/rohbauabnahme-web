@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import React from "react";
 
 import { KundenAutocomplete } from "@/components/protocol/KundenAutocomplete";
 
@@ -152,6 +153,38 @@ describe("KundenAutocomplete", () => {
     await waitFor(() => {
       expect(screen.queryByText("Muster Bau GmbH")).toBeNull();
     });
+  });
+
+  test("keeps selected customer discoverable after refocus without editing", async () => {
+    mockFetchSuccess();
+
+    const Wrapper = () => {
+      const [value, setValue] = React.useState("");
+      return (
+        <div>
+          <KundenAutocomplete value={value} onChange={setValue} />
+          <button type="button">Outside</button>
+        </div>
+      );
+    };
+
+    render(<Wrapper />);
+
+    const input = screen.getByLabelText("Kunde");
+    fireEvent.focus(input);
+    expect(await screen.findByText("Muster Bau GmbH")).not.toBeNull();
+
+    fireEvent.click(screen.getByRole("option", { name: /Muster Bau GmbH/i }));
+    await waitFor(() => {
+      expect((input as HTMLInputElement).value).toBe("K-1000 - Muster Bau GmbH");
+      expect(input.getAttribute("aria-expanded")).toBe("false");
+    });
+
+    const outsideButton = screen.getByRole("button", { name: "Outside" });
+    fireEvent.focus(outsideButton);
+    fireEvent.focus(input);
+
+    expect(await screen.findByRole("option", { name: /Muster Bau GmbH/i })).not.toBeNull();
   });
 
   test("supports keyboard navigation and enter selection", async () => {
