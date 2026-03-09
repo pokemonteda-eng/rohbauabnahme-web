@@ -90,7 +90,17 @@ export function KundenAutocomplete({ value, onChange, onSelectKunde }: KundenAut
   };
 
   return (
-    <div className="space-y-2" ref={rootRef}>
+    <div
+      className="space-y-2"
+      ref={rootRef}
+      onBlurCapture={(event) => {
+        const nextFocused = event.relatedTarget as Node | null;
+        if (nextFocused != null && rootRef.current?.contains(nextFocused)) {
+          return;
+        }
+        setIsOpen(false);
+      }}
+    >
       <Label htmlFor="kunde-suche">Kunde</Label>
       <div className="relative">
         <Input

@@ -20,15 +20,35 @@ const kundenApiResponse = [
 ];
 
 describe("KundenAutocomplete", () => {
+  const originalFetch = global.fetch;
+
+  const setMockFetch = (mock: typeof fetch) => {
+    Object.defineProperty(global, "fetch", {
+      configurable: true,
+      writable: true,
+      value: mock
+    });
+  };
+
+  const mockFetchSuccess = () =>
+    setMockFetch(
+      jest.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(kundenApiResponse)
+      } as Response) as unknown as typeof fetch
+    );
+
   afterEach(() => {
     jest.restoreAllMocks();
+    if (originalFetch == null) {
+      delete (global as { fetch?: typeof fetch }).fetch;
+      return;
+    }
+    setMockFetch(originalFetch);
   });
 
   test("loads kunden from API and allows selecting a suggestion", async () => {
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(kundenApiResponse)
-    } as Response);
+    mockFetchSuccess();
 
     const handleChange = jest.fn();
     const handleSelect = jest.fn();
@@ -53,10 +73,12 @@ describe("KundenAutocomplete", () => {
   });
 
   test("shows API error state when request fails", async () => {
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: false,
-      status: 500
-    } as Response);
+    setMockFetch(
+      jest.fn().mockResolvedValue({
+        ok: false,
+        status: 500
+      } as Response) as unknown as typeof fetch
+    );
 
     render(<KundenAutocomplete value="" onChange={jest.fn()} />);
     fireEvent.focus(screen.getByLabelText("Kunde"));
@@ -67,10 +89,7 @@ describe("KundenAutocomplete", () => {
   });
 
   test("closes dropdown on outside click and keeps it open on inside click", async () => {
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(kundenApiResponse)
-    } as Response);
+    mockFetchSuccess();
 
     render(<KundenAutocomplete value="Muster" onChange={jest.fn()} />);
 
@@ -87,10 +106,7 @@ describe("KundenAutocomplete", () => {
   });
 
   test("shows empty-state when no customer matches", async () => {
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(kundenApiResponse)
-    } as Response);
+    mockFetchSuccess();
 
     render(<KundenAutocomplete value="Unbekannt" onChange={jest.fn()} />);
     fireEvent.focus(screen.getByLabelText("Kunde"));
@@ -100,11 +116,13 @@ describe("KundenAutocomplete", () => {
 
   test("shows loading state while API is pending", async () => {
     let resolveFetch: ((value: Response) => void) | null = null;
-    global.fetch = jest.fn().mockImplementation(
-      () =>
-        new Promise<Response>((resolve) => {
-          resolveFetch = resolve;
-        })
+    setMockFetch(
+      jest.fn().mockImplementation(
+        () =>
+          new Promise<Response>((resolve) => {
+            resolveFetch = resolve;
+          })
+      ) as unknown as typeof fetch
     );
 
     render(<KundenAutocomplete value="" onChange={jest.fn()} />);
@@ -120,10 +138,7 @@ describe("KundenAutocomplete", () => {
   });
 
   test("supports selecting a customer without onSelect callback", async () => {
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(kundenApiResponse)
-    } as Response);
+    mockFetchSuccess();
 
     const handleChange = jest.fn();
 
@@ -140,10 +155,7 @@ describe("KundenAutocomplete", () => {
   });
 
   test("supports keyboard navigation and enter selection", async () => {
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(kundenApiResponse)
-    } as Response);
+    mockFetchSuccess();
 
     const handleChange = jest.fn();
     render(<KundenAutocomplete value="" onChange={handleChange} />);
@@ -159,10 +171,7 @@ describe("KundenAutocomplete", () => {
   });
 
   test("closes dropdown on escape", async () => {
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(kundenApiResponse)
-    } as Response);
+    mockFetchSuccess();
 
     render(<KundenAutocomplete value="" onChange={jest.fn()} />);
 
@@ -178,10 +187,7 @@ describe("KundenAutocomplete", () => {
   });
 
   test("opens on arrow keys when closed and updates active option via hover/up navigation", async () => {
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(kundenApiResponse)
-    } as Response);
+    mockFetchSuccess();
 
     render(<KundenAutocomplete value="" onChange={jest.fn()} />);
 
@@ -210,5 +216,30 @@ describe("KundenAutocomplete", () => {
     fireEvent.keyDown(input, { key: "ArrowUp" });
     expect(firstOption.getAttribute("aria-selected")).toBe("true");
     expect(secondOption.getAttribute("aria-selected")).toBe("false");
+  });
+
+  test("closes dropdown when tabbing focus outside the autocomplete", async () => {
+    mockFetchSuccess();
+
+    render(
+      <div>
+        <KundenAutocomplete value="" onChange={jest.fn()} />
+        <button type="button">Outside</button>
+      </div>
+    );
+
+    const input = screen.getByLabelText("Kunde");
+    fireEvent.focus(input);
+    expect(await screen.findByText("Muster Bau GmbH")).not.toBeNull();
+    expect(input.getAttribute("aria-expanded")).toBe("true");
+
+    const outsideButton = screen.getByRole("button", { name: "Outside" });
+    fireEvent.blur(input, { relatedTarget: outsideButton });
+    fireEvent.focus(outsideButton);
+
+    await waitFor(() => {
+      expect(input.getAttribute("aria-expanded")).toBe("false");
+      expect(screen.queryByText("Muster Bau GmbH")).toBeNull();
+    });
   });
 });
