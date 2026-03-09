@@ -176,4 +176,39 @@ describe("KundenAutocomplete", () => {
       expect(screen.queryByText("Muster Bau GmbH")).toBeNull();
     });
   });
+
+  test("opens on arrow keys when closed and updates active option via hover/up navigation", async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(kundenApiResponse)
+    } as Response);
+
+    render(<KundenAutocomplete value="" onChange={jest.fn()} />);
+
+    const input = screen.getByLabelText("Kunde");
+    fireEvent.focus(input);
+    expect(await screen.findByText("Muster Bau GmbH")).not.toBeNull();
+
+    fireEvent.keyDown(input, { key: "Escape" });
+    await waitFor(() => {
+      expect(screen.queryByText("Muster Bau GmbH")).toBeNull();
+    });
+
+    fireEvent.keyDown(input, { key: "ArrowDown" });
+    expect(await screen.findByText("Muster Bau GmbH")).not.toBeNull();
+
+    fireEvent.keyDown(input, { key: "ArrowUp" });
+    expect(await screen.findByText("Muster Bau GmbH")).not.toBeNull();
+
+    const firstOption = screen.getByRole("option", { name: /Muster Bau GmbH/i });
+    const secondOption = screen.getByRole("option", { name: /Rohbau AG/i });
+
+    fireEvent.mouseEnter(secondOption);
+    expect(secondOption.getAttribute("aria-selected")).toBe("true");
+    expect(firstOption.getAttribute("aria-selected")).toBe("false");
+
+    fireEvent.keyDown(input, { key: "ArrowUp" });
+    expect(firstOption.getAttribute("aria-selected")).toBe("true");
+    expect(secondOption.getAttribute("aria-selected")).toBe("false");
+  });
 });
