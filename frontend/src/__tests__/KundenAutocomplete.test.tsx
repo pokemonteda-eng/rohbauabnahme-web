@@ -46,7 +46,7 @@ describe("KundenAutocomplete", () => {
     fireEvent.focus(screen.getByLabelText("Kunde"));
 
     expect(await screen.findByText("Muster Bau GmbH")).not.toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: /Muster Bau GmbH/i }));
+    fireEvent.click(screen.getByRole("option", { name: /Muster Bau GmbH/i }));
 
     expect(handleChange).toHaveBeenCalledWith("K-1000 - Muster Bau GmbH");
     expect(handleSelect).toHaveBeenCalledWith(kundenApiResponse[0]);
@@ -77,7 +77,7 @@ describe("KundenAutocomplete", () => {
     fireEvent.focus(screen.getByLabelText("Kunde"));
     expect(await screen.findByText("Muster Bau GmbH")).not.toBeNull();
 
-    fireEvent.mouseDown(screen.getByRole("button", { name: /Muster Bau GmbH/i }));
+    fireEvent.mouseDown(screen.getByRole("option", { name: /Muster Bau GmbH/i }));
     expect(screen.getByText("Muster Bau GmbH")).not.toBeNull();
 
     fireEvent.mouseDown(document.body);
@@ -131,9 +131,47 @@ describe("KundenAutocomplete", () => {
     fireEvent.focus(screen.getByLabelText("Kunde"));
     expect(await screen.findByText("Muster Bau GmbH")).not.toBeNull();
 
-    fireEvent.click(screen.getByRole("button", { name: /Muster Bau GmbH/i }));
+    fireEvent.click(screen.getByRole("option", { name: /Muster Bau GmbH/i }));
 
     expect(handleChange).toHaveBeenCalledWith("K-1000 - Muster Bau GmbH");
+    await waitFor(() => {
+      expect(screen.queryByText("Muster Bau GmbH")).toBeNull();
+    });
+  });
+
+  test("supports keyboard navigation and enter selection", async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(kundenApiResponse)
+    } as Response);
+
+    const handleChange = jest.fn();
+    render(<KundenAutocomplete value="" onChange={handleChange} />);
+
+    const input = screen.getByLabelText("Kunde");
+    fireEvent.focus(input);
+    expect(await screen.findByText("Muster Bau GmbH")).not.toBeNull();
+
+    fireEvent.keyDown(input, { key: "ArrowDown" });
+    fireEvent.keyDown(input, { key: "Enter" });
+
+    expect(handleChange).toHaveBeenCalledWith("K-2000 - Rohbau AG");
+  });
+
+  test("closes dropdown on escape", async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(kundenApiResponse)
+    } as Response);
+
+    render(<KundenAutocomplete value="" onChange={jest.fn()} />);
+
+    const input = screen.getByLabelText("Kunde");
+    fireEvent.focus(input);
+    expect(await screen.findByText("Muster Bau GmbH")).not.toBeNull();
+
+    fireEvent.keyDown(input, { key: "Escape" });
+
     await waitFor(() => {
       expect(screen.queryByText("Muster Bau GmbH")).toBeNull();
     });

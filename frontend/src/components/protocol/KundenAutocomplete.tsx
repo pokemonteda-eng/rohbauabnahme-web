@@ -18,6 +18,7 @@ export function KundenAutocomplete({ value, onChange, onSelectKunde }: KundenAut
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
 
   useEffect(() => {
     const abortController = new AbortController();
@@ -73,6 +74,21 @@ export function KundenAutocomplete({ value, onChange, onSelectKunde }: KundenAut
       .slice(0, MAX_RESULTS);
   }, [kunden, normalizedQuery]);
 
+  useEffect(() => {
+    if (!isOpen || filteredKunden.length === 0) {
+      setActiveIndex(-1);
+      return;
+    }
+
+    setActiveIndex(0);
+  }, [isOpen, filteredKunden.length]);
+
+  const selectKunde = (kunde: Kunde) => {
+    onChange(`${kunde.kunden_nr} - ${kunde.name}`);
+    onSelectKunde?.(kunde);
+    setIsOpen(false);
+  };
+
   return (
     <div className="space-y-2" ref={rootRef}>
       <Label htmlFor="kunde-suche">Kunde</Label>
@@ -87,25 +103,71 @@ export function KundenAutocomplete({ value, onChange, onSelectKunde }: KundenAut
             setIsOpen(true);
           }}
           onFocus={() => setIsOpen(true)}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") {
+              setIsOpen(false);
+              return;
+            }
+
+            if (event.key === "ArrowDown") {
+              event.preventDefault();
+              if (!isOpen) {
+                setIsOpen(true);
+                return;
+              }
+
+              if (filteredKunden.length > 0) {
+                setActiveIndex((previous) => (previous + 1) % filteredKunden.length);
+              }
+              return;
+            }
+
+            if (event.key === "ArrowUp") {
+              event.preventDefault();
+              if (!isOpen) {
+                setIsOpen(true);
+                return;
+              }
+
+              if (filteredKunden.length > 0) {
+                setActiveIndex((previous) =>
+                  previous <= 0 ? filteredKunden.length - 1 : previous - 1
+                );
+              }
+              return;
+            }
+
+            if (event.key === "Enter" && isOpen && activeIndex >= 0 && filteredKunden[activeIndex]) {
+              event.preventDefault();
+              selectKunde(filteredKunden[activeIndex]);
+            }
+          }}
           placeholder="Kunde suchen (Name, Nr., Adresse)"
           autoComplete="off"
+          role="combobox"
+          aria-autocomplete="list"
+          aria-expanded={isOpen}
+          aria-controls="kunde-suche-listbox"
+          aria-activedescendant={activeIndex >= 0 ? `kunde-option-${filteredKunden[activeIndex]?.id}` : undefined}
         />
         {isOpen && (
           <div className="absolute z-20 mt-1 w-full overflow-hidden rounded-md border border-slate-200 bg-white shadow-md">
             {isLoading && <p className="px-3 py-2 text-sm text-slate-500">Lade Kunden...</p>}
             {!isLoading && error != null && <p className="px-3 py-2 text-sm text-red-600">{error}</p>}
             {!isLoading && error == null && (
-              <ul className="max-h-64 overflow-auto py-1">
-                {filteredKunden.map((kunde) => (
+              <ul id="kunde-suche-listbox" role="listbox" className="max-h-64 overflow-auto py-1">
+                {filteredKunden.map((kunde, index) => (
                   <li key={kunde.id}>
                     <button
+                      id={`kunde-option-${kunde.id}`}
+                      role="option"
+                      aria-selected={index === activeIndex}
                       type="button"
-                      className="w-full px-3 py-2 text-left hover:bg-slate-100 focus:bg-slate-100 focus:outline-none"
-                      onClick={() => {
-                        onChange(`${kunde.kunden_nr} - ${kunde.name}`);
-                        onSelectKunde?.(kunde);
-                        setIsOpen(false);
-                      }}
+                      className={`w-full px-3 py-2 text-left hover:bg-slate-100 focus:bg-slate-100 focus:outline-none ${
+                        index === activeIndex ? "bg-slate-100" : ""
+                      }`}
+                      onMouseEnter={() => setActiveIndex(index)}
+                      onClick={() => selectKunde(kunde)}
                     >
                       <p className="text-sm font-medium text-slate-900">{kunde.name}</p>
                       <p className="text-xs text-slate-500">{kunde.kunden_nr}</p>
