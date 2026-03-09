@@ -272,6 +272,62 @@ def test_save_and_get_lackierungsdaten() -> None:
     app.dependency_overrides.clear()
 
 
+def test_save_lackierungsdaten_second_put_updates_existing_row() -> None:
+    client = _client()
+    kunde_id = _create_kunde(client, kunden_nr="K-9007")
+    create_response = client.post(
+        "/protokolle",
+        json={
+            "auftrags_nr": "A-50003",
+            "kunde_id": kunde_id,
+            "aufbautyp": "Container",
+            "projektleiter": "PL-Lack-Update",
+            "vertriebsgebiet": "Nord",
+            "kabel_funklayout_geaendert": False,
+            "techn_aenderungen": None,
+            "datum": "2026-03-08",
+            "anlage_datum": "2026-03-08",
+        },
+    )
+    assert create_response.status_code == 201
+    protokoll_id = create_response.json()["id"]
+
+    first_save = client.put(
+        f"/protokolle/{protokoll_id}/lackierungsdaten",
+        json={
+            "klarlackschicht": True,
+            "klarlackschicht_bemerkung": "Erster Stand",
+            "zinkstaubbeschichtung": False,
+            "zinkstaub_bemerkung": None,
+            "e_kolben_beschichtung": False,
+            "e_kolben_bemerkung": None,
+        },
+    )
+    assert first_save.status_code == 200
+    first_payload = first_save.json()
+
+    second_save = client.put(
+        f"/protokolle/{protokoll_id}/lackierungsdaten",
+        json={
+            "klarlackschicht": False,
+            "klarlackschicht_bemerkung": None,
+            "zinkstaubbeschichtung": True,
+            "zinkstaub_bemerkung": "Zweiter Stand",
+            "e_kolben_beschichtung": False,
+            "e_kolben_bemerkung": None,
+        },
+    )
+    assert second_save.status_code == 200
+    second_payload = second_save.json()
+    assert second_payload["id"] == first_payload["id"]
+    assert second_payload["protokoll_id"] == protokoll_id
+    assert second_payload["klarlackschicht"] is False
+    assert second_payload["zinkstaubbeschichtung"] is True
+    assert second_payload["zinkstaub_bemerkung"] == "Zweiter Stand"
+
+    app.dependency_overrides.clear()
+
+
 def test_save_lackierungsdaten_rejects_note_without_checkbox() -> None:
     client = _client()
     kunde_id = _create_kunde(client, kunden_nr="K-9006")

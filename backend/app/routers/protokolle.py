@@ -105,18 +105,46 @@ def save_lackierungsdaten(
         cleaned = value.strip()
         data[note_field] = cleaned or None
 
-    lackierungsdaten = db.scalar(
-        select(Lackierungsdaten).where(Lackierungsdaten.protokoll_id == protokoll_id)
-    )
+    lackierungsdaten = db.scalar(select(Lackierungsdaten).where(Lackierungsdaten.protokoll_id == protokoll_id))
 
-    if lackierungsdaten is None:
+    is_new_row = lackierungsdaten is None
+    if is_new_row:
         lackierungsdaten = Lackierungsdaten(protokoll_id=protokoll_id, **data)
         db.add(lackierungsdaten)
     else:
         for key, value in data.items():
             setattr(lackierungsdaten, key, value)
 
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+
+        if not is_new_row:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Lackierungsdaten konnten nicht gespeichert werden",
+            ) from None
+
+        lackierungsdaten = db.scalar(select(Lackierungsdaten).where(Lackierungsdaten.protokoll_id == protokoll_id))
+        if lackierungsdaten is None:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Lackierungsdaten konnten nicht gespeichert werden",
+            ) from None
+
+        for key, value in data.items():
+            setattr(lackierungsdaten, key, value)
+
+        try:
+            db.commit()
+        except IntegrityError:
+            db.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Lackierungsdaten konnten nicht gespeichert werden",
+            ) from None
+
     db.refresh(lackierungsdaten)
     return lackierungsdaten
 
