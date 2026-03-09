@@ -34,7 +34,7 @@ export function HomePage() {
           </p>
           <div className="mt-6 flex gap-3">
             <Button>Primary Action</Button>
-            <Button variant="outline">Sekundaer</Button>
+            <Button variant="outline">Sekundär</Button>
           </div>
         </section>
       </main>
