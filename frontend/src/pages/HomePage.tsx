@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 
 export function HomePage() {
   const [customerQuery, setCustomerQuery] = useState("");
+  const [projektleiter, setProjektleiter] = useState("");
   const [orderNumber, setOrderNumber] = useState("");
   const [protocolDate, setProtocolDate] = useState("");
   const [aufbautyp, setAufbautyp] = useState("");
@@ -27,11 +28,13 @@ export function HomePage() {
       <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-10">
         <ProtocolHeader
           customerQuery={customerQuery}
+          projektleiter={projektleiter}
           orderNumber={orderNumber}
           protocolDate={protocolDate}
           aufbautyp={aufbautyp}
           vertriebsgebiet={vertriebsgebiet}
           onCustomerQueryChange={setCustomerQuery}
+          onProjektleiterChange={setProjektleiter}
           onOrderNumberChange={setOrderNumber}
           onProtocolDateChange={setProtocolDate}
           onAufbautypChange={setAufbautyp}
