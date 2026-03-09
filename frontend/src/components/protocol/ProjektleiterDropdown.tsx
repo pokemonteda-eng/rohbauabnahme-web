@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { listProjektleiter } from "@/api/stammdaten";
 import { Label } from "@/components/ui/label";
@@ -40,6 +40,17 @@ export function ProjektleiterDropdown({ value, onChange }: ProjektleiterDropdown
     };
   }, []);
 
+  const options = useMemo(() => projektleiter, [projektleiter]);
+  const hasNoOptions = !isLoading && error == null && options.length === 0;
+
+  const placeholderText = isLoading
+    ? "Lade Projektleiter..."
+    : error != null
+      ? "Fehler beim Laden"
+      : hasNoOptions
+        ? "Keine Projektleiter verfügbar"
+        : "Bitte Projektleiter auswählen";
+
   return (
     <div className="space-y-2">
       <Label htmlFor="projektleiter">Projektleiter</Label>
@@ -48,22 +59,22 @@ export function ProjektleiterDropdown({ value, onChange }: ProjektleiterDropdown
         name="projektleiter"
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        disabled={isLoading || error != null}
+        disabled={isLoading || error != null || hasNoOptions}
         required
       >
-        <option value="" disabled>
-          {isLoading
-            ? "Lade Projektleiter..."
-            : error != null
-              ? "Fehler beim Laden"
-              : "Bitte auswählen"}
+        <option value="" disabled={!isLoading && error == null}>
+          {placeholderText}
         </option>
-        {projektleiter.map((eintrag) => (
+        {options.map((eintrag) => (
           <option key={eintrag} value={eintrag}>
             {eintrag}
           </option>
         ))}
       </Select>
+      {error != null && <p className="text-xs text-red-600">{error}</p>}
+      {hasNoOptions && (
+        <p className="text-xs text-slate-500">Für diesen Mandanten sind keine Projektleiter hinterlegt.</p>
+      )}
     </div>
   );
 }

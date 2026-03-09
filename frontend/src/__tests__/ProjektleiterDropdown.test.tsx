@@ -52,4 +52,19 @@ describe("ProjektleiterDropdown", () => {
 
     expect(screen.getByLabelText<HTMLSelectElement>("Projektleiter").disabled).toBe(true);
   });
+
+  test("shows empty state when API returns no entries", async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve([])
+    } as Response);
+
+    render(<ProjektleiterDropdown value="" onChange={jest.fn()} />);
+
+    await waitFor(() => {
+      expect(screen.getByRole("option", { name: "Keine Projektleiter verfügbar" })).not.toBeNull();
+    });
+
+    expect(screen.getByLabelText<HTMLSelectElement>("Projektleiter").disabled).toBe(true);
+  });
 });
