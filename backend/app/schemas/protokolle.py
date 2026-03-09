@@ -35,3 +35,30 @@ class ProtokollRead(ProtokollBase):
     id: int
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class LackierungsdatenBase(BaseModel):
+    klarlackschicht: bool = False
+    klarlackschicht_bemerkung: str | None = Field(default=None, max_length=2000)
+    zinkstaubbeschichtung: bool = False
+    zinkstaub_bemerkung: str | None = Field(default=None, max_length=2000)
+    e_kolben_beschichtung: bool = False
+    e_kolben_bemerkung: str | None = Field(default=None, max_length=2000)
+
+
+class LackierungsdatenSave(LackierungsdatenBase):
+    klarlackschicht: bool
+    klarlackschicht_bemerkung: str | None = Field(default=None, max_length=2000)
+    zinkstaubbeschichtung: bool
+    zinkstaub_bemerkung: str | None = Field(default=None, max_length=2000)
+    e_kolben_beschichtung: bool
+    e_kolben_bemerkung: str | None = Field(default=None, max_length=2000)
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class LackierungsdatenRead(LackierungsdatenBase):
+    id: int
+    protokoll_id: int
+
+    model_config = ConfigDict(from_attributes=True)

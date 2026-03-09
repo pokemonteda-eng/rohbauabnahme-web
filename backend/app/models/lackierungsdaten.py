@@ -10,7 +10,13 @@ class Lackierungsdaten(Base):
     __tablename__ = "lackierungsdaten"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    protokoll_id: Mapped[int] = mapped_column(Integer, ForeignKey("protokolle.id"), nullable=False)
+    protokoll_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("protokolle.id"),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
 
     klarlackschicht: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("false"))
     klarlackschicht_bemerkung: Mapped[str | None] = mapped_column(Text, nullable=True)

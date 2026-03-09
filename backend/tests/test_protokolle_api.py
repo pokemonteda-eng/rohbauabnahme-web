@@ -1,7 +1,7 @@
 from collections.abc import Generator
 
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
@@ -27,14 +27,19 @@ def _override_get_db(session_local: sessionmaker[Session]) -> Generator[Session,
         db.close()
 
 
-def _client() -> TestClient:
+def _client_with_session() -> tuple[TestClient, sessionmaker[Session]]:
     session_local = _session_factory()
 
     def override_db() -> Generator[Session, None, None]:
         yield from _override_get_db(session_local)
 
     app.dependency_overrides[get_db] = override_db
-    return TestClient(app)
+    return TestClient(app), session_local
+
+
+def _client() -> TestClient:
+    client, _ = _client_with_session()
+    return client
 
 
 def _create_kunde(client: TestClient, kunden_nr: str = "K-9000") -> int:
@@ -219,5 +224,276 @@ def test_update_protokoll_returns_400_for_empty_payload() -> None:
 
     response = client.patch(f"/protokolle/{protokoll_id}", json={})
     assert response.status_code == 400
+
+    app.dependency_overrides.clear()
+
+
+def test_save_and_get_lackierungsdaten() -> None:
+    client = _client()
+    kunde_id = _create_kunde(client, kunden_nr="K-9005")
+    create_response = client.post(
+        "/protokolle",
+        json={
+            "auftrags_nr": "A-50001",
+            "kunde_id": kunde_id,
+            "aufbautyp": "Container",
+            "projektleiter": "PL-Lack",
+            "vertriebsgebiet": "Nord",
+            "kabel_funklayout_geaendert": False,
+            "techn_aenderungen": None,
+            "datum": "2026-03-08",
+            "anlage_datum": "2026-03-08",
+        },
+    )
+    assert create_response.status_code == 201
+    protokoll_id = create_response.json()["id"]
+
+    save_response = client.put(
+        f"/protokolle/{protokoll_id}/lackierungsdaten",
+        json={
+            "klarlackschicht": True,
+            "klarlackschicht_bemerkung": " Decklack aufgetragen ",
+            "zinkstaubbeschichtung": False,
+            "zinkstaub_bemerkung": None,
+            "e_kolben_beschichtung": True,
+            "e_kolben_bemerkung": "Erledigt",
+        },
+    )
+    assert save_response.status_code == 200
+    saved_payload = save_response.json()
+    assert saved_payload["protokoll_id"] == protokoll_id
+    assert saved_payload["klarlackschicht"] is True
+    assert saved_payload["klarlackschicht_bemerkung"] == "Decklack aufgetragen"
+    assert saved_payload["e_kolben_beschichtung"] is True
+    assert saved_payload["e_kolben_bemerkung"] == "Erledigt"
+
+    load_response = client.get(f"/protokolle/{protokoll_id}/lackierungsdaten")
+    assert load_response.status_code == 200
+    loaded_payload = load_response.json()
+    assert loaded_payload["id"] == saved_payload["id"]
+    assert loaded_payload["klarlackschicht_bemerkung"] == "Decklack aufgetragen"
+    assert loaded_payload["e_kolben_bemerkung"] == "Erledigt"
+
+    app.dependency_overrides.clear()
+
+
+def test_save_lackierungsdaten_second_put_updates_existing_row() -> None:
+    client = _client()
+    kunde_id = _create_kunde(client, kunden_nr="K-9007")
+    create_response = client.post(
+        "/protokolle",
+        json={
+            "auftrags_nr": "A-50003",
+            "kunde_id": kunde_id,
+            "aufbautyp": "Container",
+            "projektleiter": "PL-Lack-Update",
+            "vertriebsgebiet": "Nord",
+            "kabel_funklayout_geaendert": False,
+            "techn_aenderungen": None,
+            "datum": "2026-03-08",
+            "anlage_datum": "2026-03-08",
+        },
+    )
+    assert create_response.status_code == 201
+    protokoll_id = create_response.json()["id"]
+
+    first_save = client.put(
+        f"/protokolle/{protokoll_id}/lackierungsdaten",
+        json={
+            "klarlackschicht": True,
+            "klarlackschicht_bemerkung": "Erster Stand",
+            "zinkstaubbeschichtung": False,
+            "zinkstaub_bemerkung": None,
+            "e_kolben_beschichtung": False,
+            "e_kolben_bemerkung": None,
+        },
+    )
+    assert first_save.status_code == 200
+    first_payload = first_save.json()
+
+    second_save = client.put(
+        f"/protokolle/{protokoll_id}/lackierungsdaten",
+        json={
+            "klarlackschicht": False,
+            "klarlackschicht_bemerkung": None,
+            "zinkstaubbeschichtung": True,
+            "zinkstaub_bemerkung": "Zweiter Stand",
+            "e_kolben_beschichtung": False,
+            "e_kolben_bemerkung": None,
+        },
+    )
+    assert second_save.status_code == 200
+    second_payload = second_save.json()
+    assert second_payload["id"] == first_payload["id"]
+    assert second_payload["protokoll_id"] == protokoll_id
+    assert second_payload["klarlackschicht"] is False
+    assert second_payload["zinkstaubbeschichtung"] is True
+    assert second_payload["zinkstaub_bemerkung"] == "Zweiter Stand"
+
+    app.dependency_overrides.clear()
+
+
+def test_save_lackierungsdaten_rejects_note_without_checkbox() -> None:
+    client = _client()
+    kunde_id = _create_kunde(client, kunden_nr="K-9006")
+    create_response = client.post(
+        "/protokolle",
+        json={
+            "auftrags_nr": "A-50002",
+            "kunde_id": kunde_id,
+            "aufbautyp": "Koffer",
+            "projektleiter": "PL-Lack-Error",
+            "vertriebsgebiet": "West",
+            "kabel_funklayout_geaendert": False,
+            "techn_aenderungen": None,
+            "datum": "2026-03-08",
+            "anlage_datum": "2026-03-08",
+        },
+    )
+    assert create_response.status_code == 201
+    protokoll_id = create_response.json()["id"]
+
+    response = client.put(
+        f"/protokolle/{protokoll_id}/lackierungsdaten",
+        json={
+            "klarlackschicht": False,
+            "klarlackschicht_bemerkung": "Darf so nicht gesetzt sein",
+            "zinkstaubbeschichtung": False,
+            "zinkstaub_bemerkung": None,
+            "e_kolben_beschichtung": False,
+            "e_kolben_bemerkung": None,
+        },
+    )
+    assert response.status_code == 400
+    assert "klarlackschicht_bemerkung" in response.json()["detail"]
+
+    app.dependency_overrides.clear()
+
+
+def test_save_lackierungsdaten_rejects_partial_payload() -> None:
+    client = _client()
+    kunde_id = _create_kunde(client, kunden_nr="K-9008")
+    create_response = client.post(
+        "/protokolle",
+        json={
+            "auftrags_nr": "A-50004",
+            "kunde_id": kunde_id,
+            "aufbautyp": "Koffer",
+            "projektleiter": "PL-Lack-Partial",
+            "vertriebsgebiet": "West",
+            "kabel_funklayout_geaendert": False,
+            "techn_aenderungen": None,
+            "datum": "2026-03-08",
+            "anlage_datum": "2026-03-08",
+        },
+    )
+    assert create_response.status_code == 201
+    protokoll_id = create_response.json()["id"]
+
+    response = client.put(
+        f"/protokolle/{protokoll_id}/lackierungsdaten",
+        json={"klarlackschicht": True},
+    )
+    assert response.status_code == 422
+
+    app.dependency_overrides.clear()
+
+
+def test_save_lackierungsdaten_rejects_unknown_fields() -> None:
+    client = _client()
+    kunde_id = _create_kunde(client, kunden_nr="K-9009")
+    create_response = client.post(
+        "/protokolle",
+        json={
+            "auftrags_nr": "A-50005",
+            "kunde_id": kunde_id,
+            "aufbautyp": "Koffer",
+            "projektleiter": "PL-Lack-Unknown",
+            "vertriebsgebiet": "West",
+            "kabel_funklayout_geaendert": False,
+            "techn_aenderungen": None,
+            "datum": "2026-03-08",
+            "anlage_datum": "2026-03-08",
+        },
+    )
+    assert create_response.status_code == 201
+    protokoll_id = create_response.json()["id"]
+
+    response = client.put(
+        f"/protokolle/{protokoll_id}/lackierungsdaten",
+        json={
+            "klarlackschicht": True,
+            "klarlackschicht_bemerkung": "ok",
+            "zinkstaubbeschichtung": False,
+            "zinkstaub_bemerkung": None,
+            "e_kolben_beschichtung": False,
+            "e_kolben_bemerkung": None,
+            "klarlackschicht_bemerkunng": "typo",
+        },
+    )
+    assert response.status_code == 422
+
+    app.dependency_overrides.clear()
+
+
+def test_lackierungsdaten_endpoints_return_409_for_duplicate_rows() -> None:
+    client, session_local = _client_with_session()
+    kunde_id = _create_kunde(client, kunden_nr="K-9010")
+    create_response = client.post(
+        "/protokolle",
+        json={
+            "auftrags_nr": "A-50006",
+            "kunde_id": kunde_id,
+            "aufbautyp": "Container",
+            "projektleiter": "PL-Lack-Duplicate",
+            "vertriebsgebiet": "Nord",
+            "kabel_funklayout_geaendert": False,
+            "techn_aenderungen": None,
+            "datum": "2026-03-08",
+            "anlage_datum": "2026-03-08",
+        },
+    )
+    assert create_response.status_code == 201
+    protokoll_id = create_response.json()["id"]
+
+    with session_local() as db:
+        db.execute(text("DROP INDEX IF EXISTS ix_lackierungsdaten_protokoll_id"))
+        db.execute(
+            text(
+                """
+                INSERT INTO lackierungsdaten (
+                    protokoll_id,
+                    klarlackschicht,
+                    klarlackschicht_bemerkung,
+                    zinkstaubbeschichtung,
+                    zinkstaub_bemerkung,
+                    e_kolben_beschichtung,
+                    e_kolben_bemerkung
+                ) VALUES
+                    (:protokoll_id, 0, NULL, 0, NULL, 0, NULL),
+                    (:protokoll_id, 1, 'Duplikat', 1, 'Duplikat', 1, 'Duplikat')
+                """
+            ),
+            {"protokoll_id": protokoll_id},
+        )
+        db.commit()
+
+    get_response = client.get(f"/protokolle/{protokoll_id}/lackierungsdaten")
+    assert get_response.status_code == 409
+    assert "Inkonsistente Lackierungsdaten" in get_response.json()["detail"]
+
+    save_response = client.put(
+        f"/protokolle/{protokoll_id}/lackierungsdaten",
+        json={
+            "klarlackschicht": True,
+            "klarlackschicht_bemerkung": "Neu",
+            "zinkstaubbeschichtung": False,
+            "zinkstaub_bemerkung": None,
+            "e_kolben_beschichtung": False,
+            "e_kolben_bemerkung": None,
+        },
+    )
+    assert save_response.status_code == 409
+    assert "Inkonsistente Lackierungsdaten" in save_response.json()["detail"]
 
     app.dependency_overrides.clear()
