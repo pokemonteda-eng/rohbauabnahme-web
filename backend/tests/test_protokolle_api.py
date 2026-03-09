@@ -1,7 +1,7 @@
 from collections.abc import Generator
 
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
@@ -27,14 +27,19 @@ def _override_get_db(session_local: sessionmaker[Session]) -> Generator[Session,
         db.close()
 
 
-def _client() -> TestClient:
+def _client_with_session() -> tuple[TestClient, sessionmaker[Session]]:
     session_local = _session_factory()
 
     def override_db() -> Generator[Session, None, None]:
         yield from _override_get_db(session_local)
 
     app.dependency_overrides[get_db] = override_db
-    return TestClient(app)
+    return TestClient(app), session_local
+
+
+def _client() -> TestClient:
+    client, _ = _client_with_session()
+    return client
 
 
 def _create_kunde(client: TestClient, kunden_nr: str = "K-9000") -> int:
@@ -427,5 +432,68 @@ def test_save_lackierungsdaten_rejects_unknown_fields() -> None:
         },
     )
     assert response.status_code == 422
+
+    app.dependency_overrides.clear()
+
+
+def test_lackierungsdaten_endpoints_return_409_for_duplicate_rows() -> None:
+    client, session_local = _client_with_session()
+    kunde_id = _create_kunde(client, kunden_nr="K-9010")
+    create_response = client.post(
+        "/protokolle",
+        json={
+            "auftrags_nr": "A-50006",
+            "kunde_id": kunde_id,
+            "aufbautyp": "Container",
+            "projektleiter": "PL-Lack-Duplicate",
+            "vertriebsgebiet": "Nord",
+            "kabel_funklayout_geaendert": False,
+            "techn_aenderungen": None,
+            "datum": "2026-03-08",
+            "anlage_datum": "2026-03-08",
+        },
+    )
+    assert create_response.status_code == 201
+    protokoll_id = create_response.json()["id"]
+
+    with session_local() as db:
+        db.execute(text("DROP INDEX IF EXISTS ix_lackierungsdaten_protokoll_id"))
+        db.execute(
+            text(
+                """
+                INSERT INTO lackierungsdaten (
+                    protokoll_id,
+                    klarlackschicht,
+                    klarlackschicht_bemerkung,
+                    zinkstaubbeschichtung,
+                    zinkstaub_bemerkung,
+                    e_kolben_beschichtung,
+                    e_kolben_bemerkung
+                ) VALUES
+                    (:protokoll_id, 0, NULL, 0, NULL, 0, NULL),
+                    (:protokoll_id, 1, 'Duplikat', 1, 'Duplikat', 1, 'Duplikat')
+                """
+            ),
+            {"protokoll_id": protokoll_id},
+        )
+        db.commit()
+
+    get_response = client.get(f"/protokolle/{protokoll_id}/lackierungsdaten")
+    assert get_response.status_code == 409
+    assert "Inkonsistente Lackierungsdaten" in get_response.json()["detail"]
+
+    save_response = client.put(
+        f"/protokolle/{protokoll_id}/lackierungsdaten",
+        json={
+            "klarlackschicht": True,
+            "klarlackschicht_bemerkung": "Neu",
+            "zinkstaubbeschichtung": False,
+            "zinkstaub_bemerkung": None,
+            "e_kolben_beschichtung": False,
+            "e_kolben_bemerkung": None,
+        },
+    )
+    assert save_response.status_code == 409
+    assert "Inkonsistente Lackierungsdaten" in save_response.json()["detail"]
 
     app.dependency_overrides.clear()

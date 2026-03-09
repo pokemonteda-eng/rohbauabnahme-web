@@ -18,6 +18,21 @@ from app.services.validation_service import validate_lackierungsdaten
 router = APIRouter(prefix="/protokolle", tags=["protokolle"])
 
 
+def _load_lackierungsdaten_for_protokoll(db: Session, protokoll_id: int) -> Lackierungsdaten | None:
+    rows = db.scalars(
+        select(Lackierungsdaten)
+        .where(Lackierungsdaten.protokoll_id == protokoll_id)
+        .order_by(Lackierungsdaten.id.desc())
+        .limit(2)
+    ).all()
+    if len(rows) > 1:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Inkonsistente Lackierungsdaten: Mehrfacheintraege fuer Protokoll gefunden",
+        )
+    return rows[0] if rows else None
+
+
 @router.post("", response_model=ProtokollRead, status_code=status.HTTP_201_CREATED)
 def create_protokoll(payload: ProtokollCreate, db: Session = Depends(get_db)) -> Protokoll:
     protokoll = Protokoll(**payload.model_dump())
@@ -105,7 +120,7 @@ def save_lackierungsdaten(
         cleaned = value.strip()
         data[note_field] = cleaned or None
 
-    lackierungsdaten = db.scalar(select(Lackierungsdaten).where(Lackierungsdaten.protokoll_id == protokoll_id))
+    lackierungsdaten = _load_lackierungsdaten_for_protokoll(db, protokoll_id)
 
     is_new_row = lackierungsdaten is None
     if is_new_row:
@@ -126,7 +141,7 @@ def save_lackierungsdaten(
                 detail="Lackierungsdaten konnten nicht gespeichert werden",
             ) from None
 
-        lackierungsdaten = db.scalar(select(Lackierungsdaten).where(Lackierungsdaten.protokoll_id == protokoll_id))
+        lackierungsdaten = _load_lackierungsdaten_for_protokoll(db, protokoll_id)
         if lackierungsdaten is None:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
@@ -155,9 +170,7 @@ def get_lackierungsdaten(protokoll_id: int, db: Session = Depends(get_db)) -> La
     if protokoll is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Protokoll nicht gefunden")
 
-    lackierungsdaten = db.scalar(
-        select(Lackierungsdaten).where(Lackierungsdaten.protokoll_id == protokoll_id)
-    )
+    lackierungsdaten = _load_lackierungsdaten_for_protokoll(db, protokoll_id)
     if lackierungsdaten is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Lackierungsdaten nicht gefunden")
 
