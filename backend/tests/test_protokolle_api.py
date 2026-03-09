@@ -363,3 +363,69 @@ def test_save_lackierungsdaten_rejects_note_without_checkbox() -> None:
     assert "klarlackschicht_bemerkung" in response.json()["detail"]
 
     app.dependency_overrides.clear()
+
+
+def test_save_lackierungsdaten_rejects_partial_payload() -> None:
+    client = _client()
+    kunde_id = _create_kunde(client, kunden_nr="K-9008")
+    create_response = client.post(
+        "/protokolle",
+        json={
+            "auftrags_nr": "A-50004",
+            "kunde_id": kunde_id,
+            "aufbautyp": "Koffer",
+            "projektleiter": "PL-Lack-Partial",
+            "vertriebsgebiet": "West",
+            "kabel_funklayout_geaendert": False,
+            "techn_aenderungen": None,
+            "datum": "2026-03-08",
+            "anlage_datum": "2026-03-08",
+        },
+    )
+    assert create_response.status_code == 201
+    protokoll_id = create_response.json()["id"]
+
+    response = client.put(
+        f"/protokolle/{protokoll_id}/lackierungsdaten",
+        json={"klarlackschicht": True},
+    )
+    assert response.status_code == 422
+
+    app.dependency_overrides.clear()
+
+
+def test_save_lackierungsdaten_rejects_unknown_fields() -> None:
+    client = _client()
+    kunde_id = _create_kunde(client, kunden_nr="K-9009")
+    create_response = client.post(
+        "/protokolle",
+        json={
+            "auftrags_nr": "A-50005",
+            "kunde_id": kunde_id,
+            "aufbautyp": "Koffer",
+            "projektleiter": "PL-Lack-Unknown",
+            "vertriebsgebiet": "West",
+            "kabel_funklayout_geaendert": False,
+            "techn_aenderungen": None,
+            "datum": "2026-03-08",
+            "anlage_datum": "2026-03-08",
+        },
+    )
+    assert create_response.status_code == 201
+    protokoll_id = create_response.json()["id"]
+
+    response = client.put(
+        f"/protokolle/{protokoll_id}/lackierungsdaten",
+        json={
+            "klarlackschicht": True,
+            "klarlackschicht_bemerkung": "ok",
+            "zinkstaubbeschichtung": False,
+            "zinkstaub_bemerkung": None,
+            "e_kolben_beschichtung": False,
+            "e_kolben_bemerkung": None,
+            "klarlackschicht_bemerkunng": "typo",
+        },
+    )
+    assert response.status_code == 422
+
+    app.dependency_overrides.clear()

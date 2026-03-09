@@ -47,7 +47,14 @@ class LackierungsdatenBase(BaseModel):
 
 
 class LackierungsdatenSave(LackierungsdatenBase):
-    pass
+    klarlackschicht: bool
+    klarlackschicht_bemerkung: str | None = Field(default=None, max_length=2000)
+    zinkstaubbeschichtung: bool
+    zinkstaub_bemerkung: str | None = Field(default=None, max_length=2000)
+    e_kolben_beschichtung: bool
+    e_kolben_bemerkung: str | None = Field(default=None, max_length=2000)
+
+    model_config = ConfigDict(extra="forbid")
 
 
 class LackierungsdatenRead(LackierungsdatenBase):
