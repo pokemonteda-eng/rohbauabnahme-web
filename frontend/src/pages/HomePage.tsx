@@ -1,6 +1,12 @@
+import { useState } from "react";
+
+import { ProtocolHeader } from "@/components/protocol/ProtocolHeader";
 import { Button } from "@/components/ui/button";
 
 export function HomePage() {
+  const [orderNumber, setOrderNumber] = useState("");
+  const [protocolDate, setProtocolDate] = useState("");
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <header className="border-b border-slate-200 bg-white">
@@ -9,6 +15,12 @@ export function HomePage() {
         </div>
       </header>
       <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-10">
+        <ProtocolHeader
+          orderNumber={orderNumber}
+          protocolDate={protocolDate}
+          onOrderNumberChange={setOrderNumber}
+          onProtocolDateChange={setProtocolDate}
+        />
         <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
           <h1 className="text-2xl font-bold tracking-tight">React Frontend Setup</h1>
           <p className="mt-2 text-slate-600">
