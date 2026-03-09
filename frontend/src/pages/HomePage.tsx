@@ -8,6 +8,7 @@ export function HomePage() {
   const [orderNumber, setOrderNumber] = useState("");
   const [protocolDate, setProtocolDate] = useState("");
   const [aufbautyp, setAufbautyp] = useState("");
+  const [vertriebsgebiet, setVertriebsgebiet] = useState("");
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
@@ -22,10 +23,12 @@ export function HomePage() {
           orderNumber={orderNumber}
           protocolDate={protocolDate}
           aufbautyp={aufbautyp}
+          vertriebsgebiet={vertriebsgebiet}
           onCustomerQueryChange={setCustomerQuery}
           onOrderNumberChange={setOrderNumber}
           onProtocolDateChange={setProtocolDate}
           onAufbautypChange={setAufbautyp}
+          onVertriebsgebietChange={setVertriebsgebiet}
         />
         <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
           <h1 className="text-2xl font-bold tracking-tight">React Frontend Setup</h1>
