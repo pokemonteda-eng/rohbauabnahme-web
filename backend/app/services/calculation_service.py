@@ -76,7 +76,8 @@ def calculate_accessory_net_total(db: Session, protokoll_id: int) -> AccessoryPr
         if bewertung == "TEA":
             preis_tea += gesamtpreis
         if bewertung == "TEK":
-            preis_tek += gesamtpreis
+            # Excel calculates €/TEK via SUMIF over the price column, not line totals.
+            preis_tek += einzelpreis
         positionen.append(
             CalculatedAccessoryPrice(
                 auswahl_id=auswahl.id,
