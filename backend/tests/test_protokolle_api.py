@@ -594,6 +594,59 @@ def test_get_zubehoer_preisberechnung_returns_net_total_for_protocol() -> None:
     app.dependency_overrides.clear()
 
 
+def test_get_zubehoer_preisberechnung_uses_unit_price_for_tek_sum() -> None:
+    client, session_local = _client_with_session()
+    kunde_id = _create_kunde(client, kunden_nr="K-9012")
+
+    create_response = client.post(
+        "/protokolle",
+        json={
+            "auftrags_nr": "A-60002",
+            "kunde_id": kunde_id,
+            "aufbautyp": "Container",
+            "projektleiter": "PL-Zubehoer",
+            "vertriebsgebiet": "Nord",
+            "kabel_funklayout_geaendert": False,
+            "techn_aenderungen": None,
+            "datum": "2026-03-10",
+            "anlage_datum": "2026-03-10",
+        },
+    )
+    assert create_response.status_code == 201
+    protokoll_id = create_response.json()["id"]
+
+    with session_local() as db:
+        katalog = ZubehoerKatalog(
+            kategorie="Rahmen",
+            bezeichnung="Staukasten",
+            standard_preis=Decimal("22.00"),
+        )
+        db.add(katalog)
+        db.flush()
+        db.add(
+            ZubehoerAuswahl(
+                protokoll_id=protokoll_id,
+                katalog_id=katalog.id,
+                menge=3,
+                einzelpreis=None,
+                bewertung="TEK",
+                kunden_beigestellt=False,
+            )
+        )
+        db.commit()
+
+    response = client.get(f"/protokolle/{protokoll_id}/zubehoer/preisberechnung")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["netto_gesamt"] == "66.00"
+    assert payload["preis_tek"] == "22.00"
+    assert payload["positionen"][0]["gesamtpreis_netto"] == "66.00"
+    assert payload["positionen"][0]["einzelpreis_netto"] == "22.00"
+
+    app.dependency_overrides.clear()
+
+
 def test_get_zubehoer_preisberechnung_returns_404_for_missing_protocol() -> None:
     client = _client()
 
