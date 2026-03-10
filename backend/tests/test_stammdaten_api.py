@@ -31,6 +31,13 @@ def test_get_projektleiter_returns_values() -> None:
     assert response.json() == EXPECTED_PROJEKTLEITER
 
 
+def test_non_masterdata_routes_require_api_prefix() -> None:
+    client = TestClient(app)
+
+    assert client.get("/kunden").status_code == 404
+    assert client.get("/protokolle").status_code == 404
+
+
 def test_get_health_returns_status_without_api_prefix() -> None:
     client = TestClient(app)
     response = client.get("/health")
