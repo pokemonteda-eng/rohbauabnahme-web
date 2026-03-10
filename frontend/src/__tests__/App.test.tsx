@@ -68,6 +68,7 @@ describe("App", () => {
     expect(screen.getByRole("heading", { name: "Technische Änderungen" })).not.toBeNull();
     expect(screen.getByRole("group", { name: "Kabel/Funklayout geändert" })).not.toBeNull();
     expect(screen.getByLabelText("Technische Änderungen")).not.toBeNull();
+    expect(screen.queryByLabelText("Änderungsdatum")).toBeNull();
     expect(screen.getByRole("button", { name: "Ja" }).getAttribute("aria-pressed")).toBe("false");
     expect(screen.getByRole("button", { name: "Nein" }).getAttribute("aria-pressed")).toBe("false");
     expect(screen.getAllByRole("heading", { name: "Zubehör" })).toHaveLength(5);
@@ -153,6 +154,8 @@ describe("App", () => {
     expect(kabelFunklayoutJaButton.getAttribute("aria-pressed")).toBe("false");
     expect(kabelFunklayoutNeinButton.getAttribute("aria-pressed")).toBe("false");
     expect(technischeAenderungenTextarea.value).toBe("");
+    expect(technischeAenderungenTextarea.required).toBe(false);
+    expect(screen.queryByLabelText("Änderungsdatum")).toBeNull();
     expect(umlCheckbox.checked).toBe(false);
     expect(fhbCheckbox.checked).toBe(false);
     expect(sbCheckbox.checked).toBe(false);
@@ -179,6 +182,8 @@ describe("App", () => {
     fireEvent.click(zinkstaubCheckbox);
     fireEvent.click(eKolbenCheckbox);
     fireEvent.click(kabelFunklayoutJaButton);
+    const aenderungsdatumInput = screen.getByLabelText<HTMLInputElement>("Änderungsdatum");
+    fireEvent.change(aenderungsdatumInput, { target: { value: "2026-03-09" } });
     fireEvent.change(technischeAenderungenTextarea, {
       target: { value: "Zusätzliche Verkabelung erforderlich\nAntenne neu positionieren" }
     });
@@ -213,6 +218,9 @@ describe("App", () => {
     expect(eKolbenCheckbox.checked).toBe(true);
     expect(kabelFunklayoutJaButton.getAttribute("aria-pressed")).toBe("true");
     expect(kabelFunklayoutNeinButton.getAttribute("aria-pressed")).toBe("false");
+    expect(aenderungsdatumInput.required).toBe(true);
+    expect(aenderungsdatumInput.value).toBe("2026-03-09");
+    expect(technischeAenderungenTextarea.required).toBe(true);
     expect(technischeAenderungenTextarea.value).toBe(
       "Zusätzliche Verkabelung erforderlich\nAntenne neu positionieren"
     );
