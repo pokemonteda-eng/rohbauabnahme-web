@@ -7,6 +7,10 @@ import {
   type AufbauSelectionState,
   ZubehoerAufbauSection
 } from "@/components/protocol/ZubehoerAufbauSection";
+import {
+  type RahmenSelectionState,
+  ZubehoerRahmenSection
+} from "@/components/protocol/ZubehoerRahmenSection";
 import { Button } from "@/components/ui/button";
 
 const INITIAL_AUFBAU_SELECTION: AufbauSelectionState = {
@@ -17,6 +21,10 @@ const INITIAL_AUFBAU_SELECTION: AufbauSelectionState = {
   rfk: false,
   spo: false,
   sb: false
+};
+
+const INITIAL_RAHMEN_SELECTION: RahmenSelectionState = {
+  rahmen: false
 };
 
 export function HomePage() {
@@ -33,12 +41,17 @@ export function HomePage() {
   const [eKolben, setEKolben] = useState(false);
   const [eKolbenBemerkung, setEKolbenBemerkung] = useState("");
   const [aufbauSelection, setAufbauSelection] = useState<AufbauSelectionState>(INITIAL_AUFBAU_SELECTION);
+  const [rahmenSelection, setRahmenSelection] = useState<RahmenSelectionState>(INITIAL_RAHMEN_SELECTION);
 
   const handleAufbauChange = (key: AufbauOptionKey, checked: boolean) => {
     setAufbauSelection((previousState) => ({
       ...previousState,
       [key]: checked
     }));
+  };
+
+  const handleRahmenChange = (checked: boolean) => {
+    setRahmenSelection({ rahmen: checked });
   };
 
   return (
@@ -78,6 +91,7 @@ export function HomePage() {
           onEKolbenBemerkungChange={setEKolbenBemerkung}
         />
         <ZubehoerAufbauSection values={aufbauSelection} onValueChange={handleAufbauChange} />
+        <ZubehoerRahmenSection values={rahmenSelection} onValueChange={handleRahmenChange} />
         <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
           <h1 className="text-2xl font-bold tracking-tight">React Frontend Setup</h1>
           <p className="mt-2 text-slate-600">
