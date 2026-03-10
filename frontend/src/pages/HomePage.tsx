@@ -76,6 +76,7 @@ export function HomePage() {
   const [eKolben, setEKolben] = useState(false);
   const [eKolbenBemerkung, setEKolbenBemerkung] = useState("");
   const [kabelFunklayoutGeaendert, setKabelFunklayoutGeaendert] = useState<boolean | null>(null);
+  const [aenderungsdatum, setAenderungsdatum] = useState("");
   const [technischeAenderungen, setTechnischeAenderungen] = useState("");
   const [aufbauSelection, setAufbauSelection] = useState<AufbauSelectionState>(INITIAL_AUFBAU_SELECTION);
   const [rahmenSelection, setRahmenSelection] = useState<RahmenSelectionState>(INITIAL_RAHMEN_SELECTION);
@@ -164,8 +165,15 @@ export function HomePage() {
         />
         <TechnAenderungSection
           kabelFunklayoutGeaendert={kabelFunklayoutGeaendert}
+          aenderungsdatum={aenderungsdatum}
           technischeAenderungen={technischeAenderungen}
-          onKabelFunklayoutGeaendertChange={setKabelFunklayoutGeaendert}
+          onKabelFunklayoutGeaendertChange={(value) => {
+            setKabelFunklayoutGeaendert(value);
+            if (!value) {
+              setAenderungsdatum("");
+            }
+          }}
+          onAenderungsdatumChange={setAenderungsdatum}
           onTechnischeAenderungenChange={setTechnischeAenderungen}
         />
         <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">

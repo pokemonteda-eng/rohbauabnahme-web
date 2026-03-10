@@ -1,19 +1,26 @@
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 type TechnAenderungSectionProps = {
   kabelFunklayoutGeaendert: boolean | null;
+  aenderungsdatum: string;
   technischeAenderungen: string;
   onKabelFunklayoutGeaendertChange: (value: boolean) => void;
+  onAenderungsdatumChange: (value: string) => void;
   onTechnischeAenderungenChange: (value: string) => void;
 };
 
 export function TechnAenderungSection({
   kabelFunklayoutGeaendert,
+  aenderungsdatum,
   technischeAenderungen,
   onKabelFunklayoutGeaendertChange,
+  onAenderungsdatumChange,
   onTechnischeAenderungenChange
 }: TechnAenderungSectionProps) {
+  const isGeaendert = kabelFunklayoutGeaendert === true;
+
   return (
     <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -56,10 +63,24 @@ export function TechnAenderungSection({
           rows={5}
           value={technischeAenderungen}
           onChange={(event) => onTechnischeAenderungenChange(event.target.value)}
+          required={isGeaendert}
           className="flex min-h-32 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus-visible:border-slate-950 focus-visible:ring-2 focus-visible:ring-slate-950/15 disabled:cursor-not-allowed disabled:opacity-50"
           placeholder="Technische Hinweise und Änderungen dokumentieren"
         />
       </div>
+      {isGeaendert ? (
+        <div className="mt-6 space-y-2">
+          <Label htmlFor="aenderungsdatum">Änderungsdatum</Label>
+          <Input
+            id="aenderungsdatum"
+            name="aenderungsdatum"
+            type="date"
+            value={aenderungsdatum}
+            onChange={(event) => onAenderungsdatumChange(event.target.value)}
+            required
+          />
+        </div>
+      ) : null}
     </section>
   );
 }
