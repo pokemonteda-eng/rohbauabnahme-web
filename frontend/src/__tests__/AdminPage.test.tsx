@@ -4,14 +4,52 @@ import App from "@/App";
 import { clearCurrentUserRole, setCurrentUserRole } from "@/lib/auth";
 
 describe("Admin routing and access control", () => {
+  const originalFetch = global.fetch;
+
   beforeEach(() => {
     window.history.pushState({}, "", "/");
     clearCurrentUserRole();
+    Object.defineProperty(global, "fetch", {
+      configurable: true,
+      writable: true,
+      value: jest.fn().mockImplementation((input: RequestInfo | URL) => {
+        const url =
+          typeof input === "string"
+            ? input
+            : input instanceof URL
+              ? input.href
+              : input.url;
+
+        if (
+          url === "/api/v1/kunden" ||
+          url === "/api/v1/master-data/aufbautypen" ||
+          url === "/api/v1/master-data/projektleiter" ||
+          url === "/api/v1/master-data/vertriebsgebiete"
+        ) {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve([])
+          } as Response);
+        }
+
+        return Promise.reject(new Error(`Unexpected fetch URL in test: ${url}`));
+      })
+    });
   });
 
   afterEach(() => {
     clearCurrentUserRole();
     jest.restoreAllMocks();
+    if (originalFetch === undefined) {
+      delete (global as { fetch?: typeof fetch }).fetch;
+      return;
+    }
+
+    Object.defineProperty(global, "fetch", {
+      configurable: true,
+      writable: true,
+      value: originalFetch
+    });
   });
 
   test("blocks /admin for non-admin users", () => {
@@ -51,6 +89,16 @@ describe("Admin routing and access control", () => {
       expect(screen.getByRole("heading", { name: "Stammdaten" })).not.toBeNull();
       expect(screen.getByRole("button", { name: /Stammdaten/ }).getAttribute("aria-current")).toBe("page");
     });
+  });
+
+  test("falls back to the default section for invalid admin section query parameters", () => {
+    window.history.pushState({}, "", "/admin?section=toString");
+    setCurrentUserRole("admin");
+
+    render(<App />);
+
+    expect(screen.getByRole("heading", { name: "Aufbauten" })).not.toBeNull();
+    expect(screen.getByRole("button", { name: /Aufbauten/ }).getAttribute("aria-current")).toBe("page");
   });
 
   test("navigates to admin route from homepage CTA", () => {

@@ -44,12 +44,16 @@ const ADMIN_SECTIONS: Record<
   }
 };
 
+function isAdminSection(section: string | null): section is AdminSection {
+  return section !== null && Object.prototype.hasOwnProperty.call(ADMIN_SECTIONS, section);
+}
+
 function getActiveSection(): AdminSection {
   const params = new URLSearchParams(window.location.search);
   const section = params.get("section");
 
-  if (section && section in ADMIN_SECTIONS) {
-    return section as AdminSection;
+  if (isAdminSection(section)) {
+    return section;
   }
 
   return "aufbauten";
