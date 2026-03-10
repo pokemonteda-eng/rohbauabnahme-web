@@ -7,28 +7,25 @@ EXPECTED_VERTRIEBSGEBIETE = ["Nord", "Sued", "West", "Ost", "Mitte"]
 EXPECTED_PROJEKTLEITER = ["Max Mustermann", "Erika Musterfrau", "Thomas Beispiel"]
 
 
-def test_get_aufbautypen_returns_values() -> None:
+def test_unversioned_aufbautypen_route_is_not_available() -> None:
     client = TestClient(app)
     response = client.get("/stammdaten/aufbautypen")
 
-    assert response.status_code == 200
-    assert response.json() == EXPECTED_AUFBAUTYPEN
+    assert response.status_code == 404
 
 
-def test_get_vertriebsgebiete_returns_values() -> None:
+def test_unversioned_vertriebsgebiete_route_is_not_available() -> None:
     client = TestClient(app)
     response = client.get("/stammdaten/vertriebsgebiete")
 
-    assert response.status_code == 200
-    assert response.json() == EXPECTED_VERTRIEBSGEBIETE
+    assert response.status_code == 404
 
 
-def test_get_projektleiter_returns_values() -> None:
+def test_unversioned_projektleiter_route_is_not_available() -> None:
     client = TestClient(app)
     response = client.get("/stammdaten/projektleiter")
 
-    assert response.status_code == 200
-    assert response.json() == EXPECTED_PROJEKTLEITER
+    assert response.status_code == 404
 
 
 def test_non_masterdata_routes_require_api_prefix() -> None:
