@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import { LackierungSection } from "@/components/protocol/LackierungSection";
 import { ProtocolHeader } from "@/components/protocol/ProtocolHeader";
+import { TechnAenderungSection } from "@/components/protocol/TechnAenderungSection";
 import {
   type AufbauSelectionState,
   ZubehoerAufbauSection
@@ -74,6 +75,7 @@ export function HomePage() {
   const [zinkstaubBemerkung, setZinkstaubBemerkung] = useState("");
   const [eKolben, setEKolben] = useState(false);
   const [eKolbenBemerkung, setEKolbenBemerkung] = useState("");
+  const [kabelFunklayoutGeaendert, setKabelFunklayoutGeaendert] = useState<boolean | null>(null);
   const [aufbauSelection, setAufbauSelection] = useState<AufbauSelectionState>(INITIAL_AUFBAU_SELECTION);
   const [rahmenSelection, setRahmenSelection] = useState<RahmenSelectionState>(INITIAL_RAHMEN_SELECTION);
   const [schuettblendeSelection, setSchuettblendeSelection] = useState<SchuettblendeSelectionState>(
@@ -158,6 +160,10 @@ export function HomePage() {
           onZinkstaubBemerkungChange={setZinkstaubBemerkung}
           onEKolbenChange={setEKolben}
           onEKolbenBemerkungChange={setEKolbenBemerkung}
+        />
+        <TechnAenderungSection
+          kabelFunklayoutGeaendert={kabelFunklayoutGeaendert}
+          onKabelFunklayoutGeaendertChange={setKabelFunklayoutGeaendert}
         />
         <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
