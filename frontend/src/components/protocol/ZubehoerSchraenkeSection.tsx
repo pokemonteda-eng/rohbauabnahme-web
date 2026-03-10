@@ -4,7 +4,8 @@ import { Label } from "@/components/ui/label";
 export const SCHRAENKE_OPTIONS = [
   { id: "oben", label: "Oben" },
   { id: "unten", label: "Unten" },
-  { id: "innen", label: "Innen" }
+  { id: "innen", label: "Innen" },
+  { id: "kleiderschrank", label: "Kleiderschrank" }
 ] as const;
 
 export type SchraenkeOptionKey = (typeof SCHRAENKE_OPTIONS)[number]["id"];
