@@ -12,7 +12,10 @@ from app.schemas.protokolle import (
     ProtokollCreate,
     ProtokollRead,
     ProtokollUpdate,
+    ZubehoerPreisPositionRead,
+    ZubehoerPreisberechnungRead,
 )
+from app.services.calculation_service import calculate_accessory_net_total
 from app.services.validation_service import validate_lackierungsdaten
 
 router = APIRouter(prefix="/protokolle", tags=["protokolle"])
@@ -175,3 +178,32 @@ def get_lackierungsdaten(protokoll_id: int, db: Session = Depends(get_db)) -> La
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Lackierungsdaten nicht gefunden")
 
     return lackierungsdaten
+
+
+@router.get("/{protokoll_id}/zubehoer/preisberechnung", response_model=ZubehoerPreisberechnungRead)
+def get_zubehoer_preisberechnung(
+    protokoll_id: int,
+    db: Session = Depends(get_db),
+) -> ZubehoerPreisberechnungRead:
+    protokoll = db.get(Protokoll, protokoll_id)
+    if protokoll is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Protokoll nicht gefunden")
+
+    calculation = calculate_accessory_net_total(db, protokoll_id)
+    return ZubehoerPreisberechnungRead(
+        protokoll_id=calculation.protokoll_id,
+        netto_gesamt=calculation.netto_gesamt,
+        positionen=[
+            ZubehoerPreisPositionRead(
+                auswahl_id=position.auswahl_id,
+                katalog_id=position.katalog_id,
+                kategorie=position.kategorie,
+                bezeichnung=position.bezeichnung,
+                menge=position.menge,
+                einzelpreis_netto=position.einzelpreis_netto,
+                kunden_beigestellt=position.kunden_beigestellt,
+                gesamtpreis_netto=position.gesamtpreis_netto,
+            )
+            for position in calculation.positionen
+        ],
+    )

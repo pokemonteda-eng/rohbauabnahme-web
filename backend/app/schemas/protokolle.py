@@ -1,4 +1,5 @@
 from datetime import date
+from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -62,3 +63,20 @@ class LackierungsdatenRead(LackierungsdatenBase):
     protokoll_id: int
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class ZubehoerPreisPositionRead(BaseModel):
+    auswahl_id: int
+    katalog_id: int
+    kategorie: str
+    bezeichnung: str
+    menge: int
+    einzelpreis_netto: Decimal
+    kunden_beigestellt: bool
+    gesamtpreis_netto: Decimal
+
+
+class ZubehoerPreisberechnungRead(BaseModel):
+    protokoll_id: int
+    netto_gesamt: Decimal
+    positionen: list[ZubehoerPreisPositionRead]

@@ -1,4 +1,5 @@
 from collections.abc import Generator
+from decimal import Decimal
 
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, text
@@ -7,6 +8,8 @@ from sqlalchemy.pool import StaticPool
 
 from app.db import Base, get_db
 from app.main import app
+from app.models.zubehoer_auswahl import ZubehoerAuswahl
+from app.models.zubehoer_katalog import ZubehoerKatalog
 
 
 def _session_factory() -> sessionmaker[Session]:
@@ -495,5 +498,101 @@ def test_lackierungsdaten_endpoints_return_409_for_duplicate_rows() -> None:
     )
     assert save_response.status_code == 409
     assert "Inkonsistente Lackierungsdaten" in save_response.json()["detail"]
+
+    app.dependency_overrides.clear()
+
+
+def test_get_zubehoer_preisberechnung_returns_net_total_for_protocol() -> None:
+    client, session_local = _client_with_session()
+    kunde_id = _create_kunde(client, kunden_nr="K-9011")
+
+    create_response = client.post(
+        "/protokolle",
+        json={
+            "auftrags_nr": "A-60001",
+            "kunde_id": kunde_id,
+            "aufbautyp": "Container",
+            "projektleiter": "PL-Zubehoer",
+            "vertriebsgebiet": "Nord",
+            "kabel_funklayout_geaendert": False,
+            "techn_aenderungen": None,
+            "datum": "2026-03-10",
+            "anlage_datum": "2026-03-10",
+        },
+    )
+    assert create_response.status_code == 201
+    protokoll_id = create_response.json()["id"]
+
+    with session_local() as db:
+        katalog_a = ZubehoerKatalog(
+            kategorie="Aufbau",
+            bezeichnung="Leiter",
+            standard_preis=Decimal("15.50"),
+        )
+        katalog_b = ZubehoerKatalog(
+            kategorie="Rahmen",
+            bezeichnung="Staukasten",
+            standard_preis=Decimal("22.00"),
+        )
+        db.add_all([katalog_a, katalog_b])
+        db.flush()
+        db.add_all(
+            [
+                ZubehoerAuswahl(
+                    protokoll_id=protokoll_id,
+                    katalog_id=katalog_a.id,
+                    menge=2,
+                    einzelpreis=Decimal("12.00"),
+                    kunden_beigestellt=False,
+                ),
+                ZubehoerAuswahl(
+                    protokoll_id=protokoll_id,
+                    katalog_id=katalog_b.id,
+                    menge=1,
+                    einzelpreis=None,
+                    kunden_beigestellt=True,
+                ),
+            ]
+        )
+        db.commit()
+
+    response = client.get(f"/protokolle/{protokoll_id}/zubehoer/preisberechnung")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["protokoll_id"] == protokoll_id
+    assert payload["netto_gesamt"] == "24.00"
+    assert payload["positionen"] == [
+        {
+            "auswahl_id": 1,
+            "katalog_id": 1,
+            "kategorie": "Aufbau",
+            "bezeichnung": "Leiter",
+            "menge": 2,
+            "einzelpreis_netto": "12.00",
+            "kunden_beigestellt": False,
+            "gesamtpreis_netto": "24.00",
+        },
+        {
+            "auswahl_id": 2,
+            "katalog_id": 2,
+            "kategorie": "Rahmen",
+            "bezeichnung": "Staukasten",
+            "menge": 1,
+            "einzelpreis_netto": "0.00",
+            "kunden_beigestellt": True,
+            "gesamtpreis_netto": "0.00",
+        },
+    ]
+
+    app.dependency_overrides.clear()
+
+
+def test_get_zubehoer_preisberechnung_returns_404_for_missing_protocol() -> None:
+    client = _client()
+
+    response = client.get("/protokolle/9999/zubehoer/preisberechnung")
+
+    assert response.status_code == 404
 
     app.dependency_overrides.clear()
