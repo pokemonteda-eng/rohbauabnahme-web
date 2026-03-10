@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export type SchraenkeSelectionState = Record<SchraenkeOptionKey, boolean>;
+export type { SchraenkeOptionKey };
 
 type ZubehoerSchraenkeSectionProps = {
   values: SchraenkeSelectionState;
