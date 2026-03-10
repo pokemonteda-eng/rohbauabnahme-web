@@ -30,3 +30,15 @@
 - Neuer Test `backend/tests/test_alembic_migrations.py`
   - `test_alembic_upgrade_head_creates_all_expected_tables`
   - `test_alembic_has_single_head`
+
+# Ticket TASK-100
+
+## Status
+- Implementiert
+
+## Frontend
+- Einfache App-Routenstruktur ohne zusätzliche Routing-Dependency aufgebaut
+- Geschützte Route `/admin` ergänzt
+- Admin-Layout mit responsiver Navigation für Aufbauten, Lampen, Benutzer und Stammdaten ergänzt
+- Rollenprüfung auf Frontend-Seite vorbereitet über lokale Benutzerrolle mit Zugriff nur für `admin`
+
