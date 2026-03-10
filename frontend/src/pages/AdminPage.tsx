@@ -53,9 +53,10 @@ export function AdminPage() {
       return;
     }
 
+    const pathname = window.location.pathname;
     const params = new URLSearchParams(window.location.search);
 
-    if (params.get("section") === activeSection) {
+    if (pathname === "/admin" && params.get("section") === activeSection) {
       return;
     }
 
