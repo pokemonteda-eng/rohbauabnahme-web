@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { listVertriebsgebiete } from '@/api/stammdaten';
 import { Label } from '@/components/ui/label';
@@ -37,8 +37,7 @@ export function VertriebsgebietDropdown({ value, onChange }: VertriebsgebietDrop
     return () => abortController.abort();
   }, []);
 
-  const options = useMemo(() => items, [items]);
-  const hasNoOptions = !isLoading && error == null && options.length === 0;
+  const hasNoOptions = !isLoading && error == null && items.length === 0;
 
   const placeholderText = isLoading
     ? 'Lade Vertriebsgebiete...'
@@ -62,7 +61,7 @@ export function VertriebsgebietDropdown({ value, onChange }: VertriebsgebietDrop
         <option value='' disabled={!isLoading && error == null}>
           {placeholderText}
         </option>
-        {options.map((entry) => (
+        {items.map((entry) => (
           <option key={entry} value={entry}>
             {entry}
           </option>

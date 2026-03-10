@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { listProjektleiter } from "@/api/stammdaten";
 import { Label } from "@/components/ui/label";
@@ -40,8 +40,7 @@ export function ProjektleiterDropdown({ value, onChange }: ProjektleiterDropdown
     };
   }, []);
 
-  const options = useMemo(() => projektleiter, [projektleiter]);
-  const hasNoOptions = !isLoading && error == null && options.length === 0;
+  const hasNoOptions = !isLoading && error == null && projektleiter.length === 0;
 
   const placeholderText = isLoading
     ? "Lade Projektleiter..."
@@ -65,7 +64,7 @@ export function ProjektleiterDropdown({ value, onChange }: ProjektleiterDropdown
         <option value="" disabled={!isLoading && error == null}>
           {placeholderText}
         </option>
-        {options.map((eintrag) => (
+        {projektleiter.map((eintrag) => (
           <option key={eintrag} value={eintrag}>
             {eintrag}
           </option>
