@@ -78,9 +78,16 @@ def test_get_projektleiter_returns_values_with_api_prefix() -> None:
 def test_legacy_versioned_stammdaten_routes_remain_available() -> None:
     client = TestClient(app)
 
-    assert client.get("/api/v1/stammdaten/aufbautypen").json() == EXPECTED_AUFBAUTYPEN
-    assert client.get("/api/v1/stammdaten/vertriebsgebiete").json() == EXPECTED_VERTRIEBSGEBIETE
-    assert client.get("/api/v1/stammdaten/projektleiter").json() == EXPECTED_PROJEKTLEITER
+    aufbautypen_response = client.get("/api/v1/stammdaten/aufbautypen")
+    vertriebsgebiete_response = client.get("/api/v1/stammdaten/vertriebsgebiete")
+    projektleiter_response = client.get("/api/v1/stammdaten/projektleiter")
+
+    assert aufbautypen_response.status_code == 200
+    assert aufbautypen_response.json() == EXPECTED_AUFBAUTYPEN
+    assert vertriebsgebiete_response.status_code == 200
+    assert vertriebsgebiete_response.json() == EXPECTED_VERTRIEBSGEBIETE
+    assert projektleiter_response.status_code == 200
+    assert projektleiter_response.json() == EXPECTED_PROJEKTLEITER
 
 
 def test_openapi_exposes_only_versioned_master_data_routes() -> None:
