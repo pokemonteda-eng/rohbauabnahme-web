@@ -49,14 +49,20 @@ export function AdminPage() {
   const activeSection = getAdminSectionFromSearch(window.location.search);
 
   useEffect(() => {
+    const pathname = window.location.pathname;
+
+    if (pathname !== "/admin") {
+      navigateTo(`/admin${window.location.search}${window.location.hash}`, { replace: true });
+      return;
+    }
+
     if (!isAdmin) {
       return;
     }
 
-    const pathname = window.location.pathname;
     const params = new URLSearchParams(window.location.search);
 
-    if (pathname === "/admin" && params.get("section") === activeSection) {
+    if (params.get("section") === activeSection) {
       return;
     }
 

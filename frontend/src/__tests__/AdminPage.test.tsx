@@ -115,6 +115,16 @@ describe("Admin routing and access control", () => {
     expect(window.location.search).toBe("?section=lampen");
   });
 
+  test("canonicalizes nested admin paths for non-admin users without forcing a default section", () => {
+    window.history.pushState({}, "", "/admin/tools");
+
+    render(<App />);
+
+    expect(screen.getByRole("heading", { name: "Admin-Rechte erforderlich" })).not.toBeNull();
+    expect(window.location.pathname).toBe("/admin");
+    expect(window.location.search).toBe("");
+  });
+
   test("navigates to admin route from homepage CTA", () => {
     render(<App />);
 
