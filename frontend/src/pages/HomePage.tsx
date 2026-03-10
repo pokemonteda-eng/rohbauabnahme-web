@@ -3,7 +3,6 @@ import { useState } from "react";
 import { LackierungSection } from "@/components/protocol/LackierungSection";
 import { ProtocolHeader } from "@/components/protocol/ProtocolHeader";
 import {
-  type AufbauOptionKey,
   type AufbauSelectionState,
   ZubehoerAufbauSection
 } from "@/components/protocol/ZubehoerAufbauSection";
@@ -12,7 +11,6 @@ import {
   ZubehoerRahmenSection
 } from "@/components/protocol/ZubehoerRahmenSection";
 import {
-  type SchuettblendeOptionKey,
   type SchuettblendeSelectionState,
   ZubehoerSchuettblendeSection
 } from "@/components/protocol/ZubehoerSchuettblendeSection";
@@ -21,11 +19,17 @@ import {
   ZubehoerSchrottkastenSection
 } from "@/components/protocol/ZubehoerSchrottkastenSection";
 import {
-  type SchraenkeOptionKey,
   type SchraenkeSelectionState,
   ZubehoerSchraenkeSection
 } from "@/components/protocol/ZubehoerSchraenkeSection";
 import { Button } from "@/components/ui/button";
+import {
+  calculateAccessorySummary,
+  formatEuro,
+  type AufbauOptionKey,
+  type SchuettblendeOptionKey,
+  type SchraenkeOptionKey
+} from "@/lib/zubehoerPricing";
 
 const INITIAL_AUFBAU_SELECTION: AufbauSelectionState = {
   uml: false,
@@ -111,6 +115,14 @@ export function HomePage() {
     setSchrottkastenSelection({ schrottkasten: checked });
   };
 
+  const accessorySummary = calculateAccessorySummary({
+    aufbau: aufbauSelection,
+    rahmen: rahmenSelection,
+    schuettblende: schuettblendeSelection,
+    schraenke: schraenkeSelection,
+    schrottkasten: schrottkastenSelection
+  });
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <header className="border-b border-slate-200 bg-white">
@@ -147,6 +159,52 @@ export function HomePage() {
           onEKolbenChange={setEKolben}
           onEKolbenBemerkungChange={setEKolbenBemerkung}
         />
+        <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h2 className="text-lg font-semibold">Live-Preisanzeige Zubehör</h2>
+              <p className="mt-1 text-sm text-slate-600">
+                Jede Auswahl aktualisiert die Zubehörsumme sofort.
+              </p>
+            </div>
+            <div className="grid min-w-52 gap-3 sm:text-right">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                  Ausgewählte Positionen
+                </p>
+                <p data-testid="accessory-count" className="text-2xl font-semibold text-slate-900">
+                  {accessorySummary.selectedItems.length}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Netto Gesamt</p>
+                <p data-testid="accessory-total" className="text-2xl font-semibold text-emerald-700">
+                  {formatEuro(accessorySummary.total)}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="mt-6 border-t border-slate-200 pt-4">
+            {accessorySummary.selectedItems.length === 0 ? (
+              <p className="text-sm text-slate-500">Noch kein Zubehör ausgewählt.</p>
+            ) : (
+              <ul className="grid gap-3 sm:grid-cols-2">
+                {accessorySummary.selectedItems.map((item) => (
+                  <li
+                    key={`${item.category}-${item.label}`}
+                    className="flex items-center justify-between rounded-md border border-slate-200 px-3 py-2"
+                  >
+                    <div>
+                      <p className="font-medium text-slate-900">{item.label}</p>
+                      <p className="text-sm text-slate-500">{item.category}</p>
+                    </div>
+                    <p className="font-semibold text-slate-700">{formatEuro(item.price)}</p>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </section>
         <ZubehoerAufbauSection values={aufbauSelection} onValueChange={handleAufbauChange} />
         <ZubehoerRahmenSection values={rahmenSelection} onValueChange={handleRahmenChange} />
         <ZubehoerSchuettblendeSection
