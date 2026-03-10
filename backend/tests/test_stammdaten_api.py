@@ -2,26 +2,110 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 
+EXPECTED_AUFBAUTYPEN = ["FB", "FZB", "Koffer", "Container", "Pritsche"]
+EXPECTED_VERTRIEBSGEBIETE = ["Nord", "Sued", "West", "Ost", "Mitte"]
+EXPECTED_PROJEKTLEITER = ["Max Mustermann", "Erika Musterfrau", "Thomas Beispiel"]
 
-def test_get_aufbautypen_returns_values() -> None:
+
+def test_unversioned_aufbautypen_route_remains_available() -> None:
     client = TestClient(app)
     response = client.get("/stammdaten/aufbautypen")
 
     assert response.status_code == 200
-    assert response.json() == ["FB", "FZB", "Koffer", "Container", "Pritsche"]
+    assert response.json() == EXPECTED_AUFBAUTYPEN
 
 
-def test_get_vertriebsgebiete_returns_values() -> None:
+def test_unversioned_vertriebsgebiete_route_remains_available() -> None:
     client = TestClient(app)
     response = client.get("/stammdaten/vertriebsgebiete")
 
     assert response.status_code == 200
-    assert response.json() == ["Nord", "Sued", "West", "Ost", "Mitte"]
+    assert response.json() == EXPECTED_VERTRIEBSGEBIETE
 
 
-def test_get_projektleiter_returns_values() -> None:
+def test_unversioned_projektleiter_route_remains_available() -> None:
     client = TestClient(app)
     response = client.get("/stammdaten/projektleiter")
 
     assert response.status_code == 200
-    assert response.json() == ["Max Mustermann", "Erika Musterfrau", "Thomas Beispiel"]
+    assert response.json() == EXPECTED_PROJEKTLEITER
+
+
+def test_existing_root_kunden_and_protokolle_routes_remain_available() -> None:
+    client = TestClient(app)
+
+    assert client.post("/kunden", json={}).status_code == 422
+    assert client.post("/protokolle", json={}).status_code == 422
+
+
+def test_get_health_returns_status_without_api_prefix() -> None:
+    client = TestClient(app)
+    response = client.get("/health")
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok"}
+
+
+def test_get_health_returns_status_with_api_prefix() -> None:
+    client = TestClient(app)
+    response = client.get("/api/v1/health")
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok"}
+
+
+def test_get_aufbautypen_returns_values_with_api_prefix() -> None:
+    client = TestClient(app)
+    response = client.get("/api/v1/master-data/aufbautypen")
+
+    assert response.status_code == 200
+    assert response.json() == EXPECTED_AUFBAUTYPEN
+
+
+def test_get_vertriebsgebiete_returns_values_with_api_prefix() -> None:
+    client = TestClient(app)
+    response = client.get("/api/v1/master-data/vertriebsgebiete")
+
+    assert response.status_code == 200
+    assert response.json() == EXPECTED_VERTRIEBSGEBIETE
+
+
+def test_get_projektleiter_returns_values_with_api_prefix() -> None:
+    client = TestClient(app)
+    response = client.get("/api/v1/master-data/projektleiter")
+
+    assert response.status_code == 200
+    assert response.json() == EXPECTED_PROJEKTLEITER
+
+
+def test_legacy_versioned_stammdaten_routes_remain_available() -> None:
+    client = TestClient(app)
+
+    aufbautypen_response = client.get("/api/v1/stammdaten/aufbautypen")
+    vertriebsgebiete_response = client.get("/api/v1/stammdaten/vertriebsgebiete")
+    projektleiter_response = client.get("/api/v1/stammdaten/projektleiter")
+
+    assert aufbautypen_response.status_code == 200
+    assert aufbautypen_response.json() == EXPECTED_AUFBAUTYPEN
+    assert vertriebsgebiete_response.status_code == 200
+    assert vertriebsgebiete_response.json() == EXPECTED_VERTRIEBSGEBIETE
+    assert projektleiter_response.status_code == 200
+    assert projektleiter_response.json() == EXPECTED_PROJEKTLEITER
+
+
+def test_openapi_exposes_only_versioned_master_data_routes() -> None:
+    client = TestClient(app)
+    response = client.get("/openapi.json")
+
+    assert response.status_code == 200
+    paths = response.json()["paths"]
+
+    assert "/api/v1/master-data/aufbautypen" in paths
+    assert "/api/v1/master-data/vertriebsgebiete" in paths
+    assert "/api/v1/master-data/projektleiter" in paths
+    assert "/api/v1/stammdaten/aufbautypen" not in paths
+    assert "/api/v1/stammdaten/vertriebsgebiete" not in paths
+    assert "/api/v1/stammdaten/projektleiter" not in paths
+    assert "/stammdaten/aufbautypen" not in paths
+    assert "/stammdaten/vertriebsgebiete" not in paths
+    assert "/stammdaten/projektleiter" not in paths

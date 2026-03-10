@@ -8,6 +8,8 @@ from sqlalchemy.pool import StaticPool
 from app.db import Base, get_db
 from app.main import app
 
+API_PREFIX = "/api/v1"
+
 
 def _session_factory() -> sessionmaker[Session]:
     engine = create_engine(
@@ -41,14 +43,14 @@ def test_create_and_list_kunden() -> None:
         "name": "Test AG",
         "adresse": "Testweg 5, 80331 Muenchen",
     }
-    create_response = client.post("/kunden", json=payload)
+    create_response = client.post(f"{API_PREFIX}/kunden", json=payload)
     assert create_response.status_code == 201
 
     created = create_response.json()
     assert created["id"] > 0
     assert created["kunden_nr"] == payload["kunden_nr"]
 
-    list_response = client.get("/kunden")
+    list_response = client.get(f"{API_PREFIX}/kunden")
     assert list_response.status_code == 200
     kunden = list_response.json()
     assert len(kunden) == 1
@@ -67,7 +69,7 @@ def test_get_kunde_by_id_and_404() -> None:
     client = TestClient(app)
 
     create_response = client.post(
-        "/kunden",
+        f"{API_PREFIX}/kunden",
         json={
             "kunden_nr": "K-3000",
             "name": "Abnahme GmbH",
@@ -76,11 +78,11 @@ def test_get_kunde_by_id_and_404() -> None:
     )
     kunde_id = create_response.json()["id"]
 
-    get_response = client.get(f"/kunden/{kunde_id}")
+    get_response = client.get(f"{API_PREFIX}/kunden/{kunde_id}")
     assert get_response.status_code == 200
     assert get_response.json()["id"] == kunde_id
 
-    missing_response = client.get("/kunden/9999")
+    missing_response = client.get(f"{API_PREFIX}/kunden/9999")
     assert missing_response.status_code == 404
 
     app.dependency_overrides.clear()

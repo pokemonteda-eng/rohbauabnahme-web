@@ -38,7 +38,7 @@ describe("ProjektleiterDropdown", () => {
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith(
-        "/api/v1/stammdaten/projektleiter",
+        "/api/v1/master-data/projektleiter",
         expect.objectContaining({ method: "GET" })
       );
     });

@@ -18,21 +18,21 @@ describe("App", () => {
         } as Response);
       }
 
-      if (url === "/api/v1/stammdaten/aufbautypen") {
+      if (url === "/api/v1/master-data/aufbautypen") {
         return Promise.resolve({
           ok: true,
           json: () => Promise.resolve(["FB", "FZB", "Koffer"])
         } as Response);
       }
 
-      if (url === "/api/v1/stammdaten/projektleiter") {
+      if (url === "/api/v1/master-data/projektleiter") {
         return Promise.resolve({
           ok: true,
           json: () => Promise.resolve(["Max Mustermann", "Erika Musterfrau"])
         } as Response);
       }
 
-      if (url === "/api/v1/stammdaten/vertriebsgebiete") {
+      if (url === "/api/v1/master-data/vertriebsgebiete") {
         return Promise.resolve({
           ok: true,
           json: () => Promise.resolve(["Nord", "Sued", "West"])
