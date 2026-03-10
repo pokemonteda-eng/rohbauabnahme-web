@@ -63,6 +63,16 @@ describe("Admin routing and access control", () => {
     expect(window.location.search).toBe("");
   });
 
+  test("strips protected admin section queries on the base admin route for non-admin users", () => {
+    window.history.pushState({}, "", "/admin?section=lampen");
+
+    render(<App />);
+
+    expect(screen.getByRole("heading", { name: "Admin-Rechte erforderlich" })).not.toBeNull();
+    expect(window.location.pathname).toBe("/admin");
+    expect(window.location.search).toBe("");
+  });
+
   test("renders admin layout and navigation for admin users", () => {
     window.history.pushState({}, "", "/admin?section=lampen");
     setCurrentUserRole("admin");
@@ -141,7 +151,7 @@ describe("Admin routing and access control", () => {
     fireEvent.click(screen.getByRole("button", { name: "Admin-Bereich" }));
 
     expect(window.location.pathname).toBe("/admin");
-    expect(window.location.search).toBe("?section=aufbauten");
+    expect(window.location.search).toBe("");
     expect(screen.getByRole("heading", { name: "Admin-Rechte erforderlich" })).not.toBeNull();
   });
 });

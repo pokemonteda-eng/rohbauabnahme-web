@@ -62,6 +62,10 @@ export function AdminPage() {
     }
 
     if (!isAdmin) {
+      if (window.location.search) {
+        navigateTo("/admin", { replace: true });
+      }
+
       return;
     }
 
