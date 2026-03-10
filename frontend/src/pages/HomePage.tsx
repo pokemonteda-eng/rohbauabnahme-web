@@ -12,6 +12,11 @@ import {
   ZubehoerRahmenSection
 } from "@/components/protocol/ZubehoerRahmenSection";
 import {
+  type SchuettblendeOptionKey,
+  type SchuettblendeSelectionState,
+  ZubehoerSchuettblendeSection
+} from "@/components/protocol/ZubehoerSchuettblendeSection";
+import {
   type SchraenkeOptionKey,
   type SchraenkeSelectionState,
   ZubehoerSchraenkeSection
@@ -30,6 +35,11 @@ const INITIAL_AUFBAU_SELECTION: AufbauSelectionState = {
 
 const INITIAL_RAHMEN_SELECTION: RahmenSelectionState = {
   rahmen: false
+};
+
+const INITIAL_SCHUETTBLENDE_SELECTION: SchuettblendeSelectionState = {
+  aussen: false,
+  innen: false
 };
 
 const INITIAL_SCHRAENKE_SELECTION: SchraenkeSelectionState = {
@@ -53,6 +63,9 @@ export function HomePage() {
   const [eKolbenBemerkung, setEKolbenBemerkung] = useState("");
   const [aufbauSelection, setAufbauSelection] = useState<AufbauSelectionState>(INITIAL_AUFBAU_SELECTION);
   const [rahmenSelection, setRahmenSelection] = useState<RahmenSelectionState>(INITIAL_RAHMEN_SELECTION);
+  const [schuettblendeSelection, setSchuettblendeSelection] = useState<SchuettblendeSelectionState>(
+    INITIAL_SCHUETTBLENDE_SELECTION
+  );
   const [schraenkeSelection, setSchraenkeSelection] = useState<SchraenkeSelectionState>(
     INITIAL_SCHRAENKE_SELECTION
   );
@@ -66,6 +79,13 @@ export function HomePage() {
 
   const handleRahmenChange = (checked: boolean) => {
     setRahmenSelection({ rahmen: checked });
+  };
+
+  const handleSchuettblendeChange = (key: SchuettblendeOptionKey, checked: boolean) => {
+    setSchuettblendeSelection((previousState) => ({
+      ...previousState,
+      [key]: checked
+    }));
   };
 
   const handleSchraenkeChange = (key: SchraenkeOptionKey, checked: boolean) => {
@@ -113,6 +133,10 @@ export function HomePage() {
         />
         <ZubehoerAufbauSection values={aufbauSelection} onValueChange={handleAufbauChange} />
         <ZubehoerRahmenSection values={rahmenSelection} onValueChange={handleRahmenChange} />
+        <ZubehoerSchuettblendeSection
+          values={schuettblendeSelection}
+          onValueChange={handleSchuettblendeChange}
+        />
         <ZubehoerSchraenkeSection values={schraenkeSelection} onValueChange={handleSchraenkeChange} />
         <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
           <h1 className="text-2xl font-bold tracking-tight">React Frontend Setup</h1>

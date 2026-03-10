@@ -64,9 +64,10 @@ describe("App", () => {
     expect(screen.getByLabelText("Klarlackschicht")).not.toBeNull();
     expect(screen.getByLabelText("Zinkstaub")).not.toBeNull();
     expect(screen.getByLabelText("E-Kolben")).not.toBeNull();
-    expect(screen.getAllByRole("heading", { name: "Zubehör" })).toHaveLength(3);
+    expect(screen.getAllByRole("heading", { name: "Zubehör" })).toHaveLength(4);
     expect(screen.getByText("Kategorie: Aufbau")).not.toBeNull();
     expect(screen.getByText("Kategorie: Rahmen")).not.toBeNull();
+    expect(screen.getByText("Kategorie: Schüttblende")).not.toBeNull();
     expect(screen.getByText("Kategorie: Schränke")).not.toBeNull();
     expect(screen.getByLabelText("UML")).not.toBeNull();
     expect(screen.getByLabelText("FHB")).not.toBeNull();
@@ -76,9 +77,11 @@ describe("App", () => {
     expect(screen.getByLabelText("SPO")).not.toBeNull();
     expect(screen.getByLabelText("SB")).not.toBeNull();
     expect(screen.getByLabelText("Rahmen")).not.toBeNull();
+    expect(screen.getByLabelText("Schüttblende Außen")).not.toBeNull();
     expect(screen.getByLabelText("Oben")).not.toBeNull();
     expect(screen.getByLabelText("Unten")).not.toBeNull();
-    expect(screen.getByLabelText("Innen")).not.toBeNull();
+    expect(screen.getByLabelText("Schüttblende Innen")).not.toBeNull();
+    expect(screen.getByRole("checkbox", { name: /^Innen$/ })).not.toBeNull();
     expect(screen.queryByLabelText("Bemerkung Klarlackschicht")).toBeNull();
     expect(screen.queryByLabelText("Bemerkung Zinkstaub")).toBeNull();
     expect(screen.queryByLabelText("Bemerkung E-Kolben")).toBeNull();
@@ -88,7 +91,7 @@ describe("App", () => {
   });
 
   test("keeps protocol header fields controlled and updates values on change", async () => {
-    render(<App />);
+    const { container } = render(<App />);
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalled();
     });
@@ -106,9 +109,14 @@ describe("App", () => {
     const fhbCheckbox = screen.getByLabelText<HTMLInputElement>("FHB");
     const sbCheckbox = screen.getByLabelText<HTMLInputElement>("SB");
     const rahmenCheckbox = screen.getByLabelText<HTMLInputElement>("Rahmen");
-    const obenCheckbox = screen.getByLabelText<HTMLInputElement>("Oben");
-    const untenCheckbox = screen.getByLabelText<HTMLInputElement>("Unten");
-    const innenCheckbox = screen.getByLabelText<HTMLInputElement>("Innen");
+    const aussenCheckbox = screen.getByLabelText<HTMLInputElement>("Schüttblende Außen");
+    const obenCheckbox = container.querySelector<HTMLInputElement>("#schraenke-oben");
+    const untenCheckbox = container.querySelector<HTMLInputElement>("#schraenke-unten");
+    const schuettblendeInnenCheckbox = screen.getByLabelText<HTMLInputElement>("Schüttblende Innen");
+    const innenCheckbox = screen.getByRole<HTMLInputElement>("checkbox", { name: /^Innen$/ });
+    if (!obenCheckbox || !untenCheckbox) {
+      throw new Error("Expected zubehoer checkboxes to be rendered");
+    }
 
     expect(customerInput.value).toBe("");
     expect(projektleiterSelect.value).toBe("");
@@ -129,6 +137,8 @@ describe("App", () => {
     expect(fhbCheckbox.checked).toBe(false);
     expect(sbCheckbox.checked).toBe(false);
     expect(rahmenCheckbox.checked).toBe(false);
+    expect(aussenCheckbox.checked).toBe(false);
+    expect(schuettblendeInnenCheckbox.checked).toBe(false);
     expect(obenCheckbox.checked).toBe(false);
     expect(untenCheckbox.checked).toBe(false);
     expect(innenCheckbox.checked).toBe(false);
@@ -149,6 +159,8 @@ describe("App", () => {
     fireEvent.click(fhbCheckbox);
     fireEvent.click(sbCheckbox);
     fireEvent.click(rahmenCheckbox);
+    fireEvent.click(aussenCheckbox);
+    fireEvent.click(schuettblendeInnenCheckbox);
     fireEvent.click(obenCheckbox);
     fireEvent.click(untenCheckbox);
     fireEvent.click(innenCheckbox);
@@ -174,6 +186,8 @@ describe("App", () => {
     expect(fhbCheckbox.checked).toBe(true);
     expect(sbCheckbox.checked).toBe(true);
     expect(rahmenCheckbox.checked).toBe(true);
+    expect(aussenCheckbox.checked).toBe(true);
+    expect(schuettblendeInnenCheckbox.checked).toBe(true);
     expect(obenCheckbox.checked).toBe(true);
     expect(untenCheckbox.checked).toBe(true);
     expect(innenCheckbox.checked).toBe(true);
