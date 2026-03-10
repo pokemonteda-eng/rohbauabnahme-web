@@ -76,3 +76,18 @@ def test_get_projektleiter_returns_values_with_api_prefix() -> None:
 
     assert response.status_code == 200
     assert response.json() == EXPECTED_PROJEKTLEITER
+
+
+def test_openapi_exposes_only_versioned_stammdaten_routes() -> None:
+    client = TestClient(app)
+    response = client.get("/openapi.json")
+
+    assert response.status_code == 200
+    paths = response.json()["paths"]
+
+    assert "/api/v1/stammdaten/aufbautypen" in paths
+    assert "/api/v1/stammdaten/vertriebsgebiete" in paths
+    assert "/api/v1/stammdaten/projektleiter" in paths
+    assert "/stammdaten/aufbautypen" not in paths
+    assert "/stammdaten/vertriebsgebiete" not in paths
+    assert "/stammdaten/projektleiter" not in paths
