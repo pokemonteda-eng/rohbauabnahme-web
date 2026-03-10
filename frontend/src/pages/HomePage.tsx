@@ -31,6 +31,7 @@ import {
   type SchuettblendeOptionKey,
   type SchraenkeOptionKey
 } from "@/lib/zubehoerPricing";
+import { navigateTo } from "@/lib/navigation";
 
 const INITIAL_AUFBAU_SELECTION: AufbauSelectionState = {
   uml: false,
@@ -130,8 +131,15 @@ export function HomePage() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex h-16 w-full max-w-5xl items-center px-4">
+        <div className="mx-auto flex h-16 w-full max-w-5xl items-center justify-between gap-4 px-4">
           <p className="text-lg font-semibold">rohbauabnahme-web</p>
+          <button
+            type="button"
+            onClick={() => navigateTo("/admin")}
+            className="inline-flex items-center justify-center rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-100"
+          >
+            Admin-Bereich
+          </button>
         </div>
       </header>
       <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-10">

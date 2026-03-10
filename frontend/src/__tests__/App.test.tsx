@@ -4,6 +4,7 @@ import App from "@/App";
 
 describe("App", () => {
   beforeEach(() => {
+    window.history.pushState({}, "", "/");
     global.fetch = jest.fn().mockImplementation((input: RequestInfo | URL) => {
       const url =
         typeof input === "string"
