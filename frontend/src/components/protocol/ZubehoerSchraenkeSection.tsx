@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 
 export type SchraenkeSelectionState = Record<SchraenkeOptionKey, boolean>;
 export type { SchraenkeOptionKey };
+export { SCHRAENKE_OPTIONS };
 
 type ZubehoerSchraenkeSectionProps = {
   values: SchraenkeSelectionState;
