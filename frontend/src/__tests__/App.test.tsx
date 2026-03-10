@@ -64,10 +64,11 @@ describe("App", () => {
     expect(screen.getByLabelText("Klarlackschicht")).not.toBeNull();
     expect(screen.getByLabelText("Zinkstaub")).not.toBeNull();
     expect(screen.getByLabelText("E-Kolben")).not.toBeNull();
-    expect(screen.getAllByRole("heading", { name: "Zubehör" })).toHaveLength(4);
+    expect(screen.getAllByRole("heading", { name: "Zubehör" })).toHaveLength(5);
     expect(screen.getByText("Kategorie: Aufbau")).not.toBeNull();
     expect(screen.getByText("Kategorie: Rahmen")).not.toBeNull();
     expect(screen.getByText("Kategorie: Schüttblende")).not.toBeNull();
+    expect(screen.getByText("Kategorie: Schrottkasten")).not.toBeNull();
     expect(screen.getByText("Kategorie: Schränke")).not.toBeNull();
     expect(screen.getByLabelText("UML")).not.toBeNull();
     expect(screen.getByLabelText("FHB")).not.toBeNull();
@@ -77,6 +78,7 @@ describe("App", () => {
     expect(screen.getByLabelText("SPO")).not.toBeNull();
     expect(screen.getByLabelText("SB")).not.toBeNull();
     expect(screen.getByLabelText("Rahmen")).not.toBeNull();
+    expect(screen.getByLabelText("Schrottkasten")).not.toBeNull();
     expect(screen.getByLabelText("Schüttblende Außen")).not.toBeNull();
     expect(screen.getByLabelText("Oben")).not.toBeNull();
     expect(screen.getByLabelText("Unten")).not.toBeNull();
@@ -109,6 +111,7 @@ describe("App", () => {
     const fhbCheckbox = screen.getByLabelText<HTMLInputElement>("FHB");
     const sbCheckbox = screen.getByLabelText<HTMLInputElement>("SB");
     const rahmenCheckbox = screen.getByLabelText<HTMLInputElement>("Rahmen");
+    const schrottkastenCheckbox = screen.getByLabelText<HTMLInputElement>("Schrottkasten");
     const aussenCheckbox = screen.getByLabelText<HTMLInputElement>("Schüttblende Außen");
     const obenCheckbox = container.querySelector<HTMLInputElement>("#schraenke-oben");
     const untenCheckbox = container.querySelector<HTMLInputElement>("#schraenke-unten");
@@ -137,6 +140,7 @@ describe("App", () => {
     expect(fhbCheckbox.checked).toBe(false);
     expect(sbCheckbox.checked).toBe(false);
     expect(rahmenCheckbox.checked).toBe(false);
+    expect(schrottkastenCheckbox.checked).toBe(false);
     expect(aussenCheckbox.checked).toBe(false);
     expect(schuettblendeInnenCheckbox.checked).toBe(false);
     expect(obenCheckbox.checked).toBe(false);
@@ -159,6 +163,7 @@ describe("App", () => {
     fireEvent.click(fhbCheckbox);
     fireEvent.click(sbCheckbox);
     fireEvent.click(rahmenCheckbox);
+    fireEvent.click(schrottkastenCheckbox);
     fireEvent.click(aussenCheckbox);
     fireEvent.click(schuettblendeInnenCheckbox);
     fireEvent.click(obenCheckbox);
@@ -186,6 +191,7 @@ describe("App", () => {
     expect(fhbCheckbox.checked).toBe(true);
     expect(sbCheckbox.checked).toBe(true);
     expect(rahmenCheckbox.checked).toBe(true);
+    expect(schrottkastenCheckbox.checked).toBe(true);
     expect(aussenCheckbox.checked).toBe(true);
     expect(schuettblendeInnenCheckbox.checked).toBe(true);
     expect(obenCheckbox.checked).toBe(true);
