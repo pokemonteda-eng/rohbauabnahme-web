@@ -125,6 +125,16 @@ describe("Admin routing and access control", () => {
     expect(window.location.search).toBe("");
   });
 
+  test("drops protected admin section queries for non-admin users on nested admin paths", () => {
+    window.history.pushState({}, "", "/admin/tools?section=lampen");
+
+    render(<App />);
+
+    expect(screen.getByRole("heading", { name: "Admin-Rechte erforderlich" })).not.toBeNull();
+    expect(window.location.pathname).toBe("/admin");
+    expect(window.location.search).toBe("");
+  });
+
   test("navigates to admin route from homepage CTA", () => {
     render(<App />);
 

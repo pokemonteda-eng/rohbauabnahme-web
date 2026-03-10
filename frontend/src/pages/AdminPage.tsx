@@ -52,6 +52,11 @@ export function AdminPage() {
     const pathname = window.location.pathname;
 
     if (pathname !== "/admin") {
+      if (!isAdmin) {
+        navigateTo("/admin", { replace: true });
+        return;
+      }
+
       navigateTo(`/admin${window.location.search}${window.location.hash}`, { replace: true });
       return;
     }
