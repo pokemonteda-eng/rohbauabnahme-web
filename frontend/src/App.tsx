@@ -5,8 +5,12 @@ import { HomePage } from "@/pages/HomePage";
 
 type AppRoute = "/" | "/admin";
 
+function getLocationState() {
+  return `${window.location.pathname}${window.location.search}${window.location.hash}`;
+}
+
 function normalizeRoute(pathname: string): AppRoute {
-  if (pathname.startsWith("/admin")) {
+  if (pathname === "/admin" || pathname.startsWith("/admin/")) {
     return "/admin";
   }
 
@@ -14,11 +18,12 @@ function normalizeRoute(pathname: string): AppRoute {
 }
 
 function App() {
-  const [route, setRoute] = useState<AppRoute>(() => normalizeRoute(window.location.pathname));
+  const [locationState, setLocationState] = useState(() => getLocationState());
+  const route = normalizeRoute(new URL(locationState, window.location.origin).pathname);
 
   useEffect(() => {
     const handleLocationChange = () => {
-      setRoute(normalizeRoute(window.location.pathname));
+      setLocationState(getLocationState());
     };
 
     window.addEventListener("popstate", handleLocationChange);
