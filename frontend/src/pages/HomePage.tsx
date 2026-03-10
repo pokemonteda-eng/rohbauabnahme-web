@@ -17,6 +17,10 @@ import {
   ZubehoerSchuettblendeSection
 } from "@/components/protocol/ZubehoerSchuettblendeSection";
 import {
+  type SchrottkastenSelectionState,
+  ZubehoerSchrottkastenSection
+} from "@/components/protocol/ZubehoerSchrottkastenSection";
+import {
   type SchraenkeOptionKey,
   type SchraenkeSelectionState,
   ZubehoerSchraenkeSection
@@ -48,6 +52,10 @@ const INITIAL_SCHRAENKE_SELECTION: SchraenkeSelectionState = {
   innen: false
 };
 
+const INITIAL_SCHROTTKASTEN_SELECTION: SchrottkastenSelectionState = {
+  schrottkasten: false
+};
+
 export function HomePage() {
   const [customerQuery, setCustomerQuery] = useState("");
   const [projektleiter, setProjektleiter] = useState("");
@@ -68,6 +76,9 @@ export function HomePage() {
   );
   const [schraenkeSelection, setSchraenkeSelection] = useState<SchraenkeSelectionState>(
     INITIAL_SCHRAENKE_SELECTION
+  );
+  const [schrottkastenSelection, setSchrottkastenSelection] = useState<SchrottkastenSelectionState>(
+    INITIAL_SCHROTTKASTEN_SELECTION
   );
 
   const handleAufbauChange = (key: AufbauOptionKey, checked: boolean) => {
@@ -93,6 +104,10 @@ export function HomePage() {
       ...previousState,
       [key]: checked
     }));
+  };
+
+  const handleSchrottkastenChange = (checked: boolean) => {
+    setSchrottkastenSelection({ schrottkasten: checked });
   };
 
   return (
@@ -138,6 +153,10 @@ export function HomePage() {
           onValueChange={handleSchuettblendeChange}
         />
         <ZubehoerSchraenkeSection values={schraenkeSelection} onValueChange={handleSchraenkeChange} />
+        <ZubehoerSchrottkastenSection
+          values={schrottkastenSelection}
+          onValueChange={handleSchrottkastenChange}
+        />
         <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
           <h1 className="text-2xl font-bold tracking-tight">React Frontend Setup</h1>
           <p className="mt-2 text-slate-600">
