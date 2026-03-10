@@ -64,9 +64,10 @@ describe("App", () => {
     expect(screen.getByLabelText("Klarlackschicht")).not.toBeNull();
     expect(screen.getByLabelText("Zinkstaub")).not.toBeNull();
     expect(screen.getByLabelText("E-Kolben")).not.toBeNull();
-    expect(screen.getAllByRole("heading", { name: "Zubehör" })).toHaveLength(2);
+    expect(screen.getAllByRole("heading", { name: "Zubehör" })).toHaveLength(3);
     expect(screen.getByText("Kategorie: Aufbau")).not.toBeNull();
     expect(screen.getByText("Kategorie: Rahmen")).not.toBeNull();
+    expect(screen.getByText("Kategorie: Schränke")).not.toBeNull();
     expect(screen.getByLabelText("UML")).not.toBeNull();
     expect(screen.getByLabelText("FHB")).not.toBeNull();
     expect(screen.getByLabelText("RUK")).not.toBeNull();
@@ -75,6 +76,9 @@ describe("App", () => {
     expect(screen.getByLabelText("SPO")).not.toBeNull();
     expect(screen.getByLabelText("SB")).not.toBeNull();
     expect(screen.getByLabelText("Rahmen")).not.toBeNull();
+    expect(screen.getByLabelText("Oben")).not.toBeNull();
+    expect(screen.getByLabelText("Unten")).not.toBeNull();
+    expect(screen.getByLabelText("Innen")).not.toBeNull();
     expect(screen.queryByLabelText("Bemerkung Klarlackschicht")).toBeNull();
     expect(screen.queryByLabelText("Bemerkung Zinkstaub")).toBeNull();
     expect(screen.queryByLabelText("Bemerkung E-Kolben")).toBeNull();
@@ -102,6 +106,9 @@ describe("App", () => {
     const fhbCheckbox = screen.getByLabelText<HTMLInputElement>("FHB");
     const sbCheckbox = screen.getByLabelText<HTMLInputElement>("SB");
     const rahmenCheckbox = screen.getByLabelText<HTMLInputElement>("Rahmen");
+    const obenCheckbox = screen.getByLabelText<HTMLInputElement>("Oben");
+    const untenCheckbox = screen.getByLabelText<HTMLInputElement>("Unten");
+    const innenCheckbox = screen.getByLabelText<HTMLInputElement>("Innen");
 
     expect(customerInput.value).toBe("");
     expect(projektleiterSelect.value).toBe("");
@@ -122,6 +129,9 @@ describe("App", () => {
     expect(fhbCheckbox.checked).toBe(false);
     expect(sbCheckbox.checked).toBe(false);
     expect(rahmenCheckbox.checked).toBe(false);
+    expect(obenCheckbox.checked).toBe(false);
+    expect(untenCheckbox.checked).toBe(false);
+    expect(innenCheckbox.checked).toBe(false);
     expect(screen.queryByLabelText("Bemerkung Klarlackschicht")).toBeNull();
     expect(screen.queryByLabelText("Bemerkung Zinkstaub")).toBeNull();
     expect(screen.queryByLabelText("Bemerkung E-Kolben")).toBeNull();
@@ -139,6 +149,9 @@ describe("App", () => {
     fireEvent.click(fhbCheckbox);
     fireEvent.click(sbCheckbox);
     fireEvent.click(rahmenCheckbox);
+    fireEvent.click(obenCheckbox);
+    fireEvent.click(untenCheckbox);
+    fireEvent.click(innenCheckbox);
 
     const klarlackschichtBemerkung = screen.getByLabelText<HTMLInputElement>("Bemerkung Klarlackschicht");
     const zinkstaubBemerkung = screen.getByLabelText<HTMLInputElement>("Bemerkung Zinkstaub");
@@ -161,6 +174,9 @@ describe("App", () => {
     expect(fhbCheckbox.checked).toBe(true);
     expect(sbCheckbox.checked).toBe(true);
     expect(rahmenCheckbox.checked).toBe(true);
+    expect(obenCheckbox.checked).toBe(true);
+    expect(untenCheckbox.checked).toBe(true);
+    expect(innenCheckbox.checked).toBe(true);
     expect(klarlackschichtBemerkung.value).toBe("Decklack nacharbeiten");
     expect(zinkstaubBemerkung.value).toBe("Schichtdicke pruefen");
     expect(eKolbenBemerkung.value).toBe("Anschluss kontrollieren");
