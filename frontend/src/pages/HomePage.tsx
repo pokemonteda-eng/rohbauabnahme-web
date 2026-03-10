@@ -49,7 +49,8 @@ const INITIAL_SCHUETTBLENDE_SELECTION: SchuettblendeSelectionState = {
 const INITIAL_SCHRAENKE_SELECTION: SchraenkeSelectionState = {
   oben: false,
   unten: false,
-  innen: false
+  innen: false,
+  kleiderschrank: false
 };
 
 const INITIAL_SCHROTTKASTEN_SELECTION: SchrottkastenSelectionState = {

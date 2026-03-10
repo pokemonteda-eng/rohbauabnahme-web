@@ -8,7 +8,8 @@ import {
 const EMPTY_SELECTION: SchraenkeSelectionState = {
   oben: false,
   unten: false,
-  innen: false
+  innen: false,
+  kleiderschrank: false
 };
 
 describe("ZubehoerSchraenkeSection", () => {
@@ -22,6 +23,7 @@ describe("ZubehoerSchraenkeSection", () => {
     expect(screen.getByLabelText<HTMLInputElement>("Oben").checked).toBe(false);
     expect(screen.getByLabelText<HTMLInputElement>("Unten").checked).toBe(false);
     expect(screen.getByLabelText<HTMLInputElement>("Innen").checked).toBe(false);
+    expect(screen.getByLabelText<HTMLInputElement>("Kleiderschrank").checked).toBe(false);
     expect(onValueChange).not.toHaveBeenCalled();
   });
 
@@ -33,5 +35,15 @@ describe("ZubehoerSchraenkeSection", () => {
     fireEvent.click(screen.getByLabelText("Unten"));
 
     expect(onValueChange).toHaveBeenCalledWith("unten", true);
+  });
+
+  test("forwards kleiderschrank key and checked state when toggled", () => {
+    const onValueChange = jest.fn();
+
+    render(<ZubehoerSchraenkeSection values={EMPTY_SELECTION} onValueChange={onValueChange} />);
+
+    fireEvent.click(screen.getByLabelText("Kleiderschrank"));
+
+    expect(onValueChange).toHaveBeenCalledWith("kleiderschrank", true);
   });
 });

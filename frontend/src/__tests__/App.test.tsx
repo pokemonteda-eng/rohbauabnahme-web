@@ -82,6 +82,7 @@ describe("App", () => {
     expect(screen.getByLabelText("Schüttblende Außen")).not.toBeNull();
     expect(screen.getByLabelText("Oben")).not.toBeNull();
     expect(screen.getByLabelText("Unten")).not.toBeNull();
+    expect(screen.getByLabelText("Kleiderschrank")).not.toBeNull();
     expect(screen.getByLabelText("Schüttblende Innen")).not.toBeNull();
     expect(screen.getByRole("checkbox", { name: /^Innen$/ })).not.toBeNull();
     expect(screen.queryByLabelText("Bemerkung Klarlackschicht")).toBeNull();
@@ -115,9 +116,10 @@ describe("App", () => {
     const aussenCheckbox = screen.getByLabelText<HTMLInputElement>("Schüttblende Außen");
     const obenCheckbox = container.querySelector<HTMLInputElement>("#schraenke-oben");
     const untenCheckbox = container.querySelector<HTMLInputElement>("#schraenke-unten");
+    const kleiderschrankCheckbox = container.querySelector<HTMLInputElement>("#schraenke-kleiderschrank");
     const schuettblendeInnenCheckbox = screen.getByLabelText<HTMLInputElement>("Schüttblende Innen");
     const innenCheckbox = screen.getByRole<HTMLInputElement>("checkbox", { name: /^Innen$/ });
-    if (!obenCheckbox || !untenCheckbox) {
+    if (!obenCheckbox || !untenCheckbox || !kleiderschrankCheckbox) {
       throw new Error("Expected zubehoer checkboxes to be rendered");
     }
 
@@ -145,6 +147,7 @@ describe("App", () => {
     expect(schuettblendeInnenCheckbox.checked).toBe(false);
     expect(obenCheckbox.checked).toBe(false);
     expect(untenCheckbox.checked).toBe(false);
+    expect(kleiderschrankCheckbox.checked).toBe(false);
     expect(innenCheckbox.checked).toBe(false);
     expect(screen.queryByLabelText("Bemerkung Klarlackschicht")).toBeNull();
     expect(screen.queryByLabelText("Bemerkung Zinkstaub")).toBeNull();
@@ -168,6 +171,7 @@ describe("App", () => {
     fireEvent.click(schuettblendeInnenCheckbox);
     fireEvent.click(obenCheckbox);
     fireEvent.click(untenCheckbox);
+    fireEvent.click(kleiderschrankCheckbox);
     fireEvent.click(innenCheckbox);
 
     const klarlackschichtBemerkung = screen.getByLabelText<HTMLInputElement>("Bemerkung Klarlackschicht");
@@ -196,6 +200,7 @@ describe("App", () => {
     expect(schuettblendeInnenCheckbox.checked).toBe(true);
     expect(obenCheckbox.checked).toBe(true);
     expect(untenCheckbox.checked).toBe(true);
+    expect(kleiderschrankCheckbox.checked).toBe(true);
     expect(innenCheckbox.checked).toBe(true);
     expect(klarlackschichtBemerkung.value).toBe("Decklack nacharbeiten");
     expect(zinkstaubBemerkung.value).toBe("Schichtdicke pruefen");
