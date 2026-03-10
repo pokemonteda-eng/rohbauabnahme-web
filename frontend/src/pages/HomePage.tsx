@@ -11,6 +11,11 @@ import {
   type RahmenSelectionState,
   ZubehoerRahmenSection
 } from "@/components/protocol/ZubehoerRahmenSection";
+import {
+  type SchraenkeOptionKey,
+  type SchraenkeSelectionState,
+  ZubehoerSchraenkeSection
+} from "@/components/protocol/ZubehoerSchraenkeSection";
 import { Button } from "@/components/ui/button";
 
 const INITIAL_AUFBAU_SELECTION: AufbauSelectionState = {
@@ -25,6 +30,12 @@ const INITIAL_AUFBAU_SELECTION: AufbauSelectionState = {
 
 const INITIAL_RAHMEN_SELECTION: RahmenSelectionState = {
   rahmen: false
+};
+
+const INITIAL_SCHRAENKE_SELECTION: SchraenkeSelectionState = {
+  oben: false,
+  unten: false,
+  innen: false
 };
 
 export function HomePage() {
@@ -42,6 +53,9 @@ export function HomePage() {
   const [eKolbenBemerkung, setEKolbenBemerkung] = useState("");
   const [aufbauSelection, setAufbauSelection] = useState<AufbauSelectionState>(INITIAL_AUFBAU_SELECTION);
   const [rahmenSelection, setRahmenSelection] = useState<RahmenSelectionState>(INITIAL_RAHMEN_SELECTION);
+  const [schraenkeSelection, setSchraenkeSelection] = useState<SchraenkeSelectionState>(
+    INITIAL_SCHRAENKE_SELECTION
+  );
 
   const handleAufbauChange = (key: AufbauOptionKey, checked: boolean) => {
     setAufbauSelection((previousState) => ({
@@ -52,6 +66,13 @@ export function HomePage() {
 
   const handleRahmenChange = (checked: boolean) => {
     setRahmenSelection({ rahmen: checked });
+  };
+
+  const handleSchraenkeChange = (key: SchraenkeOptionKey, checked: boolean) => {
+    setSchraenkeSelection((previousState) => ({
+      ...previousState,
+      [key]: checked
+    }));
   };
 
   return (
@@ -92,6 +113,7 @@ export function HomePage() {
         />
         <ZubehoerAufbauSection values={aufbauSelection} onValueChange={handleAufbauChange} />
         <ZubehoerRahmenSection values={rahmenSelection} onValueChange={handleRahmenChange} />
+        <ZubehoerSchraenkeSection values={schraenkeSelection} onValueChange={handleSchraenkeChange} />
         <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
           <h1 className="text-2xl font-bold tracking-tight">React Frontend Setup</h1>
           <p className="mt-2 text-slate-600">
