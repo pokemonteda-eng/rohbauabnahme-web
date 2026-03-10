@@ -61,6 +61,7 @@ describe("App", () => {
     expect(screen.getByLabelText("Auftrags-Nr.")).not.toBeNull();
     expect(screen.getByLabelText("Protokolldatum")).not.toBeNull();
     expect(screen.getByRole("heading", { name: "Lackierung" })).not.toBeNull();
+    expect(screen.getByRole("heading", { name: "Live-Preisanzeige Zubehör" })).not.toBeNull();
     expect(screen.getByLabelText("Klarlackschicht")).not.toBeNull();
     expect(screen.getByLabelText("Zinkstaub")).not.toBeNull();
     expect(screen.getByLabelText("E-Kolben")).not.toBeNull();
@@ -85,6 +86,8 @@ describe("App", () => {
     expect(screen.getByLabelText("Kleiderschrank")).not.toBeNull();
     expect(screen.getByLabelText("Schüttblende Innen")).not.toBeNull();
     expect(screen.getByRole("checkbox", { name: /^Innen$/ })).not.toBeNull();
+    expect(screen.getByText("Noch kein Zubehör ausgewählt.")).not.toBeNull();
+    expect(screen.getByTestId("accessory-total").textContent).toContain("0,00");
     expect(screen.queryByLabelText("Bemerkung Klarlackschicht")).toBeNull();
     expect(screen.queryByLabelText("Bemerkung Zinkstaub")).toBeNull();
     expect(screen.queryByLabelText("Bemerkung E-Kolben")).toBeNull();
@@ -149,6 +152,7 @@ describe("App", () => {
     expect(untenCheckbox.checked).toBe(false);
     expect(kleiderschrankCheckbox.checked).toBe(false);
     expect(innenCheckbox.checked).toBe(false);
+    expect(screen.getByTestId("accessory-total").textContent).toContain("0,00");
     expect(screen.queryByLabelText("Bemerkung Klarlackschicht")).toBeNull();
     expect(screen.queryByLabelText("Bemerkung Zinkstaub")).toBeNull();
     expect(screen.queryByLabelText("Bemerkung E-Kolben")).toBeNull();
@@ -205,5 +209,8 @@ describe("App", () => {
     expect(klarlackschichtBemerkung.value).toBe("Decklack nacharbeiten");
     expect(zinkstaubBemerkung.value).toBe("Schichtdicke pruefen");
     expect(eKolbenBemerkung.value).toBe("Anschluss kontrollieren");
+    expect(screen.getByTestId("accessory-count").textContent).toBe("11");
+    expect(screen.getByTestId("accessory-total").textContent).toContain("14.850,00");
+    expect(screen.queryByText("Noch kein Zubehör ausgewählt.")).toBeNull();
   });
 });
