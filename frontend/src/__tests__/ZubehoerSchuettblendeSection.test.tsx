@@ -18,8 +18,8 @@ describe("ZubehoerSchuettblendeSection", () => {
 
     expect(screen.getByRole("heading", { name: "Zubehör" })).not.toBeNull();
     expect(screen.getByText("Kategorie: Schüttblende")).not.toBeNull();
-    expect(screen.getByLabelText<HTMLInputElement>("Außen").checked).toBe(false);
-    expect(screen.getByLabelText<HTMLInputElement>("Innen").checked).toBe(false);
+    expect(screen.getByLabelText<HTMLInputElement>("Schüttblende Außen").checked).toBe(false);
+    expect(screen.getByLabelText<HTMLInputElement>("Schüttblende Innen").checked).toBe(false);
     expect(onValueChange).not.toHaveBeenCalled();
   });
 
@@ -28,8 +28,8 @@ describe("ZubehoerSchuettblendeSection", () => {
 
     render(<ZubehoerSchuettblendeSection values={EMPTY_SELECTION} onValueChange={onValueChange} />);
 
-    fireEvent.click(screen.getByLabelText("Außen"));
-    fireEvent.click(screen.getByLabelText("Innen"));
+    fireEvent.click(screen.getByLabelText("Schüttblende Außen"));
+    fireEvent.click(screen.getByLabelText("Schüttblende Innen"));
 
     expect(onValueChange).toHaveBeenNthCalledWith(1, "aussen", true);
     expect(onValueChange).toHaveBeenNthCalledWith(2, "innen", true);

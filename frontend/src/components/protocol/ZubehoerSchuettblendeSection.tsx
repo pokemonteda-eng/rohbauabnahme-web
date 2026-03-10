@@ -29,6 +29,7 @@ export function ZubehoerSchuettblendeSection({
               id={`schuettblende-${option.id}`}
               name={`schuettblende-${option.id}`}
               type="checkbox"
+              aria-label={`Schüttblende ${option.label}`}
               checked={values[option.id]}
               onChange={(event) => onValueChange(option.id, event.target.checked)}
               className="h-4 w-4"
