@@ -1,8 +1,7 @@
 import type { ReactNode } from "react";
 
+import { type AdminSection, getAdminSectionHref } from "@/lib/admin";
 import { navigateTo } from "@/lib/navigation";
-
-type AdminSection = "aufbauten" | "lampen" | "benutzer" | "stammdaten";
 
 type AdminNavigationItem = {
   id: AdminSection;
@@ -48,7 +47,7 @@ export function AdminLayout({
                     <li key={item.id}>
                       <button
                         type="button"
-                        onClick={() => navigateTo(`/admin?section=${item.id}`)}
+                        onClick={() => navigateTo(getAdminSectionHref(item.id))}
                         className={[
                           "flex w-full flex-col rounded-2xl border px-4 py-4 text-left transition",
                           isActive

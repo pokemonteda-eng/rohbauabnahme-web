@@ -99,6 +99,7 @@ describe("Admin routing and access control", () => {
 
     expect(screen.getByRole("heading", { name: "Aufbauten" })).not.toBeNull();
     expect(screen.getByRole("button", { name: /Aufbauten/ }).getAttribute("aria-current")).toBe("page");
+    expect(window.location.search).toBe("?section=aufbauten");
   });
 
   test("navigates to admin route from homepage CTA", () => {
@@ -107,6 +108,7 @@ describe("Admin routing and access control", () => {
     fireEvent.click(screen.getByRole("button", { name: "Admin-Bereich" }));
 
     expect(window.location.pathname).toBe("/admin");
+    expect(window.location.search).toBe("?section=aufbauten");
     expect(screen.getByRole("heading", { name: "Admin-Rechte erforderlich" })).not.toBeNull();
   });
 });

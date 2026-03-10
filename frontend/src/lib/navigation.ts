@@ -4,11 +4,20 @@ function normalizeNavigationTarget(target: string) {
   return `${url.pathname}${url.search}${url.hash}`;
 }
 
-export function navigateTo(target: string) {
+type NavigateOptions = {
+  replace?: boolean;
+};
+
+export function navigateTo(target: string, options?: NavigateOptions) {
   if (normalizeNavigationTarget(window.location.href) === normalizeNavigationTarget(target)) {
     return;
   }
 
-  window.history.pushState({}, "", target);
+  if (options?.replace) {
+    window.history.replaceState({}, "", target);
+  } else {
+    window.history.pushState({}, "", target);
+  }
+
   window.dispatchEvent(new Event("app:navigate"));
 }

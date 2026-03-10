@@ -24,6 +24,7 @@ import {
   ZubehoerSchraenkeSection
 } from "@/components/protocol/ZubehoerSchraenkeSection";
 import { Button } from "@/components/ui/button";
+import { DEFAULT_ADMIN_SECTION, getAdminSectionHref } from "@/lib/admin";
 import {
   calculateAccessorySummary,
   formatEuro,
@@ -135,7 +136,7 @@ export function HomePage() {
           <p className="text-lg font-semibold">rohbauabnahme-web</p>
           <button
             type="button"
-            onClick={() => navigateTo("/admin")}
+            onClick={() => navigateTo(getAdminSectionHref(DEFAULT_ADMIN_SECTION))}
             className="inline-flex items-center justify-center rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-100"
           >
             Admin-Bereich
