@@ -193,6 +193,8 @@ def get_zubehoer_preisberechnung(
     return ZubehoerPreisberechnungRead(
         protokoll_id=calculation.protokoll_id,
         netto_gesamt=calculation.netto_gesamt,
+        preis_tea=calculation.preis_tea,
+        preis_tek=calculation.preis_tek,
         positionen=[
             ZubehoerPreisPositionRead(
                 auswahl_id=position.auswahl_id,
@@ -201,6 +203,7 @@ def get_zubehoer_preisberechnung(
                 bezeichnung=position.bezeichnung,
                 menge=position.menge,
                 einzelpreis_netto=position.einzelpreis_netto,
+                bewertung=position.bewertung,
                 kunden_beigestellt=position.kunden_beigestellt,
                 gesamtpreis_netto=position.gesamtpreis_netto,
             )

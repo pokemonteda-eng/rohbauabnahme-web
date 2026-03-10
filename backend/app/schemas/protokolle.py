@@ -72,6 +72,7 @@ class ZubehoerPreisPositionRead(BaseModel):
     bezeichnung: str
     menge: int
     einzelpreis_netto: Decimal
+    bewertung: str | None = None
     kunden_beigestellt: bool
     gesamtpreis_netto: Decimal
 
@@ -79,4 +80,6 @@ class ZubehoerPreisPositionRead(BaseModel):
 class ZubehoerPreisberechnungRead(BaseModel):
     protokoll_id: int
     netto_gesamt: Decimal
+    preis_tea: Decimal
+    preis_tek: Decimal
     positionen: list[ZubehoerPreisPositionRead]

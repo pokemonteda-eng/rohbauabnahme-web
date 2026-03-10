@@ -543,6 +543,7 @@ def test_get_zubehoer_preisberechnung_returns_net_total_for_protocol() -> None:
                     katalog_id=katalog_a.id,
                     menge=2,
                     einzelpreis=Decimal("12.00"),
+                    bewertung="TEA",
                     kunden_beigestellt=False,
                 ),
                 ZubehoerAuswahl(
@@ -550,6 +551,7 @@ def test_get_zubehoer_preisberechnung_returns_net_total_for_protocol() -> None:
                     katalog_id=katalog_b.id,
                     menge=1,
                     einzelpreis=None,
+                    bewertung="TEK",
                     kunden_beigestellt=True,
                 ),
             ]
@@ -562,6 +564,8 @@ def test_get_zubehoer_preisberechnung_returns_net_total_for_protocol() -> None:
     payload = response.json()
     assert payload["protokoll_id"] == protokoll_id
     assert payload["netto_gesamt"] == "24.00"
+    assert payload["preis_tea"] == "24.00"
+    assert payload["preis_tek"] == "0.00"
     assert payload["positionen"] == [
         {
             "auswahl_id": 1,
@@ -570,6 +574,7 @@ def test_get_zubehoer_preisberechnung_returns_net_total_for_protocol() -> None:
             "bezeichnung": "Leiter",
             "menge": 2,
             "einzelpreis_netto": "12.00",
+            "bewertung": "TEA",
             "kunden_beigestellt": False,
             "gesamtpreis_netto": "24.00",
         },
@@ -580,6 +585,7 @@ def test_get_zubehoer_preisberechnung_returns_net_total_for_protocol() -> None:
             "bezeichnung": "Staukasten",
             "menge": 1,
             "einzelpreis_netto": "0.00",
+            "bewertung": "TEK",
             "kunden_beigestellt": True,
             "gesamtpreis_netto": "0.00",
         },
