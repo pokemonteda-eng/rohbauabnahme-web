@@ -22,6 +22,7 @@ class CalculatedAccessoryPrice:
     bezeichnung: str
     menge: int
     einzelpreis_netto: Decimal
+    bewertung: str | None
     kunden_beigestellt: bool
     gesamtpreis_netto: Decimal
 
@@ -30,7 +31,17 @@ class CalculatedAccessoryPrice:
 class AccessoryPriceCalculation:
     protokoll_id: int
     netto_gesamt: Decimal
+    preis_tea: Decimal
+    preis_tek: Decimal
     positionen: list[CalculatedAccessoryPrice]
+
+
+def _normalize_bewertung(value: str | None) -> str | None:
+    if value is None:
+        return None
+
+    normalized = value.strip().upper()
+    return normalized or None
 
 
 def _resolve_unit_price(auswahl: ZubehoerAuswahl, katalog: ZubehoerKatalog) -> Decimal:
@@ -54,11 +65,18 @@ def calculate_accessory_net_total(db: Session, protokoll_id: int) -> AccessoryPr
 
     positionen: list[CalculatedAccessoryPrice] = []
     netto_gesamt = Decimal("0.00")
+    preis_tea = Decimal("0.00")
+    preis_tek = Decimal("0.00")
 
     for auswahl, katalog in rows:
         einzelpreis = _resolve_unit_price(auswahl, katalog)
         gesamtpreis = _round_currency(einzelpreis * Decimal(auswahl.menge))
+        bewertung = _normalize_bewertung(auswahl.bewertung)
         netto_gesamt += gesamtpreis
+        if bewertung == "TEA":
+            preis_tea += gesamtpreis
+        if bewertung == "TEK":
+            preis_tek += gesamtpreis
         positionen.append(
             CalculatedAccessoryPrice(
                 auswahl_id=auswahl.id,
@@ -67,6 +85,7 @@ def calculate_accessory_net_total(db: Session, protokoll_id: int) -> AccessoryPr
                 bezeichnung=katalog.bezeichnung,
                 menge=auswahl.menge,
                 einzelpreis_netto=einzelpreis,
+                bewertung=bewertung,
                 kunden_beigestellt=auswahl.kunden_beigestellt,
                 gesamtpreis_netto=gesamtpreis,
             )
@@ -75,5 +94,7 @@ def calculate_accessory_net_total(db: Session, protokoll_id: int) -> AccessoryPr
     return AccessoryPriceCalculation(
         protokoll_id=protokoll_id,
         netto_gesamt=_round_currency(netto_gesamt),
+        preis_tea=_round_currency(preis_tea),
+        preis_tek=_round_currency(preis_tek),
         positionen=positionen,
     )

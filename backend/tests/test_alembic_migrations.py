@@ -138,6 +138,7 @@ def test_alembic_upgrade_head_matches_expected_schema_details(tmp_path: Path) ->
             "katalog_id",
             "menge",
             "einzelpreis",
+            "bewertung",
             "kunden_beigestellt",
             "bemerkung",
             "erstellt_am",

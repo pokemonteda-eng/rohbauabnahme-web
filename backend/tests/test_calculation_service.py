@@ -53,6 +53,7 @@ def test_calculate_accessory_net_total_uses_override_price_and_catalog_fallback(
                 katalog_id=katalog_a.id,
                 menge=2,
                 einzelpreis=Decimal("10.00"),
+                bewertung="TEA",
                 kunden_beigestellt=False,
             ),
             ZubehoerAuswahl(
@@ -60,6 +61,7 @@ def test_calculate_accessory_net_total_uses_override_price_and_catalog_fallback(
                 katalog_id=katalog_b.id,
                 menge=3,
                 einzelpreis=None,
+                bewertung="TEK",
                 kunden_beigestellt=False,
             ),
         ]
@@ -69,6 +71,8 @@ def test_calculate_accessory_net_total_uses_override_price_and_catalog_fallback(
     calculation = calculate_accessory_net_total(db, protokoll.id)
 
     assert calculation.netto_gesamt == Decimal("49.97")
+    assert calculation.preis_tea == Decimal("20.00")
+    assert calculation.preis_tek == Decimal("29.97")
     assert [position.einzelpreis_netto for position in calculation.positionen] == [
         Decimal("10.00"),
         Decimal("9.99"),
@@ -106,6 +110,7 @@ def test_calculate_accessory_net_total_counts_customer_supplied_as_zero() -> Non
             katalog_id=katalog.id,
             menge=4,
             einzelpreis=Decimal("88.00"),
+            bewertung="TEA",
             kunden_beigestellt=True,
         )
     )
@@ -114,5 +119,47 @@ def test_calculate_accessory_net_total_counts_customer_supplied_as_zero() -> Non
     calculation = calculate_accessory_net_total(db, protokoll.id)
 
     assert calculation.netto_gesamt == Decimal("0.00")
+    assert calculation.preis_tea == Decimal("0.00")
+    assert calculation.preis_tek == Decimal("0.00")
     assert calculation.positionen[0].einzelpreis_netto == Decimal("0.00")
     assert calculation.positionen[0].gesamtpreis_netto == Decimal("0.00")
+
+
+def test_calculate_accessory_net_total_ignores_non_tea_tek_bewertungen() -> None:
+    db = _session()
+    kunde = Kunde(kunden_nr="K-9302", name="Preis Kunde", adresse="Preisweg 3")
+    db.add(kunde)
+    db.flush()
+
+    protokoll = Protokoll(
+        auftrags_nr="A-9302",
+        kunde_id=kunde.id,
+        aufbautyp="Container",
+        projektleiter="PL",
+        vertriebsgebiet="Nord",
+        anlage_datum=date(2026, 3, 10),
+    )
+    db.add(protokoll)
+    db.flush()
+
+    katalog = ZubehoerKatalog(kategorie="Aufbau", bezeichnung="Plane", standard_preis=Decimal("5.00"))
+    db.add(katalog)
+    db.flush()
+
+    db.add(
+        ZubehoerAuswahl(
+            protokoll_id=protokoll.id,
+            katalog_id=katalog.id,
+            menge=2,
+            einzelpreis=None,
+            bewertung="KMU",
+            kunden_beigestellt=False,
+        )
+    )
+    db.commit()
+
+    calculation = calculate_accessory_net_total(db, protokoll.id)
+
+    assert calculation.netto_gesamt == Decimal("10.00")
+    assert calculation.preis_tea == Decimal("0.00")
+    assert calculation.preis_tek == Decimal("0.00")
