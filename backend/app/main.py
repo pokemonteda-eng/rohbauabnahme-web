@@ -15,3 +15,6 @@ def health() -> dict[str, str]:
 app.include_router(kunden_router)
 app.include_router(protokolle_router)
 app.include_router(stammdaten_router)
+app.include_router(kunden_router, prefix="/api/v1")
+app.include_router(protokolle_router, prefix="/api/v1")
+app.include_router(stammdaten_router, prefix="/api/v1")
