@@ -1,5 +1,5 @@
 export async function listAufbautypen(signal?: AbortSignal): Promise<string[]> {
-  const response = await fetch("/api/v1/stammdaten/aufbautypen", {
+  const response = await fetch("/api/v1/master-data/aufbautypen", {
     method: "GET",
     headers: {
       Accept: "application/json"
@@ -25,7 +25,7 @@ export async function listAufbautypen(signal?: AbortSignal): Promise<string[]> {
 }
 
 export async function listProjektleiter(signal?: AbortSignal): Promise<string[]> {
-  const response = await fetch("/api/v1/stammdaten/projektleiter", {
+  const response = await fetch("/api/v1/master-data/projektleiter", {
     method: "GET",
     headers: {
       Accept: "application/json"
@@ -51,7 +51,7 @@ export async function listProjektleiter(signal?: AbortSignal): Promise<string[]>
 }
 
 export async function listVertriebsgebiete(signal?: AbortSignal): Promise<string[]> {
-  const response = await fetch("/api/v1/stammdaten/vertriebsgebiete", {
+  const response = await fetch("/api/v1/master-data/vertriebsgebiete", {
     method: "GET",
     headers: {
       Accept: "application/json"

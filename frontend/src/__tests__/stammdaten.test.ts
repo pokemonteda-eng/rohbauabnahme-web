@@ -20,14 +20,17 @@ describe("listAufbautypen", () => {
   });
 
   test("returns array values for valid payload", async () => {
-    setMockFetch(
-      jest.fn().mockResolvedValue({
+    const fetchMock = jest.fn().mockResolvedValue({
         ok: true,
         json: () => Promise.resolve(["FB", "FZB"])
-      } as Response) as unknown as typeof fetch
-    );
+      } as Response);
+    setMockFetch(fetchMock as unknown as typeof fetch);
 
     await expect(listAufbautypen()).resolves.toEqual(["FB", "FZB"]);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/v1/master-data/aufbautypen",
+      expect.objectContaining({ method: "GET" })
+    );
   });
 
   test("throws for non-ok responses", async () => {
@@ -87,14 +90,17 @@ describe("listVertriebsgebiete", () => {
   });
 
   test("returns array values for valid payload", async () => {
-    setMockFetch(
-      jest.fn().mockResolvedValue({
+    const fetchMock = jest.fn().mockResolvedValue({
         ok: true,
         json: () => Promise.resolve(["Nord", "Sued"])
-      } as Response) as unknown as typeof fetch
-    );
+      } as Response);
+    setMockFetch(fetchMock as unknown as typeof fetch);
 
     await expect(listVertriebsgebiete()).resolves.toEqual(["Nord", "Sued"]);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/v1/master-data/vertriebsgebiete",
+      expect.objectContaining({ method: "GET" })
+    );
   });
 
   test("throws for non-ok responses", async () => {
@@ -154,14 +160,17 @@ describe("listProjektleiter", () => {
   });
 
   test("returns array values for valid payload", async () => {
-    setMockFetch(
-      jest.fn().mockResolvedValue({
+    const fetchMock = jest.fn().mockResolvedValue({
         ok: true,
         json: () => Promise.resolve(["Max Mustermann", "Erika Musterfrau"])
-      } as Response) as unknown as typeof fetch
-    );
+      } as Response);
+    setMockFetch(fetchMock as unknown as typeof fetch);
 
     await expect(listProjektleiter()).resolves.toEqual(["Max Mustermann", "Erika Musterfrau"]);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/v1/master-data/projektleiter",
+      expect.objectContaining({ method: "GET" })
+    );
   });
 
   test("throws for non-ok responses", async () => {

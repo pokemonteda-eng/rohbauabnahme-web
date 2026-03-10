@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-router = APIRouter(prefix="/stammdaten", tags=["stammdaten"])
+router = APIRouter(prefix="/master-data", tags=["master-data"])
 legacy_router = APIRouter(prefix="/stammdaten", include_in_schema=False)
 
 AUFBAUTYPEN = [
