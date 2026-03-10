@@ -11,21 +11,32 @@ def test_get_aufbautypen_returns_values() -> None:
     client = TestClient(app)
     response = client.get("/stammdaten/aufbautypen")
 
-    assert response.status_code == 404
+    assert response.status_code == 200
+    assert response.json() == EXPECTED_AUFBAUTYPEN
 
 
 def test_get_vertriebsgebiete_returns_values() -> None:
     client = TestClient(app)
     response = client.get("/stammdaten/vertriebsgebiete")
 
-    assert response.status_code == 404
+    assert response.status_code == 200
+    assert response.json() == EXPECTED_VERTRIEBSGEBIETE
 
 
 def test_get_projektleiter_returns_values() -> None:
     client = TestClient(app)
     response = client.get("/stammdaten/projektleiter")
 
-    assert response.status_code == 404
+    assert response.status_code == 200
+    assert response.json() == EXPECTED_PROJEKTLEITER
+
+
+def test_get_health_returns_status_without_api_prefix() -> None:
+    client = TestClient(app)
+    response = client.get("/health")
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok"}
 
 
 def test_get_health_returns_status_with_api_prefix() -> None:
