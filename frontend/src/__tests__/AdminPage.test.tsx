@@ -59,6 +59,8 @@ describe("Admin routing and access control", () => {
 
     expect(screen.getByRole("heading", { name: "Admin-Rechte erforderlich" })).not.toBeNull();
     expect(screen.getByText(/ausschließlich für Benutzer mit der Rolle/i)).not.toBeNull();
+    expect(window.location.pathname).toBe("/admin");
+    expect(window.location.search).toBe("");
   });
 
   test("renders admin layout and navigation for admin users", () => {

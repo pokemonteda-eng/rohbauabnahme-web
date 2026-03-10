@@ -4,7 +4,6 @@ import { AdminLayout } from "@/components/admin/AdminLayout";
 import { isAdminRole, getCurrentUserRole, type UserRole } from "@/lib/auth";
 import {
   ADMIN_SECTIONS,
-  DEFAULT_ADMIN_SECTION,
   getAdminSectionFromSearch,
   getAdminSectionHref,
   type AdminSection
@@ -46,17 +45,14 @@ function AdminAccessDenied({ role }: { role: UserRole }) {
 
 export function AdminPage() {
   const role = getCurrentUserRole();
+  const isAdmin = isAdminRole(role);
   const activeSection = getAdminSectionFromSearch(window.location.search);
 
   useEffect(() => {
-    if (window.location.search) {
+    if (!isAdmin) {
       return;
     }
 
-    navigateTo(getAdminSectionHref(DEFAULT_ADMIN_SECTION), { replace: true });
-  }, []);
-
-  useEffect(() => {
     const params = new URLSearchParams(window.location.search);
 
     if (params.get("section") === activeSection) {
@@ -64,9 +60,9 @@ export function AdminPage() {
     }
 
     navigateTo(getAdminSectionHref(activeSection), { replace: true });
-  }, [activeSection]);
+  }, [activeSection, isAdmin]);
 
-  if (!isAdminRole(role)) {
+  if (!isAdmin) {
     return <AdminAccessDenied role={role} />;
   }
 
