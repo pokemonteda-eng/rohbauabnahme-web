@@ -7,32 +7,35 @@ EXPECTED_VERTRIEBSGEBIETE = ["Nord", "Sued", "West", "Ost", "Mitte"]
 EXPECTED_PROJEKTLEITER = ["Max Mustermann", "Erika Musterfrau", "Thomas Beispiel"]
 
 
-def test_unversioned_aufbautypen_route_is_not_available() -> None:
+def test_unversioned_aufbautypen_route_remains_available() -> None:
     client = TestClient(app)
     response = client.get("/stammdaten/aufbautypen")
 
-    assert response.status_code == 404
+    assert response.status_code == 200
+    assert response.json() == EXPECTED_AUFBAUTYPEN
 
 
-def test_unversioned_vertriebsgebiete_route_is_not_available() -> None:
+def test_unversioned_vertriebsgebiete_route_remains_available() -> None:
     client = TestClient(app)
     response = client.get("/stammdaten/vertriebsgebiete")
 
-    assert response.status_code == 404
+    assert response.status_code == 200
+    assert response.json() == EXPECTED_VERTRIEBSGEBIETE
 
 
-def test_unversioned_projektleiter_route_is_not_available() -> None:
+def test_unversioned_projektleiter_route_remains_available() -> None:
     client = TestClient(app)
     response = client.get("/stammdaten/projektleiter")
 
-    assert response.status_code == 404
+    assert response.status_code == 200
+    assert response.json() == EXPECTED_PROJEKTLEITER
 
 
-def test_non_masterdata_routes_require_api_prefix() -> None:
+def test_existing_root_kunden_and_protokolle_routes_remain_available() -> None:
     client = TestClient(app)
 
-    assert client.get("/kunden").status_code == 404
-    assert client.get("/protokolle").status_code == 404
+    assert client.post("/kunden", json={}).status_code == 422
+    assert client.post("/protokolle", json={}).status_code == 422
 
 
 def test_get_health_returns_status_without_api_prefix() -> None:
