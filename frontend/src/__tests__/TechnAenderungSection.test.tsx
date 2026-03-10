@@ -9,7 +9,9 @@ describe("TechnAenderungSection", () => {
     render(
       <TechnAenderungSection
         kabelFunklayoutGeaendert={null}
+        technischeAenderungen=""
         onKabelFunklayoutGeaendertChange={handleChange}
+        onTechnischeAenderungenChange={jest.fn()}
       />
     );
 
@@ -27,7 +29,9 @@ describe("TechnAenderungSection", () => {
     const { rerender } = render(
       <TechnAenderungSection
         kabelFunklayoutGeaendert={true}
+        technischeAenderungen=""
         onKabelFunklayoutGeaendertChange={jest.fn()}
+        onTechnischeAenderungenChange={jest.fn()}
       />
     );
 
@@ -37,11 +41,32 @@ describe("TechnAenderungSection", () => {
     rerender(
       <TechnAenderungSection
         kabelFunklayoutGeaendert={false}
+        technischeAenderungen=""
         onKabelFunklayoutGeaendertChange={jest.fn()}
+        onTechnischeAenderungenChange={jest.fn()}
       />
     );
 
     expect(screen.getByRole("button", { name: "Ja" }).getAttribute("aria-pressed")).toBe("false");
     expect(screen.getByRole("button", { name: "Nein" }).getAttribute("aria-pressed")).toBe("true");
+  });
+
+  test("forwards multiline text changes through the textarea", () => {
+    const handleTextChange = jest.fn();
+
+    render(
+      <TechnAenderungSection
+        kabelFunklayoutGeaendert={null}
+        technischeAenderungen=""
+        onKabelFunklayoutGeaendertChange={jest.fn()}
+        onTechnischeAenderungenChange={handleTextChange}
+      />
+    );
+
+    fireEvent.change(screen.getByLabelText("Technische Änderungen"), {
+      target: { value: "Leitungsweg angepasst\nFunkmodul versetzt" }
+    });
+
+    expect(handleTextChange).toHaveBeenCalledWith("Leitungsweg angepasst\nFunkmodul versetzt");
   });
 });

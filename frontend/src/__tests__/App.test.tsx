@@ -67,6 +67,7 @@ describe("App", () => {
     expect(screen.getByLabelText("E-Kolben")).not.toBeNull();
     expect(screen.getByRole("heading", { name: "Technische Änderungen" })).not.toBeNull();
     expect(screen.getByRole("group", { name: "Kabel/Funklayout geändert" })).not.toBeNull();
+    expect(screen.getByLabelText("Technische Änderungen")).not.toBeNull();
     expect(screen.getByRole("button", { name: "Ja" }).getAttribute("aria-pressed")).toBe("false");
     expect(screen.getByRole("button", { name: "Nein" }).getAttribute("aria-pressed")).toBe("false");
     expect(screen.getAllByRole("heading", { name: "Zubehör" })).toHaveLength(5);
@@ -117,6 +118,8 @@ describe("App", () => {
     const eKolbenCheckbox = screen.getByLabelText<HTMLInputElement>("E-Kolben");
     const kabelFunklayoutJaButton = screen.getByRole<HTMLButtonElement>("button", { name: "Ja" });
     const kabelFunklayoutNeinButton = screen.getByRole<HTMLButtonElement>("button", { name: "Nein" });
+    const technischeAenderungenTextarea =
+      screen.getByLabelText<HTMLTextAreaElement>("Technische Änderungen");
     const umlCheckbox = screen.getByLabelText<HTMLInputElement>("UML");
     const fhbCheckbox = screen.getByLabelText<HTMLInputElement>("FHB");
     const sbCheckbox = screen.getByLabelText<HTMLInputElement>("SB");
@@ -149,6 +152,7 @@ describe("App", () => {
     expect(eKolbenCheckbox.checked).toBe(false);
     expect(kabelFunklayoutJaButton.getAttribute("aria-pressed")).toBe("false");
     expect(kabelFunklayoutNeinButton.getAttribute("aria-pressed")).toBe("false");
+    expect(technischeAenderungenTextarea.value).toBe("");
     expect(umlCheckbox.checked).toBe(false);
     expect(fhbCheckbox.checked).toBe(false);
     expect(sbCheckbox.checked).toBe(false);
@@ -175,6 +179,9 @@ describe("App", () => {
     fireEvent.click(zinkstaubCheckbox);
     fireEvent.click(eKolbenCheckbox);
     fireEvent.click(kabelFunklayoutJaButton);
+    fireEvent.change(technischeAenderungenTextarea, {
+      target: { value: "Zusätzliche Verkabelung erforderlich\nAntenne neu positionieren" }
+    });
     fireEvent.click(umlCheckbox);
     fireEvent.click(fhbCheckbox);
     fireEvent.click(sbCheckbox);
@@ -206,6 +213,9 @@ describe("App", () => {
     expect(eKolbenCheckbox.checked).toBe(true);
     expect(kabelFunklayoutJaButton.getAttribute("aria-pressed")).toBe("true");
     expect(kabelFunklayoutNeinButton.getAttribute("aria-pressed")).toBe("false");
+    expect(technischeAenderungenTextarea.value).toBe(
+      "Zusätzliche Verkabelung erforderlich\nAntenne neu positionieren"
+    );
     expect(umlCheckbox.checked).toBe(true);
     expect(fhbCheckbox.checked).toBe(true);
     expect(sbCheckbox.checked).toBe(true);
