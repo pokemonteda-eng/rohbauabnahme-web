@@ -166,4 +166,70 @@ describe("AufbautenAdminSection", () => {
       expect(screen.getByText("Die Serverantwort fuer Aufbauten ist ungueltig.")).not.toBeNull();
     });
   });
+
+  test("disables every delete action while one delete request is in flight", async () => {
+    let resolveDelete: (() => void) | null = null;
+    const fetchMock = jest
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve([
+            {
+              id: 1,
+              name: "Container",
+              bild_pfad: "aufbauten/container.png",
+              bild_url: "/uploads/aufbauten/container.png",
+              aktiv: true,
+              angelegt_am: "2026-03-11T00:00:00Z",
+              aktualisiert_am: "2026-03-11T00:00:00Z"
+            },
+            {
+              id: 2,
+              name: "Pritsche",
+              bild_pfad: "aufbauten/pritsche.png",
+              bild_url: "/uploads/aufbauten/pritsche.png",
+              aktiv: true,
+              angelegt_am: "2026-03-11T00:00:00Z",
+              aktualisiert_am: "2026-03-11T00:00:00Z"
+            }
+          ])
+      } as Response)
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            resolveDelete = () => resolve({ ok: true, json: () => Promise.resolve(null) } as Response);
+          })
+      );
+
+    Object.defineProperty(global, "fetch", {
+      configurable: true,
+      writable: true,
+      value: fetchMock
+    });
+
+    render(<AufbautenAdminSection />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Container")).not.toBeNull();
+      expect(screen.getByText("Pritsche")).not.toBeNull();
+    });
+
+    const deleteButtons = screen.getAllByRole("button", { name: "Loeschen" });
+    fireEvent.click(deleteButtons[0]);
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Loesche..." }).hasAttribute("disabled")).toBe(true);
+    });
+
+    for (const button of screen.getAllByRole("button", { name: /Loesch/ })) {
+      expect(button.hasAttribute("disabled")).toBe(true);
+    }
+
+    resolveDelete?.();
+
+    await waitFor(() => {
+      expect(screen.queryByText("Container")).toBeNull();
+    });
+  });
 });

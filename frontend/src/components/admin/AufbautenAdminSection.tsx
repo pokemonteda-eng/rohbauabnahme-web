@@ -247,7 +247,7 @@ export function AufbautenAdminSection() {
                     type="button"
                     variant="ghost"
                     onClick={() => void handleDelete(item.id)}
-                    disabled={deletingId === item.id}
+                    disabled={deletingId !== null}
                     className="text-rose-200 hover:bg-rose-500/10 hover:text-rose-100"
                   >
                     {deletingId === item.id ? "Loesche..." : "Loeschen"}

@@ -129,6 +129,14 @@ def _commit_with_upload_cleanup(db: Session, uploaded_paths: list[str]) -> None:
         raise
 
 
+def _commit_delete(db: Session) -> None:
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+
+
 @router.get("", response_model=list[AufbauRead])
 def list_aufbauten(db: Session = Depends(get_db)) -> list[AufbauRead]:
     aufbauten = db.scalars(select(Aufbau).order_by(Aufbau.name.asc(), Aufbau.id.asc())).all()
@@ -197,5 +205,5 @@ def delete_aufbau(
 
     bild_pfad = aufbau.bild_pfad
     db.delete(aufbau)
-    db.commit()
+    _commit_delete(db)
     _delete_image_if_present(bild_pfad)

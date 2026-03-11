@@ -166,6 +166,47 @@ def test_create_aufbau_removes_uploaded_file_when_commit_fails(tmp_path, monkeyp
         aufbauten_router.UPLOAD_DIRECTORY = original_upload_directory
 
 
+def test_delete_aufbau_rolls_back_when_commit_fails(tmp_path, monkeypatch) -> None:
+    session_local = _session_factory()
+    original_upload_directory = aufbauten_router.UPLOAD_DIRECTORY
+    aufbauten_router.UPLOAD_DIRECTORY = tmp_path / "aufbauten"
+
+    def override_db() -> Generator[Session, None, None]:
+        yield from _override_get_db(session_local)
+
+    app.dependency_overrides[get_db] = override_db
+    client = TestClient(app)
+
+    create_response = client.post(
+        f"{API_PREFIX}/aufbauten",
+        data={"name": "FB 500", "aktiv": "true"},
+        files={"bild": _png_file()},
+        headers=ADMIN_HEADERS,
+    )
+    assert create_response.status_code == 201
+    created = create_response.json()
+
+    original_commit = Session.commit
+
+    def failing_commit(self: Session) -> None:
+        raise RuntimeError("delete failed")
+
+    monkeypatch.setattr(Session, "commit", failing_commit)
+
+    try:
+        with pytest.raises(RuntimeError, match="delete failed"):
+            client.delete(f"{API_PREFIX}/aufbauten/{created['id']}", headers=ADMIN_HEADERS)
+
+        list_response = client.get(f"{API_PREFIX}/aufbauten")
+        assert list_response.status_code == 200
+        assert [entry["id"] for entry in list_response.json()] == [created["id"]]
+        assert len(list((tmp_path / "aufbauten").glob("*.png"))) == 1
+    finally:
+        monkeypatch.setattr(Session, "commit", original_commit)
+        app.dependency_overrides.clear()
+        aufbauten_router.UPLOAD_DIRECTORY = original_upload_directory
+
+
 def test_aufbau_mutations_require_admin_authentication(tmp_path) -> None:
     session_local = _session_factory()
     original_upload_directory = aufbauten_router.UPLOAD_DIRECTORY
