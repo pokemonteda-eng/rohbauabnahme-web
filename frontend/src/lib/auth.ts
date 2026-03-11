@@ -1,4 +1,5 @@
 const AUTH_ROLE_STORAGE_KEY = "rbw-user-role";
+const AUTH_TOKEN_STORAGE_KEY = "rbw-auth-token";
 
 export type UserRole = "admin" | "projektleiter" | "bearbeiter" | "viewer" | "anonymous";
 
@@ -24,4 +25,31 @@ export function clearCurrentUserRole() {
 
 export function isAdminRole(role: UserRole) {
   return role === "admin";
+}
+
+export function getCurrentAuthToken(): string | null {
+  const token = window.localStorage.getItem(AUTH_TOKEN_STORAGE_KEY)?.trim();
+  return token ? token : null;
+}
+
+export function setCurrentAuthToken(token: string) {
+  window.localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, token);
+}
+
+export function clearCurrentAuthToken() {
+  window.localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
+}
+
+export function getAuthHeaders(): HeadersInit {
+  const token = getCurrentAuthToken();
+  const role = getCurrentUserRole();
+
+  if (token == null) {
+    return {};
+  }
+
+  return {
+    Authorization: `Bearer ${token}`,
+    "X-User-Role": role
+  };
 }

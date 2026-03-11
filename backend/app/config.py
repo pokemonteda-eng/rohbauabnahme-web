@@ -5,6 +5,9 @@ class Settings(BaseSettings):
     app_name: str = "Rohbauabnahme Web API"
     app_version: str = "0.1.0"
     api_v1_prefix: str = "/api/v1"
+    admin_api_token: str = "dev-admin-token"
+    auth_role_header: str = "X-User-Role"
+    max_aufbau_upload_size_bytes: int = 2 * 1024 * 1024
 
     cors_allow_origins: list[str] = ["*"]
     cors_allow_credentials: bool = True

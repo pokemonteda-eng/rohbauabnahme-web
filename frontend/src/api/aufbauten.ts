@@ -1,3 +1,5 @@
+import { getAuthHeaders } from "@/lib/auth";
+
 export type Aufbau = {
   id: number;
   name: string;
@@ -100,6 +102,7 @@ export async function listAufbauten(signal?: AbortSignal): Promise<Aufbau[]> {
 export async function createAufbau(payload: AufbauPayload): Promise<Aufbau> {
   const response = await fetch("/api/v1/aufbauten", {
     method: "POST",
+    headers: getAuthHeaders(),
     body: buildFormData(payload)
   });
 
@@ -113,6 +116,7 @@ export async function createAufbau(payload: AufbauPayload): Promise<Aufbau> {
 export async function updateAufbau(id: number, payload: AufbauPayload): Promise<Aufbau> {
   const response = await fetch(`/api/v1/aufbauten/${id}`, {
     method: "PATCH",
+    headers: getAuthHeaders(),
     body: buildFormData(payload)
   });
 
@@ -125,7 +129,8 @@ export async function updateAufbau(id: number, payload: AufbauPayload): Promise<
 
 export async function deleteAufbau(id: number): Promise<void> {
   const response = await fetch(`/api/v1/aufbauten/${id}`, {
-    method: "DELETE"
+    method: "DELETE",
+    headers: getAuthHeaders()
   });
 
   if (!response.ok) {
