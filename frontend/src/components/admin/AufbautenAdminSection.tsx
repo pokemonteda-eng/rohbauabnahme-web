@@ -21,6 +21,11 @@ function formatStatusLabel(aktiv: boolean) {
   return aktiv ? "Aktiv" : "Inaktiv";
 }
 
+function isPngFile(file: File) {
+  const normalizedName = file.name.toLowerCase();
+  return file.type === "image/png" || normalizedName.endsWith(".png");
+}
+
 export function AufbautenAdminSection() {
   const [items, setItems] = useState<Aufbau[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -155,6 +160,9 @@ export function AufbautenAdminSection() {
     });
     setPreviewUrl(item.bild_url);
     setSubmitError(null);
+    if (fileInputRef.current != null) {
+      fileInputRef.current.value = "";
+    }
   }
 
   async function handleDelete(id: number) {
@@ -316,12 +324,25 @@ export function AufbautenAdminSection() {
               ref={fileInputRef}
               type="file"
               accept="image/png"
-              onChange={(event) =>
+              onChange={(event) => {
+                const file = event.target.files?.[0] ?? null;
+
+                if (file != null && !isPngFile(file)) {
+                  event.target.value = "";
+                  setSubmitError("Bitte eine PNG-Datei auswaehlen.");
+                  setFormState((current) => ({
+                    ...current,
+                    bild: null
+                  }));
+                  return;
+                }
+
+                setSubmitError(null);
                 setFormState((current) => ({
                   ...current,
-                  bild: event.target.files?.[0] ?? null
-                }))
-              }
+                  bild: file
+                }));
+              }}
             />
             <p className="text-xs leading-5 text-stone-500">
               {editingId === null

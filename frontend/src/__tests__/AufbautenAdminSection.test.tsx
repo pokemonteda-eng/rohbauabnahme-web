@@ -148,6 +148,53 @@ describe("AufbautenAdminSection", () => {
     });
   });
 
+  test("rejects non-png selections before submit and keeps the existing preview in edit mode", async () => {
+    const fetchMock = jest.fn().mockResolvedValueOnce({
+      ok: true,
+      json: () =>
+        Promise.resolve([
+          {
+            id: 1,
+            name: "Container",
+            bild_pfad: "aufbauten/container.png",
+            bild_url: "/uploads/aufbauten/container.png",
+            aktiv: true,
+            angelegt_am: "2026-03-11T00:00:00Z",
+            aktualisiert_am: "2026-03-11T00:00:00Z"
+          }
+        ])
+    } as Response);
+
+    Object.defineProperty(global, "fetch", {
+      configurable: true,
+      writable: true,
+      value: fetchMock
+    });
+
+    render(<AufbautenAdminSection />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Container")).not.toBeNull();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Bearbeiten" }));
+
+    const previewBefore = screen.getByAltText("PNG-Vorschau");
+    expect(previewBefore.getAttribute("src")).toBe("/uploads/aufbauten/container.png");
+
+    const invalidFile = new File(["not-a-png"], "container.jpg", {
+      type: "image/jpeg"
+    });
+
+    fireEvent.change(screen.getByLabelText("PNG-Datei"), {
+      target: { files: [invalidFile] }
+    });
+
+    expect(screen.getByText("Bitte eine PNG-Datei auswaehlen.")).not.toBeNull();
+    expect(screen.getByAltText("PNG-Vorschau").getAttribute("src")).toBe("/uploads/aufbauten/container.png");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
   test("shows a load error when the aufbauten list response is malformed", async () => {
     const fetchMock = jest.fn().mockResolvedValue({
       ok: true,
