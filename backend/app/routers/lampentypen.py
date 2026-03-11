@@ -4,7 +4,6 @@ from decimal import Decimal, InvalidOperation
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import select
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.db import get_db
@@ -72,15 +71,18 @@ def _serialize_lampentyp(lampentyp: Lampentyp) -> LampentypRead:
     )
 
 
-def _commit_or_raise(db: Session) -> None:
-    try:
-        db.commit()
-    except IntegrityError:
-        db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Lampentyp mit diesem Namen existiert bereits",
-        ) from None
+def _ensure_unique_name(db: Session, name: str, lampentyp_id: int | None = None) -> None:
+    existing_lampentyp = db.scalar(select(Lampentyp).where(Lampentyp.name == name))
+    if existing_lampentyp is None:
+        return
+
+    if lampentyp_id is not None and existing_lampentyp.id == lampentyp_id:
+        return
+
+    raise HTTPException(
+        status_code=status.HTTP_409_CONFLICT,
+        detail="Lampentyp mit diesem Namen existiert bereits",
+    )
 
 
 @router.get("", response_model=list[LampentypRead])
@@ -92,6 +94,7 @@ def list_lampentypen(db: Session = Depends(get_db)) -> list[LampentypRead]:
 @router.post("", response_model=LampentypRead, status_code=status.HTTP_201_CREATED)
 def create_lampentyp(payload: LampentypPayload, db: Session = Depends(get_db)) -> LampentypRead:
     normalized = _normalize_payload(payload)
+    _ensure_unique_name(db, normalized.name)
     lampentyp = Lampentyp(
         name=normalized.name,
         beschreibung=normalized.beschreibung,
@@ -99,7 +102,7 @@ def create_lampentyp(payload: LampentypPayload, db: Session = Depends(get_db)) -
         standard_preis=Decimal(str(normalized.standard_preis)),
     )
     db.add(lampentyp)
-    _commit_or_raise(db)
+    db.commit()
     db.refresh(lampentyp)
     return _serialize_lampentyp(lampentyp)
 
@@ -115,10 +118,11 @@ def update_lampentyp(
     if lampentyp is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Lampentyp nicht gefunden")
 
+    _ensure_unique_name(db, normalized.name, lampentyp_id=lampentyp.id)
     lampentyp.name = normalized.name
     lampentyp.beschreibung = normalized.beschreibung
     lampentyp.icon_url = normalized.icon_url
     lampentyp.standard_preis = Decimal(str(normalized.standard_preis))
-    _commit_or_raise(db)
+    db.commit()
     db.refresh(lampentyp)
     return _serialize_lampentyp(lampentyp)

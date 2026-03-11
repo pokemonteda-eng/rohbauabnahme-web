@@ -153,6 +153,29 @@ def test_lampentypen_reject_duplicate_names_and_missing_records() -> None:
         assert duplicate_response.status_code == 409
         assert duplicate_response.json()["detail"] == "Lampentyp mit diesem Namen existiert bereits"
 
+        second_response = client.post(
+            API_PREFIX,
+            json={
+                "name": "Heckblitzer",
+                "beschreibung": "Warnleuchte fuer den Heckbereich.",
+                "icon_url": "https://cdn.example.com/icons/heckblitzer.png",
+                "standard_preis": 99.5,
+            },
+        )
+        assert second_response.status_code == 201
+
+        duplicate_update_response = client.patch(
+            f"{API_PREFIX}/{second_response.json()['id']}",
+            json={
+                "name": "Frontblitzer",
+                "beschreibung": "Soll auf bestehenden Namen kollidieren.",
+                "icon_url": "https://cdn.example.com/icons/heckblitzer.png",
+                "standard_preis": 99.5,
+            },
+        )
+        assert duplicate_update_response.status_code == 409
+        assert duplicate_update_response.json()["detail"] == "Lampentyp mit diesem Namen existiert bereits"
+
         missing_response = client.patch(
             f"{API_PREFIX}/9999",
             json={
