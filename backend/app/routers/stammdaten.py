@@ -1,4 +1,10 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from sqlalchemy import select
+from sqlalchemy.exc import OperationalError
+from sqlalchemy.orm import Session
+
+from app.db import get_db
+from app.models.aufbau import Aufbau
 
 router = APIRouter(prefix="/master-data", tags=["master-data"])
 legacy_router = APIRouter(prefix="/stammdaten", include_in_schema=False)
@@ -26,7 +32,16 @@ PROJEKTLEITER = [
 ]
 
 
-def get_aufbautypen() -> list[str]:
+def get_aufbautypen(db: Session) -> list[str]:
+    try:
+        values = db.scalars(
+            select(Aufbau.name).where(Aufbau.aktiv.is_(True)).order_by(Aufbau.name.asc(), Aufbau.id.asc())
+        ).all()
+    except OperationalError:
+        return AUFBAUTYPEN.copy()
+
+    if values:
+        return values
     return AUFBAUTYPEN.copy()
 
 
@@ -39,13 +54,13 @@ def get_projektleiter() -> list[str]:
 
 
 @router.get("/aufbautypen", response_model=list[str])
-def list_aufbautypen() -> list[str]:
-    return get_aufbautypen()
+def list_aufbautypen(db: Session = Depends(get_db)) -> list[str]:
+    return get_aufbautypen(db)
 
 
 @legacy_router.get("/aufbautypen", response_model=list[str])
-def list_legacy_aufbautypen() -> list[str]:
-    return get_aufbautypen()
+def list_legacy_aufbautypen(db: Session = Depends(get_db)) -> list[str]:
+    return get_aufbautypen(db)
 
 
 @router.get("/vertriebsgebiete", response_model=list[str])

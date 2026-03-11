@@ -1,3 +1,4 @@
+from app.models.aufbau import Aufbau
 from app.models.kunde import Kunde
 from app.models.lackierungsdaten import Lackierungsdaten
 from app.models.protokoll import Protokoll
@@ -7,6 +8,7 @@ from app.models.zubehoer_auswahl import ZubehoerAuswahl
 from app.models.zubehoer_katalog import ZubehoerKatalog
 
 __all__ = [
+    "Aufbau",
     "Kunde",
     "Lackierungsdaten",
     "Protokoll",

@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 
+import { AufbautenAdminSection } from "@/components/admin/AufbautenAdminSection";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { isAdminRole, getCurrentUserRole, type UserRole } from "@/lib/auth";
 import {
@@ -16,6 +17,41 @@ function roleLabel(role: UserRole) {
   }
 
   return role;
+}
+
+function renderAdminSection(activeSection: AdminSection) {
+  if (activeSection === "aufbauten") {
+    return <AufbautenAdminSection />;
+  }
+
+  const currentSection = ADMIN_SECTIONS[activeSection];
+
+  return (
+    <section className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(280px,0.9fr)]">
+      <article className="rounded-3xl border border-stone-800 bg-stone-950/70 p-6">
+        <p className="text-sm uppercase tracking-[0.24em] text-amber-200">{currentSection.eyebrow}</p>
+        <h2 className="mt-3 text-2xl font-semibold text-white">{currentSection.title}</h2>
+        <p className="mt-4 max-w-2xl text-sm leading-7 text-stone-300">{currentSection.body}</p>
+      </article>
+      <aside className="rounded-3xl border border-stone-800 bg-stone-900/80 p-6">
+        <h2 className="text-lg font-semibold text-white">Freigabe</h2>
+        <dl className="mt-4 grid gap-4 text-sm">
+          <div className="rounded-2xl border border-stone-800 bg-stone-950/70 p-4">
+            <dt className="text-stone-500">Rollenprüfung</dt>
+            <dd className="mt-2 font-medium text-white">nur `admin`</dd>
+          </div>
+          <div className="rounded-2xl border border-stone-800 bg-stone-950/70 p-4">
+            <dt className="text-stone-500">Aktive Route</dt>
+            <dd className="mt-2 font-medium text-white">/admin?section={activeSection}</dd>
+          </div>
+          <div className="rounded-2xl border border-stone-800 bg-stone-950/70 p-4">
+            <dt className="text-stone-500">Status</dt>
+            <dd className="mt-2 font-medium text-white">Vorbereitung aktiv</dd>
+          </div>
+        </dl>
+      </aside>
+    </section>
+  );
 }
 
 function AdminAccessDenied({ role }: { role: UserRole }) {
@@ -98,30 +134,7 @@ export function AdminPage() {
         description: section.description
       }))}
     >
-      <section className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(280px,0.9fr)]">
-        <article className="rounded-3xl border border-stone-800 bg-stone-950/70 p-6">
-          <p className="text-sm uppercase tracking-[0.24em] text-amber-200">{currentSection.eyebrow}</p>
-          <h2 className="mt-3 text-2xl font-semibold text-white">{currentSection.title}</h2>
-          <p className="mt-4 max-w-2xl text-sm leading-7 text-stone-300">{currentSection.body}</p>
-        </article>
-        <aside className="rounded-3xl border border-stone-800 bg-stone-900/80 p-6">
-          <h2 className="text-lg font-semibold text-white">Freigabe</h2>
-          <dl className="mt-4 grid gap-4 text-sm">
-            <div className="rounded-2xl border border-stone-800 bg-stone-950/70 p-4">
-              <dt className="text-stone-500">Rollenprüfung</dt>
-              <dd className="mt-2 font-medium text-white">nur `admin`</dd>
-            </div>
-            <div className="rounded-2xl border border-stone-800 bg-stone-950/70 p-4">
-              <dt className="text-stone-500">Aktive Route</dt>
-              <dd className="mt-2 font-medium text-white">/admin?section={activeSection}</dd>
-            </div>
-            <div className="rounded-2xl border border-stone-800 bg-stone-950/70 p-4">
-              <dt className="text-stone-500">Status</dt>
-              <dd className="mt-2 font-medium text-white">Grundstruktur implementiert</dd>
-            </div>
-          </dl>
-        </aside>
-      </section>
+      {renderAdminSection(activeSection)}
     </AdminLayout>
   );
 }

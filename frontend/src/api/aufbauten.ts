@@ -1,0 +1,112 @@
+export type Aufbau = {
+  id: number;
+  name: string;
+  bild_pfad: string;
+  bild_url: string;
+  aktiv: boolean;
+  angelegt_am: string;
+  aktualisiert_am: string;
+};
+
+type AufbauPayload = {
+  name: string;
+  aktiv: boolean;
+  bild?: File | null;
+};
+
+function isAufbau(value: unknown): value is Aufbau {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  const candidate = value as Record<string, unknown>;
+  return (
+    typeof candidate.id === "number" &&
+    typeof candidate.name === "string" &&
+    typeof candidate.bild_pfad === "string" &&
+    typeof candidate.bild_url === "string" &&
+    typeof candidate.aktiv === "boolean" &&
+    typeof candidate.angelegt_am === "string" &&
+    typeof candidate.aktualisiert_am === "string"
+  );
+}
+
+function buildFormData(payload: AufbauPayload) {
+  const formData = new FormData();
+  formData.set("name", payload.name);
+  formData.set("aktiv", String(payload.aktiv));
+
+  if (payload.bild != null) {
+    formData.set("bild", payload.bild);
+  }
+
+  return formData;
+}
+
+async function parseAufbauResponse(response: Response): Promise<Aufbau> {
+  const data: unknown = await response.json();
+  if (!isAufbau(data)) {
+    throw new Error("Die Serverantwort fuer Aufbauten ist ungueltig.");
+  }
+
+  return data;
+}
+
+function getErrorMessage(entity: string, status: number) {
+  return `${entity} fehlgeschlagen (${status}).`;
+}
+
+export async function listAufbauten(signal?: AbortSignal): Promise<Aufbau[]> {
+  const response = await fetch("/api/v1/aufbauten", {
+    method: "GET",
+    headers: { Accept: "application/json" },
+    signal
+  });
+
+  if (!response.ok) {
+    throw new Error(getErrorMessage("Aufbauten laden", response.status));
+  }
+
+  const data: unknown = await response.json();
+  if (!Array.isArray(data)) {
+    return [];
+  }
+
+  return data.filter(isAufbau);
+}
+
+export async function createAufbau(payload: AufbauPayload): Promise<Aufbau> {
+  const response = await fetch("/api/v1/aufbauten", {
+    method: "POST",
+    body: buildFormData(payload)
+  });
+
+  if (!response.ok) {
+    throw new Error(getErrorMessage("Aufbau anlegen", response.status));
+  }
+
+  return parseAufbauResponse(response);
+}
+
+export async function updateAufbau(id: number, payload: AufbauPayload): Promise<Aufbau> {
+  const response = await fetch(`/api/v1/aufbauten/${id}`, {
+    method: "PATCH",
+    body: buildFormData(payload)
+  });
+
+  if (!response.ok) {
+    throw new Error(getErrorMessage("Aufbau aktualisieren", response.status));
+  }
+
+  return parseAufbauResponse(response);
+}
+
+export async function deleteAufbau(id: number): Promise<void> {
+  const response = await fetch(`/api/v1/aufbauten/${id}`, {
+    method: "DELETE"
+  });
+
+  if (!response.ok) {
+    throw new Error(getErrorMessage("Aufbau loeschen", response.status));
+  }
+}

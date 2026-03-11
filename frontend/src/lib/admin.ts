@@ -13,10 +13,10 @@ export const DEFAULT_ADMIN_SECTION: AdminSection = "aufbauten";
 export const ADMIN_SECTIONS: Record<AdminSection, AdminSectionContent> = {
   aufbauten: {
     label: "Aufbauten",
-    description: "Grundstruktur für die spätere Verwaltung von Fahrzeugaufbauten und Medien.",
-    eyebrow: "TASK-101 Vorbereitung",
-    title: "Aufbau-Verwaltung vorbereiten",
-    body: "Hier werden CRUD-Ansichten für Aufbautypen und zugehörige PNG-Vorlagen angedockt. Die Routing-Struktur steht bereits stabil unter /admin."
+    description: "CRUD fuer Fahrzeugaufbauten mit PNG-Vorlagen, Aktivstatus und direkter Vorschau.",
+    eyebrow: "TASK-101",
+    title: "Aufbau-Verwaltung",
+    body: "Aufbauten werden hier zentral gepflegt und stehen anschliessend als aktive Auswahl fuer Folge-Module wie Beleuchtung und Kopfdaten bereit."
   },
   lampen: {
     label: "Lampen",

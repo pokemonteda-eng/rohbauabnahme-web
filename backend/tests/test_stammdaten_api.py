@@ -1,10 +1,24 @@
 from fastapi.testclient import TestClient
+from sqlalchemy import create_engine, text
+from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.pool import StaticPool
 
+from app.db import Base, get_db
 from app.main import app
 
 EXPECTED_AUFBAUTYPEN = ["FB", "FZB", "Koffer", "Container", "Pritsche"]
 EXPECTED_VERTRIEBSGEBIETE = ["Nord", "Sued", "West", "Ost", "Mitte"]
 EXPECTED_PROJEKTLEITER = ["Max Mustermann", "Erika Musterfrau", "Thomas Beispiel"]
+
+
+def _session_factory() -> sessionmaker[Session]:
+    engine = create_engine(
+        "sqlite+pysqlite://",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+    Base.metadata.create_all(bind=engine)
+    return sessionmaker(bind=engine, autocommit=False, autoflush=False, class_=Session)
 
 
 def test_unversioned_aufbautypen_route_remains_available() -> None:
@@ -109,3 +123,35 @@ def test_openapi_exposes_only_versioned_master_data_routes() -> None:
     assert "/stammdaten/aufbautypen" not in paths
     assert "/stammdaten/vertriebsgebiete" not in paths
     assert "/stammdaten/projektleiter" not in paths
+
+
+def test_get_aufbautypen_prefers_active_admin_aufbauten() -> None:
+    session_local = _session_factory()
+
+    def override_db():
+        db = session_local()
+        try:
+            db.execute(
+                text(
+                    """
+                INSERT INTO aufbauten (name, bild_pfad, aktiv)
+                VALUES ('Container XL', 'aufbauten/container-xl.png', 1),
+                       ('FB Basic', 'aufbauten/fb-basic.png', 0),
+                       ('Koffer S', 'aufbauten/koffer-s.png', 1)
+                    """
+                )
+            )
+            db.commit()
+            yield db
+        finally:
+            db.close()
+
+    app.dependency_overrides[get_db] = override_db
+    client = TestClient(app)
+
+    response = client.get("/api/v1/master-data/aufbautypen")
+
+    assert response.status_code == 200
+    assert response.json() == ["Container XL", "Koffer S"]
+
+    app.dependency_overrides.clear()

@@ -5,6 +5,7 @@ from sqlalchemy import engine_from_config, pool
 
 from app.config import settings
 from app.db import Base
+import app.models.aufbau  # noqa: F401
 import app.models.kunde  # noqa: F401
 import app.models.protokoll  # noqa: F401
 import app.models.lackierungsdaten  # noqa: F401

@@ -32,6 +32,10 @@ describe("Admin routing and access control", () => {
           } as Response);
         }
 
+        if (url === "/api/v1/aufbauten") {
+          return new Promise(() => undefined);
+        }
+
         return Promise.reject(new Error(`Unexpected fetch URL in test: ${url}`));
       })
     });
@@ -111,6 +115,7 @@ describe("Admin routing and access control", () => {
 
     expect(screen.getByRole("heading", { name: "Aufbauten" })).not.toBeNull();
     expect(screen.getByRole("button", { name: /Aufbauten/ }).getAttribute("aria-current")).toBe("page");
+    expect(screen.getByRole("heading", { name: "Aufbauten verwalten" })).not.toBeNull();
     expect(window.location.search).toBe("?section=aufbauten");
   });
 
