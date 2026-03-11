@@ -47,40 +47,41 @@ def test_create_update_delete_and_list_aufbauten(tmp_path) -> None:
     app.dependency_overrides[get_db] = override_db
     client = TestClient(app)
 
-    create_response = client.post(
-        f"{API_PREFIX}/aufbauten",
-        data={"name": "FB 500", "aktiv": "true"},
-        files={"bild": _png_file()},
-    )
-    assert create_response.status_code == 201
-    created = create_response.json()
-    assert created["name"] == "FB 500"
-    assert created["aktiv"] is True
-    assert created["bild_url"].startswith("/uploads/aufbauten/")
-    assert len(list((tmp_path / "aufbauten").glob("*.png"))) == 1
+    try:
+        create_response = client.post(
+            f"{API_PREFIX}/aufbauten",
+            data={"name": "FB 500", "aktiv": "true"},
+            files={"bild": _png_file()},
+        )
+        assert create_response.status_code == 201
+        created = create_response.json()
+        assert created["name"] == "FB 500"
+        assert created["aktiv"] is True
+        assert created["bild_url"].startswith("/uploads/aufbauten/")
+        assert len(list((tmp_path / "aufbauten").glob("*.png"))) == 1
 
-    list_response = client.get(f"{API_PREFIX}/aufbauten")
-    assert list_response.status_code == 200
-    assert [entry["name"] for entry in list_response.json()] == ["FB 500"]
+        list_response = client.get(f"{API_PREFIX}/aufbauten")
+        assert list_response.status_code == 200
+        assert [entry["name"] for entry in list_response.json()] == ["FB 500"]
 
-    update_response = client.patch(
-        f"{API_PREFIX}/aufbauten/{created['id']}",
-        data={"name": "FB 500 XL", "aktiv": "false"},
-        files={"bild": _png_file("ersatz.png")},
-    )
-    assert update_response.status_code == 200
-    updated = update_response.json()
-    assert updated["name"] == "FB 500 XL"
-    assert updated["aktiv"] is False
-    assert len(list((tmp_path / "aufbauten").glob("*.png"))) == 1
+        update_response = client.patch(
+            f"{API_PREFIX}/aufbauten/{created['id']}",
+            data={"name": "FB 500 XL", "aktiv": "false"},
+            files={"bild": _png_file("ersatz.png")},
+        )
+        assert update_response.status_code == 200
+        updated = update_response.json()
+        assert updated["name"] == "FB 500 XL"
+        assert updated["aktiv"] is False
+        assert len(list((tmp_path / "aufbauten").glob("*.png"))) == 1
 
-    delete_response = client.delete(f"{API_PREFIX}/aufbauten/{created['id']}")
-    assert delete_response.status_code == 204
-    assert client.get(f"{API_PREFIX}/aufbauten").json() == []
-    assert list((tmp_path / "aufbauten").glob("*.png")) == []
-
-    app.dependency_overrides.clear()
-    aufbauten_router.UPLOAD_DIRECTORY = original_upload_directory
+        delete_response = client.delete(f"{API_PREFIX}/aufbauten/{created['id']}")
+        assert delete_response.status_code == 204
+        assert client.get(f"{API_PREFIX}/aufbauten").json() == []
+        assert list((tmp_path / "aufbauten").glob("*.png")) == []
+    finally:
+        app.dependency_overrides.clear()
+        aufbauten_router.UPLOAD_DIRECTORY = original_upload_directory
 
 
 def test_create_aufbau_rejects_duplicate_names_and_invalid_png(tmp_path) -> None:
@@ -94,28 +95,29 @@ def test_create_aufbau_rejects_duplicate_names_and_invalid_png(tmp_path) -> None
     app.dependency_overrides[get_db] = override_db
     client = TestClient(app)
 
-    first_response = client.post(
-        f"{API_PREFIX}/aufbauten",
-        data={"name": "Container", "aktiv": "true"},
-        files={"bild": _png_file()},
-    )
-    assert first_response.status_code == 201
+    try:
+        first_response = client.post(
+            f"{API_PREFIX}/aufbauten",
+            data={"name": "Container", "aktiv": "true"},
+            files={"bild": _png_file()},
+        )
+        assert first_response.status_code == 201
 
-    duplicate_response = client.post(
-        f"{API_PREFIX}/aufbauten",
-        data={"name": "Container", "aktiv": "true"},
-        files={"bild": _png_file("duplicate.png")},
-    )
-    assert duplicate_response.status_code == 409
-    assert duplicate_response.json()["detail"] == "Aufbau mit diesem Namen existiert bereits"
+        duplicate_response = client.post(
+            f"{API_PREFIX}/aufbauten",
+            data={"name": "Container", "aktiv": "true"},
+            files={"bild": _png_file("duplicate.png")},
+        )
+        assert duplicate_response.status_code == 409
+        assert duplicate_response.json()["detail"] == "Aufbau mit diesem Namen existiert bereits"
 
-    invalid_response = client.post(
-        f"{API_PREFIX}/aufbauten",
-        data={"name": "Pritsche", "aktiv": "true"},
-        files={"bild": ("bad.png", BytesIO(b"not-a-png"), "image/png")},
-    )
-    assert invalid_response.status_code == 400
-    assert invalid_response.json()["detail"] == "Die hochgeladene Datei ist kein gueltiges PNG"
-
-    app.dependency_overrides.clear()
-    aufbauten_router.UPLOAD_DIRECTORY = original_upload_directory
+        invalid_response = client.post(
+            f"{API_PREFIX}/aufbauten",
+            data={"name": "Pritsche", "aktiv": "true"},
+            files={"bild": ("bad.png", BytesIO(b"not-a-png"), "image/png")},
+        )
+        assert invalid_response.status_code == 400
+        assert invalid_response.json()["detail"] == "Die hochgeladene Datei ist kein gueltiges PNG"
+    finally:
+        app.dependency_overrides.clear()
+        aufbauten_router.UPLOAD_DIRECTORY = original_upload_directory

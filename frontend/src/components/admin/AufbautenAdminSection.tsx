@@ -59,11 +59,18 @@ export function AufbautenAdminSection() {
       return undefined;
     }
 
+    if (typeof URL.createObjectURL !== "function") {
+      setPreviewUrl(null);
+      return undefined;
+    }
+
     const objectUrl = URL.createObjectURL(formState.bild);
     setPreviewUrl(objectUrl);
 
     return () => {
-      URL.revokeObjectURL(objectUrl);
+      if (typeof URL.revokeObjectURL === "function") {
+        URL.revokeObjectURL(objectUrl);
+      }
     };
   }, [formState.bild]);
 

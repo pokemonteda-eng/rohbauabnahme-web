@@ -56,6 +56,24 @@ function getErrorMessage(entity: string, status: number) {
   return `${entity} fehlgeschlagen (${status}).`;
 }
 
+async function getResponseError(response: Response, entity: string): Promise<Error> {
+  try {
+    const data: unknown = await response.json();
+    if (
+      typeof data === "object" &&
+      data !== null &&
+      "detail" in data &&
+      typeof (data as { detail: unknown }).detail === "string"
+    ) {
+      return new Error((data as { detail: string }).detail);
+    }
+  } catch {
+    // Ignore invalid JSON and fall back to a generic message.
+  }
+
+  return new Error(getErrorMessage(entity, response.status));
+}
+
 export async function listAufbauten(signal?: AbortSignal): Promise<Aufbau[]> {
   const response = await fetch("/api/v1/aufbauten", {
     method: "GET",
@@ -82,7 +100,7 @@ export async function createAufbau(payload: AufbauPayload): Promise<Aufbau> {
   });
 
   if (!response.ok) {
-    throw new Error(getErrorMessage("Aufbau anlegen", response.status));
+    throw await getResponseError(response, "Aufbau anlegen");
   }
 
   return parseAufbauResponse(response);
@@ -95,7 +113,7 @@ export async function updateAufbau(id: number, payload: AufbauPayload): Promise<
   });
 
   if (!response.ok) {
-    throw new Error(getErrorMessage("Aufbau aktualisieren", response.status));
+    throw await getResponseError(response, "Aufbau aktualisieren");
   }
 
   return parseAufbauResponse(response);
@@ -107,6 +125,6 @@ export async function deleteAufbau(id: number): Promise<void> {
   });
 
   if (!response.ok) {
-    throw new Error(getErrorMessage("Aufbau loeschen", response.status));
+    throw await getResponseError(response, "Aufbau loeschen");
   }
 }

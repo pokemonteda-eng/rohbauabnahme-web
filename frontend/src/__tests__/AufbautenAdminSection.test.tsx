@@ -104,4 +104,47 @@ describe("AufbautenAdminSection", () => {
     );
     expect(URL.createObjectURL).toHaveBeenCalledWith(file);
   });
+
+  test("shows backend validation details instead of a generic status message", async () => {
+    const fetchMock = jest
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve([])
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 409,
+        json: () => Promise.resolve({ detail: "Aufbau mit diesem Namen existiert bereits" })
+      } as Response);
+
+    Object.defineProperty(global, "fetch", {
+      configurable: true,
+      writable: true,
+      value: fetchMock
+    });
+
+    render(<AufbautenAdminSection />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/noch keine aufbauten vorhanden/i)).not.toBeNull();
+    });
+
+    fireEvent.change(screen.getByLabelText("Name"), {
+      target: { value: "Container" }
+    });
+
+    const file = new File([new Uint8Array([137, 80, 78, 71])], "container.png", {
+      type: "image/png"
+    });
+    fireEvent.change(screen.getByLabelText("PNG-Datei"), {
+      target: { files: [file] }
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Aufbau anlegen" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Aufbau mit diesem Namen existiert bereits")).not.toBeNull();
+    });
+  });
 });
