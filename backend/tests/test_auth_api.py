@@ -119,3 +119,16 @@ def test_verify_password_prefers_bcrypt_for_bcrypt_hashes(monkeypatch: pytest.Mo
     monkeypatch.setattr(auth_module.crypt, "crypt", fail_crypt)
 
     assert auth_module.verify_password("admin", password_hash) is True
+
+
+def test_login_rejects_invalid_bcrypt_hash_configuration(monkeypatch: pytest.MonkeyPatch) -> None:
+    client = TestClient(app)
+    monkeypatch.setattr(settings, "auth_login_password_hash", "$2b$12$invalid")
+
+    response = client.post(
+        f"{API_PREFIX}/auth/login",
+        json={"username": "admin", "password": "admin"},
+    )
+
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Ungueltige Zugangsdaten"

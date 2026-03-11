@@ -32,7 +32,10 @@ def _verify_bcrypt_password(password: str, password_hash: str) -> bool | None:
     except ImportError:
         return None
 
-    return bcrypt.checkpw(password.encode("utf-8"), password_hash.encode("utf-8"))
+    try:
+        return bcrypt.checkpw(password.encode("utf-8"), password_hash.encode("utf-8"))
+    except ValueError:
+        return False
 
 
 def verify_password(password: str, password_hash: str) -> bool:
