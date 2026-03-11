@@ -1,8 +1,30 @@
+import base64
+import hashlib
+import hmac
+import json
+
 from fastapi.testclient import TestClient
 
+from app.config import settings
 from app.main import app
 
 API_PREFIX = "/api/v1"
+
+
+def _b64url_encode(raw: bytes) -> str:
+    return base64.urlsafe_b64encode(raw).rstrip(b"=").decode("ascii")
+
+
+def _sign_test_token(header: object, payload: object) -> str:
+    encoded_header = _b64url_encode(json.dumps(header, separators=(",", ":")).encode("utf-8"))
+    encoded_payload = _b64url_encode(json.dumps(payload, separators=(",", ":")).encode("utf-8"))
+    signing_input = f"{encoded_header}.{encoded_payload}".encode("ascii")
+    signature = hmac.new(
+        settings.jwt_secret_key.encode("utf-8"),
+        signing_input,
+        hashlib.sha256,
+    ).digest()
+    return f"{encoded_header}.{encoded_payload}.{_b64url_encode(signature)}"
 
 
 def test_login_verify_and_refresh() -> None:
@@ -66,3 +88,19 @@ def test_auth_rejects_invalid_credentials_and_wrong_token_type() -> None:
     missing_auth_response = client.get(f"{API_PREFIX}/auth/verify")
     assert missing_auth_response.status_code == 401
     assert missing_auth_response.json()["detail"] == "Authentifizierung erforderlich"
+
+
+def test_verify_rejects_malformed_token_payload_shape() -> None:
+    client = TestClient(app)
+    malformed_token = _sign_test_token(
+        header={"alg": "HS256", "typ": "JWT"},
+        payload=["not", "an", "object"],
+    )
+
+    response = client.get(
+        f"{API_PREFIX}/auth/verify",
+        headers={"Authorization": f"Bearer {malformed_token}"},
+    )
+
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Ungueltiges Zugriffstoken"

@@ -108,6 +108,7 @@ def decode_jwt(token: str, expected_type: str | None = None) -> dict[str, object
     ).digest()
 
     try:
+        header = json.loads(_b64url_decode(encoded_header))
         actual_signature = _b64url_decode(encoded_signature)
         payload = json.loads(_b64url_decode(encoded_payload))
     except (ValueError, json.JSONDecodeError) as exc:
@@ -115,6 +116,24 @@ def decode_jwt(token: str, expected_type: str | None = None) -> dict[str, object
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Ungueltiges Zugriffstoken",
         ) from exc
+
+    if not isinstance(header, dict):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Ungueltiges Zugriffstoken",
+        )
+
+    if header.get("alg") != "HS256" or header.get("typ") != "JWT":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Ungueltiges Zugriffstoken",
+        )
+
+    if not isinstance(payload, dict):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Ungueltiges Zugriffstoken",
+        )
 
     if not hmac.compare_digest(actual_signature, expected_signature):
         raise HTTPException(
