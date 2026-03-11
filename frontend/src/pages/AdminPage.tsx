@@ -64,17 +64,19 @@ function LampentypThumbnail({
   alt: string;
   className?: string;
 }) {
+  const sizeClassName = className ?? "h-14 w-14 rounded-2xl";
+
   return iconUrl ? (
     <img
       src={iconUrl}
       alt={alt}
-      className={className ?? "h-14 w-14 rounded-2xl border border-stone-700 bg-stone-950 object-cover p-2"}
+      className={`${sizeClassName} border border-stone-700 bg-stone-950 object-cover p-2`}
     />
   ) : (
     <div
       role="img"
       aria-label={alt}
-      className={className ?? "flex h-14 w-14 items-center justify-center rounded-2xl border border-dashed border-stone-700 bg-stone-950 text-xs uppercase tracking-[0.2em] text-stone-500"}
+      className={`${sizeClassName} flex items-center justify-center border border-dashed border-stone-700 bg-stone-950 px-2 text-center text-xs uppercase tracking-[0.2em] text-stone-500`}
     >
       Kein Icon
     </div>

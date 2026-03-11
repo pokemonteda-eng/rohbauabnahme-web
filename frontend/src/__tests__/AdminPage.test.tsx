@@ -161,6 +161,7 @@ describe("Admin routing and access control", () => {
       "https://cdn.example.com/frontblitzer.png"
     );
     expect(screen.getByLabelText("Vorschau fuer neuen Lampentyp")).toBeInTheDocument();
+    expect(screen.getByText("Kein Icon")).not.toBeNull();
     expect(screen.getByDisplayValue("0.00")).not.toBeNull();
   });
 
