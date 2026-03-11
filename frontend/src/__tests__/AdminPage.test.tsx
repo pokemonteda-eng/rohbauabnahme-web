@@ -156,6 +156,11 @@ describe("Admin routing and access control", () => {
     expect(screen.getByRole("button", { name: /Aufbauten/ })).not.toBeNull();
     expect(screen.getByRole("button", { name: /Lampen/ }).getAttribute("aria-current")).toBe("page");
     expect(await screen.findByText("Frontblitzer")).not.toBeNull();
+    expect(screen.getByAltText("Icon fuer Frontblitzer")).toHaveAttribute(
+      "src",
+      "https://cdn.example.com/frontblitzer.png"
+    );
+    expect(screen.getByLabelText("Vorschau fuer neuen Lampentyp")).toBeInTheDocument();
     expect(screen.getByDisplayValue("0.00")).not.toBeNull();
   });
 
@@ -250,6 +255,7 @@ describe("Admin routing and access control", () => {
     fireEvent.click(screen.getByRole("button", { name: "Lampentyp anlegen" }));
 
     expect(await screen.findByText("Heckblitzer")).not.toBeNull();
+    expect(screen.getByAltText("Icon fuer Heckblitzer")).toHaveAttribute("src", "https://cdn.example.com/heckblitzer.png");
     expect(screen.getByText("129.90 EUR")).not.toBeNull();
   });
 
@@ -272,6 +278,10 @@ describe("Admin routing and access control", () => {
 
     await waitFor(() => {
       expect(screen.getByText("Frontblitzer Plus")).not.toBeNull();
+      expect(screen.getByAltText("Icon fuer Frontblitzer Plus")).toHaveAttribute(
+        "src",
+        "https://cdn.example.com/frontblitzer.png"
+      );
       expect(screen.getByText("89.50 EUR")).not.toBeNull();
     });
   });

@@ -55,6 +55,32 @@ const EMPTY_LAMPENTYP_FORM = {
   standard_preis: "0.00"
 };
 
+function LampentypThumbnail({
+  iconUrl,
+  alt,
+  className
+}: {
+  iconUrl: string;
+  alt: string;
+  className?: string;
+}) {
+  return iconUrl ? (
+    <img
+      src={iconUrl}
+      alt={alt}
+      className={className ?? "h-14 w-14 rounded-2xl border border-stone-700 bg-stone-950 object-cover p-2"}
+    />
+  ) : (
+    <div
+      role="img"
+      aria-label={alt}
+      className={className ?? "flex h-14 w-14 items-center justify-center rounded-2xl border border-dashed border-stone-700 bg-stone-950 text-xs uppercase tracking-[0.2em] text-stone-500"}
+    >
+      Kein Icon
+    </div>
+  );
+}
+
 function LampentypenSection() {
   const [lampentypen, setLampentypen] = useState<Lampentyp[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -207,9 +233,16 @@ function LampentypenSection() {
                   ].join(" ")}
                 >
                   <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <p className="text-base font-semibold text-white">{lampentyp.name}</p>
-                      <p className="mt-2 text-sm leading-6 text-stone-400">{lampentyp.beschreibung}</p>
+                    <div className="flex items-start gap-4">
+                      <LampentypThumbnail
+                        iconUrl={lampentyp.icon_url}
+                        alt={`Icon fuer ${lampentyp.name}`}
+                        className="h-16 w-16 rounded-2xl border border-stone-700 bg-stone-950 object-cover p-2"
+                      />
+                      <div>
+                        <p className="text-base font-semibold text-white">{lampentyp.name}</p>
+                        <p className="mt-2 text-sm leading-6 text-stone-400">{lampentyp.beschreibung}</p>
+                      </div>
                     </div>
                     <span className="rounded-full border border-stone-700 px-3 py-1 text-xs font-medium text-stone-200">
                       {lampentyp.standard_preis.toFixed(2)} EUR
@@ -230,6 +263,20 @@ function LampentypenSection() {
           {selectedLampentyp ? selectedLampentyp.name : "Lampentyp-Formular"}
         </h2>
         <form className="mt-6 grid gap-5" onSubmit={(event) => void handleSubmit(event)}>
+          <div className="rounded-2xl border border-stone-800 bg-stone-950/70 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-stone-500">Thumbnail-Vorschau</p>
+            <div className="mt-4 flex items-center gap-4">
+              <LampentypThumbnail
+                iconUrl={formValues.icon_url.trim()}
+                alt={`Vorschau fuer ${formValues.name.trim() || "neuen Lampentyp"}`}
+                className="h-20 w-20 rounded-3xl border border-stone-700 bg-stone-950 object-cover p-3"
+              />
+              <p className="max-w-xs text-sm leading-6 text-stone-400">
+                Das Icon wird direkt im Verwaltungsmodul angezeigt und dient als Grundlage fuer die spaetere Auswahl
+                in der Beleuchtungskonfiguration.
+              </p>
+            </div>
+          </div>
           <div className="grid gap-2">
             <label htmlFor="lampentyp-name" className="text-sm font-medium text-stone-200">
               Name
