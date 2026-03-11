@@ -195,6 +195,36 @@ describe("AufbautenAdminSection", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
+  test("rejects files whose mime type is not png even when the extension is .png", async () => {
+    const fetchMock = jest.fn().mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve([])
+    } as Response);
+
+    Object.defineProperty(global, "fetch", {
+      configurable: true,
+      writable: true,
+      value: fetchMock
+    });
+
+    render(<AufbautenAdminSection />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/noch keine aufbauten vorhanden/i)).not.toBeNull();
+    });
+
+    const spoofedFile = new File(["not-a-png"], "container.png", {
+      type: "image/jpeg"
+    });
+
+    fireEvent.change(screen.getByLabelText("PNG-Datei"), {
+      target: { files: [spoofedFile] }
+    });
+
+    expect(screen.getByText("Bitte eine PNG-Datei auswaehlen.")).not.toBeNull();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
   test("shows a load error when the aufbauten list response is malformed", async () => {
     const fetchMock = jest.fn().mockResolvedValue({
       ok: true,

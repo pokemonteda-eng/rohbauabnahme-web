@@ -111,6 +111,15 @@ def _delete_image_if_present(bild_pfad: str) -> None:
         target_path.unlink()
 
 
+def _delete_image_after_commit(bild_pfad: str) -> None:
+    try:
+        _delete_image_if_present(bild_pfad)
+    except OSError:
+        # The database change has already been committed. A cleanup failure must not turn
+        # a successful mutation into an API error response.
+        return
+
+
 def _commit_with_upload_cleanup(db: Session, uploaded_paths: list[str]) -> None:
     try:
         db.commit()
@@ -187,7 +196,7 @@ def update_aufbau(
     _commit_with_upload_cleanup(db, [replacement_image] if replacement_image is not None else [])
 
     if replacement_image is not None and previous_image != replacement_image:
-        _delete_image_if_present(previous_image)
+        _delete_image_after_commit(previous_image)
 
     db.refresh(aufbau)
     return _serialize_aufbau(aufbau)
@@ -206,4 +215,4 @@ def delete_aufbau(
     bild_pfad = aufbau.bild_pfad
     db.delete(aufbau)
     _commit_delete(db)
-    _delete_image_if_present(bild_pfad)
+    _delete_image_after_commit(bild_pfad)

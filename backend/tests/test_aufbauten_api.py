@@ -207,6 +207,79 @@ def test_delete_aufbau_rolls_back_when_commit_fails(tmp_path, monkeypatch) -> No
         aufbauten_router.UPLOAD_DIRECTORY = original_upload_directory
 
 
+def test_update_aufbau_succeeds_when_previous_image_cleanup_fails(tmp_path, monkeypatch) -> None:
+    session_local = _session_factory()
+    original_upload_directory = aufbauten_router.UPLOAD_DIRECTORY
+    aufbauten_router.UPLOAD_DIRECTORY = tmp_path / "aufbauten"
+
+    def override_db() -> Generator[Session, None, None]:
+        yield from _override_get_db(session_local)
+
+    app.dependency_overrides[get_db] = override_db
+    client = TestClient(app)
+
+    try:
+        create_response = client.post(
+            f"{API_PREFIX}/aufbauten",
+            data={"name": "FB 500", "aktiv": "true"},
+            files={"bild": _png_file()},
+            headers=ADMIN_HEADERS,
+        )
+        assert create_response.status_code == 201
+        created = create_response.json()
+
+        def failing_cleanup(_: str) -> None:
+            raise OSError("permission denied")
+
+        monkeypatch.setattr(aufbauten_router, "_delete_image_if_present", failing_cleanup)
+
+        update_response = client.patch(
+            f"{API_PREFIX}/aufbauten/{created['id']}",
+            data={"name": "FB 500 XL", "aktiv": "true"},
+            files={"bild": _png_file("replacement.png")},
+            headers=ADMIN_HEADERS,
+        )
+        assert update_response.status_code == 200
+        assert update_response.json()["name"] == "FB 500 XL"
+    finally:
+        app.dependency_overrides.clear()
+        aufbauten_router.UPLOAD_DIRECTORY = original_upload_directory
+
+
+def test_delete_aufbau_succeeds_when_image_cleanup_fails(tmp_path, monkeypatch) -> None:
+    session_local = _session_factory()
+    original_upload_directory = aufbauten_router.UPLOAD_DIRECTORY
+    aufbauten_router.UPLOAD_DIRECTORY = tmp_path / "aufbauten"
+
+    def override_db() -> Generator[Session, None, None]:
+        yield from _override_get_db(session_local)
+
+    app.dependency_overrides[get_db] = override_db
+    client = TestClient(app)
+
+    try:
+        create_response = client.post(
+            f"{API_PREFIX}/aufbauten",
+            data={"name": "FB 500", "aktiv": "true"},
+            files={"bild": _png_file()},
+            headers=ADMIN_HEADERS,
+        )
+        assert create_response.status_code == 201
+        created = create_response.json()
+
+        def failing_cleanup(_: str) -> None:
+            raise OSError("permission denied")
+
+        monkeypatch.setattr(aufbauten_router, "_delete_image_if_present", failing_cleanup)
+
+        delete_response = client.delete(f"{API_PREFIX}/aufbauten/{created['id']}", headers=ADMIN_HEADERS)
+        assert delete_response.status_code == 204
+        assert client.get(f"{API_PREFIX}/aufbauten").json() == []
+    finally:
+        app.dependency_overrides.clear()
+        aufbauten_router.UPLOAD_DIRECTORY = original_upload_directory
+
+
 def test_aufbau_mutations_require_admin_authentication(tmp_path) -> None:
     session_local = _session_factory()
     original_upload_directory = aufbauten_router.UPLOAD_DIRECTORY

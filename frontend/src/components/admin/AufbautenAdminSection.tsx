@@ -23,7 +23,11 @@ function formatStatusLabel(aktiv: boolean) {
 
 function isPngFile(file: File) {
   const normalizedName = file.name.toLowerCase();
-  return file.type === "image/png" || normalizedName.endsWith(".png");
+  if (!normalizedName.endsWith(".png")) {
+    return false;
+  }
+
+  return file.type === "" || file.type === "image/png";
 }
 
 export function AufbautenAdminSection() {
