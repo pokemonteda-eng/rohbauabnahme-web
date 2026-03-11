@@ -8,6 +8,7 @@ from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
+from app import models
 from app.db import Base, get_db
 from app.main import app
 
@@ -196,3 +197,8 @@ def test_lampen_typen_migration_creates_expected_schema(tmp_path: Path) -> None:
         if constraint.get("column_names")
     }
     assert ("name",) in unique_constraints
+
+
+def test_models_package_exports_lampentyp() -> None:
+    assert "Lampentyp" in models.__all__
+    assert models.Lampentyp.__tablename__ == "lampen_typen"
