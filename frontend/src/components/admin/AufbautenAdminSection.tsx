@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 
 import { createAufbau, deleteAufbau, listAufbauten, updateAufbau, type Aufbau } from "@/api/aufbauten";
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,7 @@ export function AufbautenAdminSection() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [formState, setFormState] = useState<FormState>(INITIAL_FORM_STATE);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -43,9 +44,15 @@ export function AufbautenAdminSection() {
         const data = await listAufbauten(controller.signal);
         setItems(data);
       } catch (error) {
+        if (controller.signal.aborted) {
+          return;
+        }
+
         setLoadError(error instanceof Error ? error.message : "Aufbauten konnten nicht geladen werden.");
       } finally {
-        setIsLoading(false);
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
       }
     }
 
@@ -92,6 +99,9 @@ export function AufbautenAdminSection() {
     setPreviewUrl(null);
     setEditingId(null);
     setSubmitError(null);
+    if (fileInputRef.current != null) {
+      fileInputRef.current.value = "";
+    }
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -303,6 +313,7 @@ export function AufbautenAdminSection() {
             <Label htmlFor="aufbau-bild">PNG-Datei</Label>
             <Input
               id="aufbau-bild"
+              ref={fileInputRef}
               type="file"
               accept="image/png"
               onChange={(event) =>

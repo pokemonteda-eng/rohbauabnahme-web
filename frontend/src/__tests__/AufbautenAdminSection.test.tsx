@@ -147,4 +147,23 @@ describe("AufbautenAdminSection", () => {
       expect(screen.getByText("Aufbau mit diesem Namen existiert bereits")).not.toBeNull();
     });
   });
+
+  test("shows a load error when the aufbauten list response is malformed", async () => {
+    const fetchMock = jest.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve([{ id: 1, name: "Container" }])
+    } as Response);
+
+    Object.defineProperty(global, "fetch", {
+      configurable: true,
+      writable: true,
+      value: fetchMock
+    });
+
+    render(<AufbautenAdminSection />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Die Serverantwort fuer Aufbauten ist ungueltig.")).not.toBeNull();
+    });
+  });
 });

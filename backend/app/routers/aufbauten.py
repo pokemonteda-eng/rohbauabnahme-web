@@ -81,6 +81,24 @@ def _delete_image_if_present(bild_pfad: str) -> None:
         target_path.unlink()
 
 
+def _commit_with_upload_cleanup(db: Session, uploaded_paths: list[str]) -> None:
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        for bild_pfad in uploaded_paths:
+            _delete_image_if_present(bild_pfad)
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Aufbau mit diesem Namen existiert bereits",
+        ) from None
+    except Exception:
+        db.rollback()
+        for bild_pfad in uploaded_paths:
+            _delete_image_if_present(bild_pfad)
+        raise
+
+
 @router.get("", response_model=list[AufbauRead])
 def list_aufbauten(db: Session = Depends(get_db)) -> list[AufbauRead]:
     aufbauten = db.scalars(select(Aufbau).order_by(Aufbau.name.asc(), Aufbau.id.asc())).all()
@@ -98,16 +116,7 @@ def create_aufbau(
     bild_pfad = _store_png(bild)
     aufbau = Aufbau(name=normalized_name, aktiv=aktiv, bild_pfad=bild_pfad)
     db.add(aufbau)
-
-    try:
-        db.commit()
-    except IntegrityError:
-        db.rollback()
-        _delete_image_if_present(bild_pfad)
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Aufbau mit diesem Namen existiert bereits",
-        ) from None
+    _commit_with_upload_cleanup(db, [bild_pfad])
 
     db.refresh(aufbau)
     return _serialize_aufbau(aufbau)
@@ -135,17 +144,7 @@ def update_aufbau(
 
     aufbau.name = normalized_name
     aufbau.aktiv = aktiv
-
-    try:
-        db.commit()
-    except IntegrityError:
-        db.rollback()
-        if replacement_image is not None:
-            _delete_image_if_present(replacement_image)
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Aufbau mit diesem Namen existiert bereits",
-        ) from None
+    _commit_with_upload_cleanup(db, [replacement_image] if replacement_image is not None else [])
 
     if replacement_image is not None and previous_image != replacement_image:
         _delete_image_if_present(previous_image)

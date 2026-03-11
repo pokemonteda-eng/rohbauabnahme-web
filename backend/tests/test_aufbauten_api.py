@@ -1,6 +1,7 @@
 from collections.abc import Generator
 from io import BytesIO
 
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
@@ -119,5 +120,37 @@ def test_create_aufbau_rejects_duplicate_names_and_invalid_png(tmp_path) -> None
         assert invalid_response.status_code == 400
         assert invalid_response.json()["detail"] == "Die hochgeladene Datei ist kein gueltiges PNG"
     finally:
+        app.dependency_overrides.clear()
+        aufbauten_router.UPLOAD_DIRECTORY = original_upload_directory
+
+
+def test_create_aufbau_removes_uploaded_file_when_commit_fails(tmp_path, monkeypatch) -> None:
+    session_local = _session_factory()
+    original_upload_directory = aufbauten_router.UPLOAD_DIRECTORY
+    aufbauten_router.UPLOAD_DIRECTORY = tmp_path / "aufbauten"
+
+    def override_db() -> Generator[Session, None, None]:
+        yield from _override_get_db(session_local)
+
+    original_commit = Session.commit
+
+    def failing_commit(self: Session) -> None:
+        raise RuntimeError("database unavailable")
+
+    app.dependency_overrides[get_db] = override_db
+    monkeypatch.setattr(Session, "commit", failing_commit)
+    client = TestClient(app)
+
+    try:
+        with pytest.raises(RuntimeError, match="database unavailable"):
+            client.post(
+                f"{API_PREFIX}/aufbauten",
+                data={"name": "FB 500", "aktiv": "true"},
+                files={"bild": _png_file()},
+            )
+
+        assert list((tmp_path / "aufbauten").glob("*.png")) == []
+    finally:
+        monkeypatch.setattr(Session, "commit", original_commit)
         app.dependency_overrides.clear()
         aufbauten_router.UPLOAD_DIRECTORY = original_upload_directory

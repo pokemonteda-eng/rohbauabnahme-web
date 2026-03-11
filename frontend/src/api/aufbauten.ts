@@ -52,6 +52,15 @@ async function parseAufbauResponse(response: Response): Promise<Aufbau> {
   return data;
 }
 
+async function parseAufbautenResponse(response: Response): Promise<Aufbau[]> {
+  const data: unknown = await response.json();
+  if (!Array.isArray(data) || !data.every(isAufbau)) {
+    throw new Error("Die Serverantwort fuer Aufbauten ist ungueltig.");
+  }
+
+  return data;
+}
+
 function getErrorMessage(entity: string, status: number) {
   return `${entity} fehlgeschlagen (${status}).`;
 }
@@ -85,12 +94,7 @@ export async function listAufbauten(signal?: AbortSignal): Promise<Aufbau[]> {
     throw new Error(getErrorMessage("Aufbauten laden", response.status));
   }
 
-  const data: unknown = await response.json();
-  if (!Array.isArray(data)) {
-    return [];
-  }
-
-  return data.filter(isAufbau);
+  return parseAufbautenResponse(response);
 }
 
 export async function createAufbau(payload: AufbauPayload): Promise<Aufbau> {
