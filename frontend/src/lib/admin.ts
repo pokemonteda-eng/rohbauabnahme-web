@@ -1,5 +1,22 @@
 export type AdminSection = "aufbauten" | "lampen" | "benutzer" | "stammdaten";
 
+export type Lampentyp = {
+  id: number;
+  name: string;
+  beschreibung: string;
+  icon_url: string;
+  standard_preis: number;
+  angelegt_am: string;
+  aktualisiert_am: string;
+};
+
+export type LampentypPayload = {
+  name: string;
+  beschreibung: string;
+  icon_url: string;
+  standard_preis: number;
+};
+
 export type AdminSectionContent = {
   label: string;
   description: string;
@@ -58,4 +75,52 @@ export function getAdminSectionFromSearch(search: string) {
   }
 
   return DEFAULT_ADMIN_SECTION;
+}
+
+async function parseAdminResponse<T>(response: Response): Promise<T> {
+  if (response.ok) {
+    return (await response.json()) as T;
+  }
+
+  let detail = "Admin-Anfrage fehlgeschlagen";
+
+  try {
+    const payload = (await response.json()) as { detail?: string };
+    if (payload.detail) {
+      detail = payload.detail;
+    }
+  } catch {
+    // Ignore invalid error bodies and use the fallback message.
+  }
+
+  throw new Error(detail);
+}
+
+export async function fetchLampentypen() {
+  const response = await fetch("/api/v1/lampen-typen");
+  return parseAdminResponse<Lampentyp[]>(response);
+}
+
+export async function createLampentyp(payload: LampentypPayload) {
+  const response = await fetch("/api/v1/lampen-typen", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  });
+
+  return parseAdminResponse<Lampentyp>(response);
+}
+
+export async function updateLampentyp(id: number, payload: LampentypPayload) {
+  const response = await fetch(`/api/v1/lampen-typen/${id}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  });
+
+  return parseAdminResponse<Lampentyp>(response);
 }
