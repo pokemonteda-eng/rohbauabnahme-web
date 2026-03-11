@@ -3,8 +3,10 @@ import hashlib
 import hmac
 import json
 
+import pytest
 from fastapi.testclient import TestClient
 
+from app import auth as auth_module
 from app.config import settings
 from app.main import app
 
@@ -104,3 +106,16 @@ def test_verify_rejects_malformed_token_payload_shape() -> None:
 
     assert response.status_code == 401
     assert response.json()["detail"] == "Ungueltiges Zugriffstoken"
+
+
+def test_verify_password_prefers_bcrypt_for_bcrypt_hashes(monkeypatch: pytest.MonkeyPatch) -> None:
+    bcrypt = pytest.importorskip("bcrypt")
+
+    password_hash = bcrypt.hashpw(b"admin", bcrypt.gensalt()).decode("utf-8")
+
+    def fail_crypt(*args: object, **kwargs: object) -> str:
+        raise AssertionError("crypt fallback should not be used for bcrypt hashes")
+
+    monkeypatch.setattr(auth_module.crypt, "crypt", fail_crypt)
+
+    assert auth_module.verify_password("admin", password_hash) is True

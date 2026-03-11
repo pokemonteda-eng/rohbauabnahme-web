@@ -14,6 +14,7 @@ from app.config import settings
 http_bearer = HTTPBearer(auto_error=False)
 ACCESS_TOKEN_TYPE = "access"
 REFRESH_TOKEN_TYPE = "refresh"
+BCRYPT_PREFIXES = ("$2a$", "$2b$", "$2y$")
 
 
 def _b64url_encode(raw: bytes) -> str:
@@ -25,7 +26,21 @@ def _b64url_decode(raw: str) -> bytes:
     return base64.urlsafe_b64decode(f"{raw}{padding}")
 
 
+def _verify_bcrypt_password(password: str, password_hash: str) -> bool | None:
+    try:
+        import bcrypt
+    except ImportError:
+        return None
+
+    return bcrypt.checkpw(password.encode("utf-8"), password_hash.encode("utf-8"))
+
+
 def verify_password(password: str, password_hash: str) -> bool:
+    if password_hash.startswith(BCRYPT_PREFIXES):
+        bcrypt_result = _verify_bcrypt_password(password, password_hash)
+        if bcrypt_result is not None:
+            return bcrypt_result
+
     return crypt.crypt(password, password_hash) == password_hash
 
 
