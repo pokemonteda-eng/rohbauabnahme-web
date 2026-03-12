@@ -162,8 +162,6 @@ def test_create_update_and_list_lampentypen() -> None:
             f"{API_PREFIX}/{created['id']}",
             json={
                 "name": "Heckblitzer Plus",
-                "beschreibung": "Kompakter LED-Blitzer fuer Heck und Seitenbereich.",
-                "icon_url": "https://cdn.example.com/icons/heckblitzer-plus.png",
                 "standard_preis": 189.4,
             },
             headers=_auth_header(),
@@ -171,7 +169,8 @@ def test_create_update_and_list_lampentypen() -> None:
         assert update_response.status_code == 200
         updated = update_response.json()
         assert updated["name"] == "Heckblitzer Plus"
-        assert updated["icon_url"] == "https://cdn.example.com/icons/heckblitzer-plus.png"
+        assert updated["beschreibung"] == "Kompakter LED-Blitzer fuer das Heck."
+        assert updated["icon_url"] == "https://cdn.example.com/icons/heckblitzer.png"
         assert updated["standard_preis"] == 189.4
 
         second_response = client.post(
@@ -189,6 +188,14 @@ def test_create_update_and_list_lampentypen() -> None:
         list_response = client.get(API_PREFIX, headers=_auth_header())
         assert list_response.status_code == 200
         assert [entry["name"] for entry in list_response.json()] == ["Arbeitsscheinwerfer", "Heckblitzer Plus"]
+
+        delete_response = client.delete(f"{API_PREFIX}/{created['id']}", headers=_auth_header())
+        assert delete_response.status_code == 204
+        assert delete_response.content == b""
+
+        deleted_list_response = client.get(API_PREFIX, headers=_auth_header())
+        assert deleted_list_response.status_code == 200
+        assert [entry["name"] for entry in deleted_list_response.json()] == ["Arbeitsscheinwerfer"]
     finally:
         app.dependency_overrides.clear()
 
@@ -265,6 +272,10 @@ def test_lampentypen_reject_duplicate_names_and_missing_records() -> None:
         )
         assert missing_response.status_code == 404
         assert missing_response.json()["detail"] == "Lampentyp nicht gefunden"
+
+        missing_delete_response = client.delete(f"{API_PREFIX}/9999", headers=_auth_header())
+        assert missing_delete_response.status_code == 404
+        assert missing_delete_response.json()["detail"] == "Lampentyp nicht gefunden"
     finally:
         app.dependency_overrides.clear()
 

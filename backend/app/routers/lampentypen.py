@@ -25,6 +25,13 @@ class LampentypPayload(BaseModel):
     standard_preis: float = Field(ge=0)
 
 
+class LampentypUpdatePayload(BaseModel):
+    name: str | None = Field(default=None, min_length=1, max_length=255)
+    beschreibung: str | None = Field(default=None, min_length=1, max_length=5000)
+    icon_url: str | None = Field(default=None, min_length=1, max_length=500)
+    standard_preis: float | None = Field(default=None, ge=0)
+
+
 class LampentypRead(BaseModel):
     id: int
     name: str
@@ -38,24 +45,13 @@ class LampentypRead(BaseModel):
 
 
 def _normalize_payload(payload: LampentypPayload) -> LampentypPayload:
-    normalized_name = payload.name.strip()
-    normalized_beschreibung = payload.beschreibung.strip()
-    normalized_icon_url = payload.icon_url.strip()
-
-    if not normalized_name:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Name darf nicht leer sein")
-    if not normalized_beschreibung:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Beschreibung darf nicht leer sein")
-    if not normalized_icon_url:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Icon-URL darf nicht leer sein")
-
-    try:
-        normalized_preis = Decimal(str(payload.standard_preis)).quantize(Decimal("0.01"))
-    except InvalidOperation as exc:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Standard-Preis ist ungueltig",
-        ) from exc
+    normalized_name = _normalize_text_field(payload.name, "Name darf nicht leer sein")
+    normalized_beschreibung = _normalize_text_field(
+        payload.beschreibung,
+        "Beschreibung darf nicht leer sein",
+    )
+    normalized_icon_url = _normalize_text_field(payload.icon_url, "Icon-URL darf nicht leer sein")
+    normalized_preis = _normalize_preis(payload.standard_preis)
 
     return LampentypPayload(
         name=normalized_name,
@@ -63,6 +59,47 @@ def _normalize_payload(payload: LampentypPayload) -> LampentypPayload:
         icon_url=normalized_icon_url,
         standard_preis=float(normalized_preis),
     )
+
+
+def _normalize_text_field(value: str, empty_message: str) -> str:
+    normalized = value.strip()
+    if not normalized:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=empty_message)
+
+    return normalized
+
+
+def _normalize_preis(value: float) -> Decimal:
+    try:
+        return Decimal(str(value)).quantize(Decimal("0.01"))
+    except InvalidOperation as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Standard-Preis ist ungueltig",
+        ) from exc
+
+
+def _apply_partial_update(
+    lampentyp: Lampentyp,
+    payload: LampentypUpdatePayload,
+    db: Session,
+) -> None:
+    if "name" in payload.model_fields_set and payload.name is not None:
+        lampentyp.name = _normalize_text_field(payload.name, "Name darf nicht leer sein")
+
+    if "beschreibung" in payload.model_fields_set and payload.beschreibung is not None:
+        lampentyp.beschreibung = _normalize_text_field(
+            payload.beschreibung,
+            "Beschreibung darf nicht leer sein",
+        )
+
+    if "icon_url" in payload.model_fields_set and payload.icon_url is not None:
+        lampentyp.icon_url = _normalize_text_field(payload.icon_url, "Icon-URL darf nicht leer sein")
+
+    if "standard_preis" in payload.model_fields_set and payload.standard_preis is not None:
+        lampentyp.standard_preis = _normalize_preis(payload.standard_preis)
+
+    _ensure_unique_name(db, lampentyp.name, lampentyp_id=lampentyp.id)
 
 
 def _serialize_lampentyp(lampentyp: Lampentyp) -> LampentypRead:
@@ -127,19 +164,24 @@ def create_lampentyp(payload: LampentypPayload, db: Session = Depends(get_db)) -
 @router.patch("/{lampentyp_id}", response_model=LampentypRead)
 def update_lampentyp(
     lampentyp_id: int,
-    payload: LampentypPayload,
+    payload: LampentypUpdatePayload,
     db: Session = Depends(get_db),
 ) -> LampentypRead:
-    normalized = _normalize_payload(payload)
     lampentyp = db.get(Lampentyp, lampentyp_id)
     if lampentyp is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Lampentyp nicht gefunden")
 
-    _ensure_unique_name(db, normalized.name, lampentyp_id=lampentyp.id)
-    lampentyp.name = normalized.name
-    lampentyp.beschreibung = normalized.beschreibung
-    lampentyp.icon_url = normalized.icon_url
-    lampentyp.standard_preis = Decimal(str(normalized.standard_preis))
+    _apply_partial_update(lampentyp, payload, db)
     _commit_lampentyp_change(db)
     db.refresh(lampentyp)
     return _serialize_lampentyp(lampentyp)
+
+
+@router.delete("/{lampentyp_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_lampentyp(lampentyp_id: int, db: Session = Depends(get_db)) -> None:
+    lampentyp = db.get(Lampentyp, lampentyp_id)
+    if lampentyp is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Lampentyp nicht gefunden")
+
+    db.delete(lampentyp)
+    db.commit()
