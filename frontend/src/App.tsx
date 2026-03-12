@@ -1,3 +1,4 @@
+```
 import { useEffect, useState } from "react";
 
 import { AdminPage } from "@/pages/AdminPage";
@@ -53,7 +54,11 @@ function AppContent() {
     );
   }
 
-  return <HomePage />;
+  return (
+    <ProtectedRoute>
+      <HomePage />
+    </ProtectedRoute>
+  );
 }
 
 function App() {
@@ -65,3 +70,4 @@ function App() {
 }
 
 export default App;
+```
