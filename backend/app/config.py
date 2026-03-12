@@ -1,17 +1,22 @@
-from secrets import token_urlsafe
+from functools import lru_cache
 
-from pydantic import model_validator
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+REQUIRED_AUTH_FIELDS = {
+    "auth_login_username": "AUTH_LOGIN_USERNAME",
+    "auth_login_password_hash": "AUTH_LOGIN_PASSWORD_HASH",
+    "jwt_secret_key": "JWT_SECRET_KEY",
+}
 
 
 class Settings(BaseSettings):
     app_name: str = "Rohbauabnahme Web API"
     app_version: str = "0.1.0"
     api_v1_prefix: str = "/api/v1"
-    auth_allow_insecure_dev_defaults: bool = False
-    auth_login_username: str | None = None
-    auth_login_password_hash: str | None = None
-    jwt_secret_key: str | None = None
+    auth_login_username: str = Field(..., alias="AUTH_LOGIN_USERNAME")
+    auth_login_password_hash: str = Field(..., alias="AUTH_LOGIN_PASSWORD_HASH")
+    jwt_secret_key: str = Field(..., alias="JWT_SECRET_KEY")
     jwt_access_token_expire_minutes: int = 15
     jwt_refresh_token_expire_minutes: int = 60 * 24 * 7
 
@@ -28,35 +33,56 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",
+        populate_by_name=True,
     )
 
-    @model_validator(mode="after")
-    def validate_auth_configuration(self) -> "Settings":
-        if self.auth_allow_insecure_dev_defaults:
-            if self.auth_login_username is None:
-                self.auth_login_username = f"dev-disabled-{token_urlsafe(8)}"
-            if self.auth_login_password_hash is None:
-                self.auth_login_password_hash = "!"
-            if self.jwt_secret_key is None:
-                self.jwt_secret_key = token_urlsafe(32)
-            return self
+    @model_validator(mode="before")
+    @classmethod
+    def _require_auth_env_values(cls, data: object) -> object:
+        if not isinstance(data, dict):
+            return data
 
-        missing_settings: list[str] = []
-        if self.auth_login_username is None:
-            missing_settings.append("AUTH_LOGIN_USERNAME")
-        if self.auth_login_password_hash is None:
-            missing_settings.append("AUTH_LOGIN_PASSWORD_HASH")
-        if self.jwt_secret_key is None:
-            missing_settings.append("JWT_SECRET_KEY")
+        for field_name, env_var in REQUIRED_AUTH_FIELDS.items():
+            value = data.get(env_var, data.get(field_name))
+            if value is None:
+                raise ValueError(f"{env_var} muss gesetzt sein.")
+            if isinstance(value, str) and not value.strip():
+                raise ValueError(f"{env_var} darf nicht leer sein.")
 
-        if missing_settings:
-            raise ValueError(
-                "Missing required auth settings: "
-                + ", ".join(missing_settings)
-                + ". Set them via environment variables or opt into AUTH_ALLOW_INSECURE_DEV_DEFAULTS=true."
-            )
-
-        return self
+        return data
 
 
-settings = Settings()
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()
+
+
+def clear_settings_cache() -> None:
+    get_settings.cache_clear()
+
+
+def reload_settings() -> Settings:
+    clear_settings_cache()
+    return get_settings()
+
+
+def _require_runtime_auth_value(value: str, env_var: str) -> None:
+    if not value:
+        raise RuntimeError(f"{env_var} muss gesetzt sein.")
+    if not value.strip():
+        raise RuntimeError(f"{env_var} darf nicht leer sein.")
+
+
+def validate_auth_configuration() -> Settings:
+    current_settings = get_settings()
+    _require_runtime_auth_value(current_settings.auth_login_username, "AUTH_LOGIN_USERNAME")
+    _require_runtime_auth_value(current_settings.auth_login_password_hash, "AUTH_LOGIN_PASSWORD_HASH")
+    _require_runtime_auth_value(current_settings.jwt_secret_key, "JWT_SECRET_KEY")
+    return current_settings
+
+
+def validate_auth_secrets() -> Settings:
+    return validate_auth_configuration()
+
+
+settings = get_settings()

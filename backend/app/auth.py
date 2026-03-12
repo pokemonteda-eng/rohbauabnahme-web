@@ -9,7 +9,7 @@ from datetime import UTC, datetime, timedelta
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from app.config import settings
+from app.config import get_settings, validate_auth_secrets
 
 http_bearer = HTTPBearer(auto_error=False)
 ACCESS_TOKEN_TYPE = "access"
@@ -48,22 +48,18 @@ def verify_password(password: str, password_hash: str) -> bool:
 
 
 def authenticate_configured_user(username: str, password: str) -> dict[str, str] | None:
-    configured_username = settings.auth_login_username
-    configured_password_hash = settings.auth_login_password_hash
-
-    if not configured_username or not configured_password_hash:
+    settings = validate_auth_secrets()
+    if username != settings.auth_login_username:
         return None
 
-    if username != configured_username:
-        return None
-
-    if not verify_password(password, configured_password_hash):
+    if not verify_password(password, settings.auth_login_password_hash):
         return None
 
     return {"sub": username, "role": "admin"}
 
 
 def _sign_token(payload: dict[str, object]) -> str:
+    settings = validate_auth_secrets()
     encoded_header = _b64url_encode(
         json.dumps({"alg": "HS256", "typ": "JWT"}, separators=(",", ":")).encode("utf-8")
     )
@@ -94,6 +90,7 @@ def _build_token(subject: str, role: str, token_type: str, expires_in_minutes: i
 
 
 def issue_token_pair(subject: str, role: str) -> dict[str, object]:
+    settings = get_settings()
     access_token, _ = _build_token(
         subject=subject,
         role=role,
@@ -116,6 +113,7 @@ def issue_token_pair(subject: str, role: str) -> dict[str, object]:
 
 
 def decode_jwt(token: str, expected_type: str | None = None) -> dict[str, object]:
+    settings = validate_auth_secrets()
     try:
         encoded_header, encoded_payload, encoded_signature = token.split(".")
     except ValueError as exc:

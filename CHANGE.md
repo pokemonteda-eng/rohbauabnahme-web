@@ -53,3 +53,15 @@
 
 ## Tests
 - Frontend-Tests für Lampentypen-Laden, Validierung, Create/Edit, API-Konflikte und Recovery ergänzt
+
+# Ticket TASK-118
+
+## Auth Backend
+- Unsichere Defaults und `AUTH_ALLOW_INSECURE_DEV_DEFAULTS` entfernt
+- Auth-Konfiguration wird nur noch ueber ENV geladen; `AUTH_LOGIN_USERNAME`, `AUTH_LOGIN_PASSWORD_HASH` und `JWT_SECRET_KEY` sind Pflichtwerte
+- App verweigert Import/Start bei fehlenden oder leeren Auth-ENV-Werten mit klarer Fehlermeldung
+- Auth-Funktionen validieren kritische Werte zusaetzlich im Laufzeitpfad
+
+## Tests
+- `backend/tests/conftest.py` setzt Test-ENV fuer importierende Backend-Tests zentral
+- `backend/tests/test_auth_api.py` prueft Erfolgsfall sowie Start- und Runtime-Fehlerpfade fuer fehlende oder leere Auth-ENV-Werte
