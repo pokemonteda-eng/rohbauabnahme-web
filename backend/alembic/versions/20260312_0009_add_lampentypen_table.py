@@ -26,6 +26,7 @@ def upgrade() -> None:
         sa.Column("beschreibung", sa.Text(), nullable=False),
         sa.Column("icon_url", sa.String(length=500), nullable=False),
         sa.Column("standard_preis", sa.Numeric(precision=10, scale=2), nullable=False),
+        sa.Column("version", sa.Integer(), server_default="1", nullable=False),
         sa.Column("angelegt_am", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
         sa.Column("aktualisiert_am", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
         sa.PrimaryKeyConstraint("id"),

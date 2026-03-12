@@ -1,9 +1,9 @@
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import select
+from sqlalchemy import delete, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -26,6 +26,7 @@ class LampentypPayload(BaseModel):
 
 
 class LampentypUpdatePayload(BaseModel):
+    version: int = Field(ge=1, description="Erwartete aktuelle Revision des Lampentyps")
     name: str | None = Field(default=None, min_length=1, max_length=255)
     beschreibung: str | None = Field(default=None, min_length=1, max_length=5000)
     icon_url: str | None = Field(default=None, min_length=1, max_length=500)
@@ -38,6 +39,7 @@ class LampentypRead(BaseModel):
     beschreibung: str
     icon_url: str
     standard_preis: float
+    version: int
     angelegt_am: datetime
     aktualisiert_am: datetime
 
@@ -99,6 +101,12 @@ def _apply_partial_update(
     if "standard_preis" in payload.model_fields_set and payload.standard_preis is not None:
         lampentyp.standard_preis = _normalize_preis(payload.standard_preis)
 
+    if payload.model_fields_set == {"version"}:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Mindestens ein Feld muss aktualisiert werden",
+        )
+
     _ensure_unique_name(db, lampentyp.name, lampentyp_id=lampentyp.id)
 
 
@@ -109,6 +117,7 @@ def _serialize_lampentyp(lampentyp: Lampentyp) -> LampentypRead:
         beschreibung=lampentyp.beschreibung,
         icon_url=lampentyp.icon_url,
         standard_preis=float(lampentyp.standard_preis),
+        version=lampentyp.version,
         angelegt_am=lampentyp.angelegt_am,
         aktualisiert_am=lampentyp.aktualisiert_am,
     )
@@ -139,13 +148,33 @@ def _commit_lampentyp_change(db: Session) -> None:
         ) from None
 
 
-@router.get("", response_model=list[LampentypRead])
+def _raise_missing_or_conflict(db: Session, lampentyp_id: int) -> None:
+    if db.get(Lampentyp, lampentyp_id) is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Lampentyp nicht gefunden")
+
+    raise HTTPException(
+        status_code=status.HTTP_409_CONFLICT,
+        detail="Lampentyp wurde zwischenzeitlich geaendert",
+    )
+
+
+@router.get(
+    "",
+    response_model=list[LampentypRead],
+    summary="Listet alle Lampentypen fuer Admins",
+)
 def list_lampentypen(db: Session = Depends(get_db)) -> list[LampentypRead]:
     lampentypen = db.scalars(select(Lampentyp).order_by(Lampentyp.name.asc(), Lampentyp.id.asc())).all()
     return [_serialize_lampentyp(lampentyp) for lampentyp in lampentypen]
 
 
-@router.post("", response_model=LampentypRead, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=LampentypRead,
+    status_code=status.HTTP_201_CREATED,
+    summary="Legt einen Lampentyp an",
+    responses={409: {"description": "Conflict"}},
+)
 def create_lampentyp(payload: LampentypPayload, db: Session = Depends(get_db)) -> LampentypRead:
     normalized = _normalize_payload(payload)
     _ensure_unique_name(db, normalized.name)
@@ -161,7 +190,12 @@ def create_lampentyp(payload: LampentypPayload, db: Session = Depends(get_db)) -
     return _serialize_lampentyp(lampentyp)
 
 
-@router.patch("/{lampentyp_id}", response_model=LampentypRead)
+@router.patch(
+    "/{lampentyp_id}",
+    response_model=LampentypRead,
+    summary="Aktualisiert einen Lampentyp mit Versionspruefung",
+    responses={409: {"description": "Conflict"}},
+)
 def update_lampentyp(
     lampentyp_id: int,
     payload: LampentypUpdatePayload,
@@ -172,16 +206,55 @@ def update_lampentyp(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Lampentyp nicht gefunden")
 
     _apply_partial_update(lampentyp, payload, db)
-    _commit_lampentyp_change(db)
-    db.refresh(lampentyp)
-    return _serialize_lampentyp(lampentyp)
+    next_version = payload.version + 1
 
+    statement = (
+        update(Lampentyp)
+        .where(Lampentyp.id == lampentyp_id, Lampentyp.version == payload.version)
+        .values(
+            name=lampentyp.name,
+            beschreibung=lampentyp.beschreibung,
+            icon_url=lampentyp.icon_url,
+            standard_preis=lampentyp.standard_preis,
+            version=next_version,
+            aktualisiert_am=datetime.utcnow(),
+        )
+    )
 
-@router.delete("/{lampentyp_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_lampentyp(lampentyp_id: int, db: Session = Depends(get_db)) -> None:
-    lampentyp = db.get(Lampentyp, lampentyp_id)
-    if lampentyp is None:
+    try:
+        result = db.execute(statement)
+        if result.rowcount != 1:
+            db.rollback()
+            _raise_missing_or_conflict(db, lampentyp_id)
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Lampentyp mit diesem Namen existiert bereits",
+        ) from None
+
+    updated_lampentyp = db.get(Lampentyp, lampentyp_id)
+    if updated_lampentyp is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Lampentyp nicht gefunden")
+    return _serialize_lampentyp(updated_lampentyp)
 
-    db.delete(lampentyp)
+
+@router.delete(
+    "/{lampentyp_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Loescht einen Lampentyp mit Versionspruefung",
+    responses={409: {"description": "Conflict"}},
+)
+def delete_lampentyp(
+    lampentyp_id: int,
+    version: int = Query(ge=1, description="Erwartete aktuelle Revision des Lampentyps"),
+    db: Session = Depends(get_db),
+) -> None:
+    statement = delete(Lampentyp).where(Lampentyp.id == lampentyp_id, Lampentyp.version == version)
+    result = db.execute(statement)
+    if result.rowcount != 1:
+        db.rollback()
+        _raise_missing_or_conflict(db, lampentyp_id)
+
     db.commit()

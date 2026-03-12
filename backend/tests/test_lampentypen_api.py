@@ -157,10 +157,12 @@ def test_create_update_and_list_lampentypen() -> None:
         assert created["beschreibung"] == "Kompakter LED-Blitzer fuer das Heck."
         assert created["icon_url"] == "https://cdn.example.com/icons/heckblitzer.png"
         assert created["standard_preis"] == 149.9
+        assert created["version"] == 1
 
         update_response = client.patch(
             f"{API_PREFIX}/{created['id']}",
             json={
+                "version": created["version"],
                 "name": "Heckblitzer Plus",
                 "standard_preis": 189.4,
             },
@@ -172,6 +174,7 @@ def test_create_update_and_list_lampentypen() -> None:
         assert updated["beschreibung"] == "Kompakter LED-Blitzer fuer das Heck."
         assert updated["icon_url"] == "https://cdn.example.com/icons/heckblitzer.png"
         assert updated["standard_preis"] == 189.4
+        assert updated["version"] == 2
 
         second_response = client.post(
             API_PREFIX,
@@ -188,8 +191,12 @@ def test_create_update_and_list_lampentypen() -> None:
         list_response = client.get(API_PREFIX, headers=_auth_header())
         assert list_response.status_code == 200
         assert [entry["name"] for entry in list_response.json()] == ["Arbeitsscheinwerfer", "Heckblitzer Plus"]
+        assert [entry["version"] for entry in list_response.json()] == [1, 2]
 
-        delete_response = client.delete(f"{API_PREFIX}/{created['id']}", headers=_auth_header())
+        delete_response = client.delete(
+            f"{API_PREFIX}/{created['id']}?version={updated['version']}",
+            headers=_auth_header(),
+        )
         assert delete_response.status_code == 204
         assert delete_response.content == b""
 
@@ -250,6 +257,7 @@ def test_lampentypen_reject_duplicate_names_and_missing_records() -> None:
         duplicate_update_response = client.patch(
             f"{API_PREFIX}/{second_response.json()['id']}",
             json={
+                "version": second_response.json()["version"],
                 "name": "Frontblitzer",
                 "beschreibung": "Soll auf bestehenden Namen kollidieren.",
                 "icon_url": "https://cdn.example.com/icons/heckblitzer.png",
@@ -263,6 +271,7 @@ def test_lampentypen_reject_duplicate_names_and_missing_records() -> None:
         missing_response = client.patch(
             f"{API_PREFIX}/9999",
             json={
+                "version": 1,
                 "name": "Nicht vorhanden",
                 "beschreibung": "Sollte 404 liefern.",
                 "icon_url": "https://cdn.example.com/icons/missing.png",
@@ -273,7 +282,7 @@ def test_lampentypen_reject_duplicate_names_and_missing_records() -> None:
         assert missing_response.status_code == 404
         assert missing_response.json()["detail"] == "Lampentyp nicht gefunden"
 
-        missing_delete_response = client.delete(f"{API_PREFIX}/9999", headers=_auth_header())
+        missing_delete_response = client.delete(f"{API_PREFIX}/9999?version=1", headers=_auth_header())
         assert missing_delete_response.status_code == 404
         assert missing_delete_response.json()["detail"] == "Lampentyp nicht gefunden"
     finally:
@@ -316,6 +325,92 @@ def test_lampentypen_returns_conflict_when_commit_hits_unique_constraint() -> No
         app.dependency_overrides.clear()
 
 
+def test_lampentypen_return_conflict_for_stale_update_and_delete_versions() -> None:
+    session_local = _session_factory()
+
+    def override_db() -> Generator[Session, None, None]:
+        yield from _override_get_db(session_local)
+
+    app.dependency_overrides[get_db] = override_db
+    client = TestClient(app)
+
+    try:
+        create_response = client.post(
+            API_PREFIX,
+            json={
+                "name": "Arbeitslicht",
+                "beschreibung": "Leistungsstarker Scheinwerfer fuer den Nahbereich.",
+                "icon_url": "https://cdn.example.com/icons/arbeitslicht.png",
+                "standard_preis": 199.9,
+            },
+            headers=_auth_header(),
+        )
+        assert create_response.status_code == 201
+        created = create_response.json()
+
+        first_update_response = client.patch(
+            f"{API_PREFIX}/{created['id']}",
+            json={
+                "version": created["version"],
+                "beschreibung": "Aktualisierte Beschreibung nach erster Aenderung.",
+            },
+            headers=_auth_header(),
+        )
+        assert first_update_response.status_code == 200
+        updated = first_update_response.json()
+        assert updated["version"] == 2
+
+        stale_update_response = client.patch(
+            f"{API_PREFIX}/{created['id']}",
+            json={
+                "version": 1,
+                "name": "Arbeitslicht Alt",
+            },
+            headers=_auth_header(),
+        )
+        assert stale_update_response.status_code == 409
+        assert stale_update_response.json()["detail"] == "Lampentyp wurde zwischenzeitlich geaendert"
+
+        stale_delete_response = client.delete(
+            f"{API_PREFIX}/{created['id']}?version=1",
+            headers=_auth_header(),
+        )
+        assert stale_delete_response.status_code == 409
+        assert stale_delete_response.json()["detail"] == "Lampentyp wurde zwischenzeitlich geaendert"
+
+        delete_response = client.delete(
+            f"{API_PREFIX}/{created['id']}?version={updated['version']}",
+            headers=_auth_header(),
+        )
+        assert delete_response.status_code == 204
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_lampentypen_openapi_documents_versioned_conflict_contract() -> None:
+    client = TestClient(app)
+
+    response = client.get("/openapi.json")
+
+    assert response.status_code == 200
+    openapi = response.json()
+    patch_operation = openapi["paths"]["/api/v1/lampen-typen/{lampentyp_id}"]["patch"]
+    delete_operation = openapi["paths"]["/api/v1/lampen-typen/{lampentyp_id}"]["delete"]
+
+    patch_schema = patch_operation["requestBody"]["content"]["application/json"]["schema"]
+    if "$ref" in patch_schema:
+        schema_name = patch_schema["$ref"].rsplit("/", maxsplit=1)[-1]
+        patch_schema = openapi["components"]["schemas"][schema_name]
+
+    patch_properties = patch_schema["properties"]
+    assert "version" in patch_properties
+    assert patch_operation["responses"]["409"]["description"] == "Conflict"
+
+    delete_parameters = {parameter["name"]: parameter for parameter in delete_operation["parameters"]}
+    assert delete_parameters["version"]["required"] is True
+    assert delete_operation["responses"]["409"]["description"] == "Conflict"
+
+
 def test_lampen_typen_migration_creates_expected_schema(tmp_path: Path) -> None:
     backend_dir = _backend_dir()
     db_path = tmp_path / "lampen_typen.db"
@@ -332,6 +427,7 @@ def test_lampen_typen_migration_creates_expected_schema(tmp_path: Path) -> None:
         "beschreibung",
         "icon_url",
         "standard_preis",
+        "version",
         "angelegt_am",
         "aktualisiert_am",
     }
@@ -339,6 +435,7 @@ def test_lampen_typen_migration_creates_expected_schema(tmp_path: Path) -> None:
     assert columns["beschreibung"]["nullable"] is False
     assert columns["icon_url"]["nullable"] is False
     assert columns["standard_preis"]["nullable"] is False
+    assert columns["version"]["nullable"] is False
     unique_constraints = {
         tuple(constraint["column_names"])
         for constraint in inspector.get_unique_constraints("lampen_typen")

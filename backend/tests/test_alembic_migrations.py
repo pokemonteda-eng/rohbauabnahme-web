@@ -123,6 +123,7 @@ def test_alembic_upgrade_head_matches_expected_schema_details(tmp_path: Path) ->
             "beschreibung",
             "icon_url",
             "standard_preis",
+            "version",
             "angelegt_am",
             "aktualisiert_am",
         },
@@ -185,6 +186,8 @@ def test_alembic_upgrade_head_matches_expected_schema_details(tmp_path: Path) ->
     assert lampentypen_columns["beschreibung"]["nullable"] is False
     assert lampentypen_columns["icon_url"]["nullable"] is False
     assert lampentypen_columns["standard_preis"]["nullable"] is False
+    assert lampentypen_columns["version"]["nullable"] is False
+    assert lampentypen_columns["version"]["default"] is not None
     assert lampentypen_columns["angelegt_am"]["default"] is not None
     assert lampentypen_columns["aktualisiert_am"]["default"] is not None
 

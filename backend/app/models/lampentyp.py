@@ -15,6 +15,7 @@ class Lampentyp(Base):
     beschreibung: Mapped[str] = mapped_column(Text, nullable=False)
     icon_url: Mapped[str] = mapped_column(String(500), nullable=False)
     standard_preis: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1, server_default="1")
     angelegt_am: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
