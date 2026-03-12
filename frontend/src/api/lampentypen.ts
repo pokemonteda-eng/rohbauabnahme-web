@@ -34,6 +34,19 @@ export class LampentypenApiError extends Error {
   }
 }
 
+const FIELD_LABELS: Record<string, string> = {
+  name: "Name",
+  beschreibung: "Beschreibung",
+  icon_url: "Icon-URL",
+  standard_preis: "Standard-Preis",
+  version: "Version"
+};
+
+type ValidationErrorDetail = {
+  loc?: unknown;
+  msg?: unknown;
+};
+
 function getAuthHeaders() {
   const token = getAccessToken();
 
@@ -56,8 +69,8 @@ async function parseApiError(response: Response, fallbackMessage: string) {
 
   try {
     const data: unknown = await response.json();
-    if (data && typeof data === "object" && "detail" in data && typeof data.detail === "string") {
-      detail = data.detail;
+    if (data && typeof data === "object" && "detail" in data) {
+      detail = formatApiDetail((data as { detail: unknown }).detail);
     }
   } catch {
     detail = null;
@@ -112,6 +125,40 @@ async function parseApiError(response: Response, fallbackMessage: string) {
     response.status,
     detail
   );
+}
+
+function formatApiDetail(detail: unknown): string | null {
+  if (typeof detail === "string") {
+    return detail;
+  }
+
+  if (Array.isArray(detail)) {
+    const messages = detail
+      .map((entry) => formatValidationDetail(entry as ValidationErrorDetail))
+      .filter((message): message is string => Boolean(message));
+
+    if (messages.length > 0) {
+      return messages.join(" ");
+    }
+  }
+
+  return null;
+}
+
+function formatValidationDetail(entry: ValidationErrorDetail): string | null {
+  if (typeof entry?.msg !== "string") {
+    return null;
+  }
+
+  const location = Array.isArray(entry.loc)
+    ? entry.loc.findLast((segment): segment is string => typeof segment === "string" && segment in FIELD_LABELS)
+    : null;
+
+  if (!location) {
+    return entry.msg;
+  }
+
+  return `${FIELD_LABELS[location]}: ${entry.msg}`;
 }
 
 async function requestJson<T>(input: RequestInfo | URL, init: RequestInit, fallbackMessage: string): Promise<T> {

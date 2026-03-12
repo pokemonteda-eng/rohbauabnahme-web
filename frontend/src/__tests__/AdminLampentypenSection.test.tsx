@@ -98,6 +98,28 @@ describe("AdminLampentypenSection", () => {
     });
   });
 
+  test("recovers from a load error after reloading the list", async () => {
+    mockListLampentypen
+      .mockRejectedValueOnce(new Error("Admin-Sitzung ist abgelaufen oder ungueltig."))
+      .mockResolvedValueOnce([lampentyp({ id: 2, name: "Frontblitzer" })]);
+
+    render(<AdminLampentypenSection />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Lampentypen konnten nicht geladen werden.")).not.toBeNull();
+      expect(screen.getByText(/abgelaufen oder ungueltig/i)).not.toBeNull();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Liste neu laden" }));
+
+    await waitFor(() => {
+      expect(screen.queryByText("Lampentypen konnten nicht geladen werden.")).toBeNull();
+      expect(screen.getByText("Frontblitzer")).not.toBeNull();
+    });
+
+    expect(mockListLampentypen).toHaveBeenCalledTimes(2);
+  });
+
   test("validates required fields, URL and price before submit", async () => {
     render(<AdminLampentypenSection />);
 
@@ -159,6 +181,54 @@ describe("AdminLampentypenSection", () => {
     });
     expect((screen.getByLabelText("Name") as HTMLInputElement).value).toBe("");
     expect((screen.getByLabelText("Standard-Preis in EUR") as HTMLInputElement).value).toBe("");
+  });
+
+  test("keeps form values after an API error and allows immediate retry", async () => {
+    mockCreateLampentyp
+      .mockRejectedValueOnce(
+        new LampentypenApiError("Lampentyp mit diesem Namen existiert bereits", 409, "Lampentyp mit diesem Namen existiert bereits")
+      )
+      .mockResolvedValueOnce(lampentyp({ id: 9, name: "Frontblitzer", standard_preis: 95 }));
+
+    render(<AdminLampentypenSection />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Es sind noch keine Lampentypen vorhanden.")).not.toBeNull();
+    });
+
+    fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Frontblitzer" } });
+    fireEvent.change(screen.getByLabelText("Beschreibung"), { target: { value: "Schmale Frontwarnleuchte." } });
+    fireEvent.change(screen.getByLabelText("Icon-URL"), {
+      target: { value: "https://cdn.example.com/icons/frontblitzer.png" }
+    });
+    fireEvent.change(screen.getByLabelText("Standard-Preis in EUR"), { target: { value: "95" } });
+    fireEvent.click(screen.getByRole("button", { name: "Lampentyp anlegen" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Aktion fehlgeschlagen.")).not.toBeNull();
+      expect(screen.getByText("Lampentyp mit diesem Namen existiert bereits")).not.toBeNull();
+    });
+
+    expect((screen.getByLabelText("Name") as HTMLInputElement).value).toBe("Frontblitzer");
+
+    fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Frontblitzer Pro" } });
+
+    await waitFor(() => {
+      expect(screen.queryByText("Aktion fehlgeschlagen.")).toBeNull();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Lampentyp anlegen" }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("status").textContent).toContain('Lampentyp "Frontblitzer" wurde angelegt.');
+    });
+
+    expect(mockCreateLampentyp).toHaveBeenLastCalledWith({
+      name: "Frontblitzer Pro",
+      beschreibung: "Schmale Frontwarnleuchte.",
+      icon_url: "https://cdn.example.com/icons/frontblitzer.png",
+      standard_preis: 95
+    });
   });
 
   test("reloads server state after a stale update conflict", async () => {
