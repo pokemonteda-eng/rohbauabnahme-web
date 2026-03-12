@@ -1,4 +1,3 @@
-```
 declare const __API_BASE_URL__: string | undefined;
 
 const API_BASE_URL: string =
@@ -81,4 +80,3 @@ export async function verify(accessToken: string): Promise<VerifyResponse> {
   });
   return handleResponse<VerifyResponse>(response);
 }
-```
