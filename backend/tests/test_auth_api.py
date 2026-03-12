@@ -11,6 +11,10 @@ from app.config import settings
 from app.main import app
 
 API_PREFIX = "/api/v1"
+TEST_USERNAME = "admin"
+TEST_PASSWORD = "admin"
+TEST_PASSWORD_HASH = "$2b$12$C5WmrDo6ftE/lFt/w5klsOdAYeLRamb6Lo4fKi9KXUujXFwN2BB0C"
+TEST_JWT_SECRET = "test-jwt-secret-for-auth-api"
 
 
 def _b64url_encode(raw: bytes) -> str:
@@ -29,17 +33,24 @@ def _sign_test_token(header: object, payload: object) -> str:
     return f"{encoded_header}.{encoded_payload}.{_b64url_encode(signature)}"
 
 
+@pytest.fixture(autouse=True)
+def configure_auth_settings(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(settings, "auth_login_username", TEST_USERNAME)
+    monkeypatch.setattr(settings, "auth_login_password_hash", TEST_PASSWORD_HASH)
+    monkeypatch.setattr(settings, "jwt_secret_key", TEST_JWT_SECRET)
+
+
 def test_login_verify_and_refresh() -> None:
     client = TestClient(app)
 
     login_response = client.post(
         f"{API_PREFIX}/auth/login",
-        json={"username": "admin", "password": "admin"},
+        json={"username": TEST_USERNAME, "password": TEST_PASSWORD},
     )
     assert login_response.status_code == 200
     login_payload = login_response.json()
     assert login_payload["token_type"] == "bearer"
-    assert login_payload["username"] == "admin"
+    assert login_payload["username"] == TEST_USERNAME
     assert login_payload["role"] == "admin"
     assert login_payload["access_token"] != login_payload["refresh_token"]
 
@@ -50,7 +61,7 @@ def test_login_verify_and_refresh() -> None:
     assert verify_response.status_code == 200
     verify_payload = verify_response.json()
     assert verify_payload["authenticated"] is True
-    assert verify_payload["username"] == "admin"
+    assert verify_payload["username"] == TEST_USERNAME
     assert verify_payload["role"] == "admin"
     assert verify_payload["token_type"] == "access"
 
@@ -69,14 +80,14 @@ def test_auth_rejects_invalid_credentials_and_wrong_token_type() -> None:
 
     invalid_login_response = client.post(
         f"{API_PREFIX}/auth/login",
-        json={"username": "admin", "password": "falsch"},
+        json={"username": TEST_USERNAME, "password": "falsch"},
     )
     assert invalid_login_response.status_code == 401
     assert invalid_login_response.json()["detail"] == "Ungueltige Zugangsdaten"
 
     login_response = client.post(
         f"{API_PREFIX}/auth/login",
-        json={"username": "admin", "password": "admin"},
+        json={"username": TEST_USERNAME, "password": TEST_PASSWORD},
     )
     assert login_response.status_code == 200
 
@@ -118,7 +129,7 @@ def test_verify_password_prefers_bcrypt_for_bcrypt_hashes(monkeypatch: pytest.Mo
 
     monkeypatch.setattr(auth_module.crypt, "crypt", fail_crypt)
 
-    assert auth_module.verify_password("admin", password_hash) is True
+    assert auth_module.verify_password(TEST_PASSWORD, password_hash) is True
 
 
 def test_login_rejects_invalid_bcrypt_hash_configuration(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -127,7 +138,23 @@ def test_login_rejects_invalid_bcrypt_hash_configuration(monkeypatch: pytest.Mon
 
     response = client.post(
         f"{API_PREFIX}/auth/login",
-        json={"username": "admin", "password": "admin"},
+        json={"username": TEST_USERNAME, "password": TEST_PASSWORD},
+    )
+
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Ungueltige Zugangsdaten"
+
+
+def test_login_rejects_when_admin_credentials_are_not_configured(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    client = TestClient(app)
+    monkeypatch.setattr(settings, "auth_login_username", None)
+    monkeypatch.setattr(settings, "auth_login_password_hash", None)
+
+    response = client.post(
+        f"{API_PREFIX}/auth/login",
+        json={"username": TEST_USERNAME, "password": TEST_PASSWORD},
     )
 
     assert response.status_code == 401

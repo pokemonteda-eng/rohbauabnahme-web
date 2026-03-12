@@ -48,10 +48,16 @@ def verify_password(password: str, password_hash: str) -> bool:
 
 
 def authenticate_configured_user(username: str, password: str) -> dict[str, str] | None:
-    if username != settings.auth_login_username:
+    configured_username = settings.auth_login_username
+    configured_password_hash = settings.auth_login_password_hash
+
+    if not configured_username or not configured_password_hash:
         return None
 
-    if not verify_password(password, settings.auth_login_password_hash):
+    if username != configured_username:
+        return None
+
+    if not verify_password(password, configured_password_hash):
         return None
 
     return {"sub": username, "role": "admin"}

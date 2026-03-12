@@ -1,3 +1,5 @@
+from secrets import token_urlsafe
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -5,9 +7,9 @@ class Settings(BaseSettings):
     app_name: str = "Rohbauabnahme Web API"
     app_version: str = "0.1.0"
     api_v1_prefix: str = "/api/v1"
-    auth_login_username: str = "admin"
-    auth_login_password_hash: str = "$2b$12$C5WmrDo6ftE/lFt/w5klsOdAYeLRamb6Lo4fKi9KXUujXFwN2BB0C"
-    jwt_secret_key: str = "change-me-dev-jwt-secret"
+    auth_login_username: str | None = None
+    auth_login_password_hash: str | None = None
+    jwt_secret_key: str = token_urlsafe(32)
     jwt_access_token_expire_minutes: int = 15
     jwt_refresh_token_expire_minutes: int = 60 * 24 * 7
 
