@@ -15,7 +15,8 @@ export const secureStorage = {
 
     try {
       const bytes = CryptoJS.AES.decrypt(encryptedValue, SECRET_KEY);
-      return bytes.toString(CryptoJS.enc.Utf8);
+      const decryptedValue = bytes.toString(CryptoJS.enc.Utf8);
+      return decryptedValue;
     } catch (error) {
       console.error('Decryption failed:', error);
       return null;

@@ -1,3 +1,4 @@
+```
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -57,3 +58,4 @@ export const useAuth = (): AuthContextType => {
   }
   return context;
 };
+```

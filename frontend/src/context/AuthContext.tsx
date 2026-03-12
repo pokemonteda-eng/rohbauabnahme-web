@@ -1,3 +1,4 @@
+```
 import React, {
   createContext,
   useContext,
@@ -203,7 +204,7 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
       }
     };
 
-    verifyToken();
+    void verifyToken();
   }, [refreshToken]);
 
   // Auto-refresh token before expiry
@@ -212,7 +213,7 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
 
     const interval = setInterval(() => {
       if (isTokenNearExpiry()) {
-        refreshToken();
+        void refreshToken();
       }
     }, 60000); // Check every minute
 
@@ -241,3 +242,4 @@ export function useAuth(): AuthContextType {
   }
   return context;
 }
+```
