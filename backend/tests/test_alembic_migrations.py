@@ -53,6 +53,7 @@ def test_alembic_upgrade_head_creates_all_expected_tables(tmp_path: Path) -> Non
     expected_tables = {
         "alembic_version",
         "kunden",
+        "lampen_typen",
         "protokolle",
         "lackierungsdaten",
         "protokoll_kopfdaten",
@@ -116,6 +117,16 @@ def test_alembic_upgrade_head_matches_expected_schema_details(tmp_path: Path) ->
             "erstellt_am",
             "aktualisiert_am",
         },
+        "lampen_typen": {
+            "id",
+            "name",
+            "beschreibung",
+            "icon_url",
+            "standard_preis",
+            "version",
+            "angelegt_am",
+            "aktualisiert_am",
+        },
         "technische_aenderungen": {
             "id",
             "protokoll_id",
@@ -170,6 +181,16 @@ def test_alembic_upgrade_head_matches_expected_schema_details(tmp_path: Path) ->
     assert lackierungs_columns["erstellt_am"]["default"] is not None
     assert lackierungs_columns["aktualisiert_am"]["default"] is not None
 
+    lampentypen_columns = {column["name"]: column for column in inspector.get_columns("lampen_typen")}
+    assert lampentypen_columns["name"]["nullable"] is False
+    assert lampentypen_columns["beschreibung"]["nullable"] is False
+    assert lampentypen_columns["icon_url"]["nullable"] is False
+    assert lampentypen_columns["standard_preis"]["nullable"] is False
+    assert lampentypen_columns["version"]["nullable"] is False
+    assert lampentypen_columns["version"]["default"] is not None
+    assert lampentypen_columns["angelegt_am"]["default"] is not None
+    assert lampentypen_columns["aktualisiert_am"]["default"] is not None
+
     technische_columns = {
         column["name"]: column for column in inspector.get_columns("technische_aenderungen")
     }
@@ -208,6 +229,13 @@ def test_alembic_upgrade_head_matches_expected_schema_details(tmp_path: Path) ->
         if constraint.get("column_names")
     }
     assert ("protokoll_id",) in kopfdaten_unique_constraints
+
+    lampentypen_unique_constraints = {
+        tuple(constraint["column_names"])
+        for constraint in inspector.get_unique_constraints("lampen_typen")
+        if constraint.get("column_names")
+    }
+    assert ("name",) in lampentypen_unique_constraints
 
     technische_unique_constraints = {
         tuple(constraint["column_names"])
