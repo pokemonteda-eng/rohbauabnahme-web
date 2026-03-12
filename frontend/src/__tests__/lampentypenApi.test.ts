@@ -1,4 +1,4 @@
-import { clearAccessToken, setAccessToken } from "@/lib/auth";
+import { logout, persistAuthSession } from "@/lib/auth";
 import { createLampentyp, LampentypenApiError } from "@/api/lampentypen";
 
 describe("lampentypen api", () => {
@@ -14,11 +14,19 @@ describe("lampentypen api", () => {
 
   beforeEach(() => {
     window.localStorage.clear();
-    setAccessToken("test-admin-token");
+    persistAuthSession({
+      username: "admin",
+      role: "admin",
+      accessToken: "test-admin-token",
+      refreshToken: "test-refresh-token",
+      tokenType: "bearer",
+      accessTokenExpiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+      refreshTokenExpiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+    });
   });
 
   afterEach(() => {
-    clearAccessToken();
+    logout();
 
     if (originalFetch == null) {
       delete (global as { fetch?: typeof fetch }).fetch;
@@ -88,7 +96,7 @@ describe("lampentypen api", () => {
   });
 
   test("fails early when the admin token is missing", async () => {
-    clearAccessToken();
+    logout();
 
     await expect(
       createLampentyp({

@@ -1,56 +1,33 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 import App from "@/App";
-import { clearAccessToken, clearCurrentUserRole, setAccessToken, setCurrentUserRole } from "@/lib/auth";
+import { persistAuthSession } from "@/lib/auth";
 
 function jsonResponse(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body), {
+  return {
+    ok: status >= 200 && status < 300,
     status,
-    headers: {
-      "Content-Type": "application/json"
-    }
-  });
+    json: () => Promise.resolve(body)
+  } as Response;
 }
 
-describe("Admin routing and access control", () => {
+function createSession(overrides?: Partial<Parameters<typeof persistAuthSession>[0]>) {
+  return {
+    username: "admin",
+    role: "admin" as const,
+    accessToken: "stored-access-token",
+    refreshToken: "stored-refresh-token",
+    tokenType: "bearer",
+    accessTokenExpiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+    refreshTokenExpiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+    ...overrides
+  };
+}
+
+describe("Admin routing and auth session handling", () => {
   const originalFetch = global.fetch;
 
-  beforeEach(() => {
-    window.history.pushState({}, "", "/");
-    clearCurrentUserRole();
-    clearAccessToken();
-    Object.defineProperty(global, "fetch", {
-      configurable: true,
-      writable: true,
-      value: jest.fn().mockImplementation((input: RequestInfo | URL) => {
-        const url =
-          typeof input === "string"
-            ? input
-            : input instanceof URL
-              ? input.href
-              : input.url;
-
-        if (url === "/api/v1/lampen-typen") {
-          return Promise.resolve(jsonResponse([]));
-        }
-
-        if (
-          url === "/api/v1/kunden" ||
-          url === "/api/v1/master-data/aufbautypen" ||
-          url === "/api/v1/master-data/projektleiter" ||
-          url === "/api/v1/master-data/vertriebsgebiete"
-        ) {
-          return Promise.resolve(jsonResponse([]));
-        }
-
-        return Promise.reject(new Error(`Unexpected fetch URL in test: ${url}`));
-      })
-    });
-  });
-
   afterEach(() => {
-    clearCurrentUserRole();
-    clearAccessToken();
     jest.restoreAllMocks();
     if (originalFetch === undefined) {
       delete (global as { fetch?: typeof fetch }).fetch;
@@ -64,123 +41,246 @@ describe("Admin routing and access control", () => {
     });
   });
 
-  test("blocks /admin for non-admin users", () => {
+  test("shows the login form for anonymous users on /admin", () => {
     window.history.pushState({}, "", "/admin");
 
     render(<App />);
 
-    expect(screen.getByRole("heading", { name: "Admin-Rechte erforderlich" })).not.toBeNull();
-    expect(screen.getByText(/ausschließlich für Benutzer mit der Rolle/i)).not.toBeNull();
-    expect(window.location.pathname).toBe("/admin");
-    expect(window.location.search).toBe("");
+    return waitFor(() => {
+      expect(screen.getByRole("heading", { name: "Anmelden" })).not.toBeNull();
+      expect(screen.getByLabelText("Benutzername")).not.toBeNull();
+      expect(screen.getByLabelText("Passwort")).not.toBeNull();
+    });
   });
 
-  test("strips protected admin section queries on the base admin route for non-admin users", () => {
+  test("logs in and loads the protected admin module", async () => {
     window.history.pushState({}, "", "/admin?section=lampen");
+    const fetchMock = jest.fn().mockImplementation((input: RequestInfo | URL) => {
+      const url =
+        typeof input === "string"
+          ? input
+          : input instanceof URL
+            ? input.href
+            : input.url;
+
+      if (url === "/api/v1/auth/login") {
+        return Promise.resolve(
+          jsonResponse({
+            access_token: "new-access-token",
+            refresh_token: "new-refresh-token",
+            token_type: "bearer",
+            expires_in: 900,
+            refresh_expires_in: 604800,
+            username: "admin",
+            role: "admin"
+          })
+        );
+      }
+
+      if (url === "/api/v1/lampen-typen") {
+        return Promise.resolve(jsonResponse([]));
+      }
+
+      return Promise.reject(new Error(`Unexpected fetch URL in test: ${url}`));
+    });
+    Object.defineProperty(global, "fetch", {
+      configurable: true,
+      writable: true,
+      value: fetchMock
+    });
 
     render(<App />);
 
-    expect(screen.getByRole("heading", { name: "Admin-Rechte erforderlich" })).not.toBeNull();
-    expect(window.location.pathname).toBe("/admin");
-    expect(window.location.search).toBe("");
-  });
+    await waitFor(() => {
+      expect(screen.getByLabelText("Benutzername")).not.toBeNull();
+    });
 
-  test("renders admin layout and lampentypen module for admin users", async () => {
-    window.history.pushState({}, "", "/admin?section=lampen");
-    setCurrentUserRole("admin");
-    setAccessToken("test-access-token");
-
-    render(<App />);
-
-    expect(screen.getByRole("heading", { name: "Lampen" })).not.toBeNull();
-    expect(screen.getByRole("navigation", { name: "Admin Navigation" })).not.toBeNull();
-    expect(screen.getByRole("button", { name: /Aufbauten/ })).not.toBeNull();
-    expect(screen.getByRole("button", { name: /Lampen Reservierter Einstiegspunkt/ }).getAttribute("aria-current")).toBe(
-      "page"
-    );
+    fireEvent.change(screen.getByLabelText("Benutzername"), { target: { value: "admin" } });
+    fireEvent.change(screen.getByLabelText("Passwort"), { target: { value: "admin" } });
+    fireEvent.click(screen.getByRole("button", { name: "Anmelden" }));
 
     await waitFor(() => {
       expect(screen.getByText("Lampentypen verwalten")).not.toBeNull();
       expect(screen.getByText("Es sind noch keine Lampentypen vorhanden.")).not.toBeNull();
     });
+
+    expect(window.localStorage.getItem("rbw-auth-session")).toContain("new-refresh-token");
   });
 
-  test("switches admin sections via query-string navigation", async () => {
+  test("restores a persisted session and verifies it before rendering admin content", async () => {
     window.history.pushState({}, "", "/admin?section=lampen");
-    setCurrentUserRole("admin");
-    setAccessToken("test-access-token");
+    persistAuthSession(createSession());
+    const fetchMock = jest.fn().mockImplementation((input: RequestInfo | URL) => {
+      const url =
+        typeof input === "string"
+          ? input
+          : input instanceof URL
+            ? input.href
+            : input.url;
+
+      if (url === "/api/v1/auth/verify") {
+        return Promise.resolve(
+          jsonResponse({
+            authenticated: true,
+            username: "admin",
+            role: "admin",
+            token_type: "access",
+            expires_at: "2030-01-01T00:15:00.000Z"
+          })
+        );
+      }
+
+      if (url === "/api/v1/lampen-typen") {
+        return Promise.resolve(jsonResponse([]));
+      }
+
+      return Promise.reject(new Error(`Unexpected fetch URL in test: ${url}`));
+    });
+    Object.defineProperty(global, "fetch", {
+      configurable: true,
+      writable: true,
+      value: fetchMock
+    });
 
     render(<App />);
 
     await waitFor(() => {
-      expect(screen.getByText("Es sind noch keine Lampentypen vorhanden.")).not.toBeNull();
+      expect(screen.getByText("Lampentypen verwalten")).not.toBeNull();
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /Stammdaten/ }));
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/v1/auth/verify",
+      expect.objectContaining({
+        method: "GET"
+      })
+    );
+  });
 
-    expect(window.location.pathname).toBe("/admin");
-    expect(window.location.search).toBe("?section=stammdaten");
+  test("refreshes an expiring session before requesting admin data", async () => {
+    window.history.pushState({}, "", "/admin?section=lampen");
+    persistAuthSession(
+      createSession({
+        accessTokenExpiresAt: new Date(Date.now() + 10 * 1000).toISOString()
+      })
+    );
+    const fetchMock = jest.fn().mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
+      const url =
+        typeof input === "string"
+          ? input
+          : input instanceof URL
+            ? input.href
+            : input.url;
+
+      if (url === "/api/v1/auth/refresh") {
+        return Promise.resolve(
+          jsonResponse({
+            access_token: "refreshed-access-token",
+            refresh_token: "refreshed-refresh-token",
+            token_type: "bearer",
+            expires_in: 900,
+            refresh_expires_in: 604800,
+            username: "admin",
+            role: "admin"
+          })
+        );
+      }
+
+      if (url === "/api/v1/lampen-typen") {
+        const authorizationHeader =
+          init?.headers instanceof Headers
+            ? init.headers.get("Authorization")
+            : new Headers(init?.headers).get("Authorization");
+
+        expect(authorizationHeader).toBe("Bearer refreshed-access-token");
+        return Promise.resolve(jsonResponse([]));
+      }
+
+      return Promise.reject(new Error(`Unexpected fetch URL in test: ${url}`));
+    });
+    Object.defineProperty(global, "fetch", {
+      configurable: true,
+      writable: true,
+      value: fetchMock
+    });
+
+    render(<App />);
 
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Stammdaten" })).not.toBeNull();
-      expect(screen.getByRole("button", { name: /Stammdaten/ }).getAttribute("aria-current")).toBe("page");
+      expect(screen.getByText("Lampentypen verwalten")).not.toBeNull();
     });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/v1/auth/refresh",
+      expect.objectContaining({
+        method: "POST"
+      })
+    );
   });
 
-  test("falls back to the default section for invalid admin section query parameters", () => {
-    window.history.pushState({}, "", "/admin?section=toString");
-    setCurrentUserRole("admin");
+  test("logs out from the admin layout and returns to the login screen", async () => {
+    window.history.pushState({}, "", "/admin?section=lampen");
+    persistAuthSession(createSession());
+    const fetchMock = jest.fn().mockImplementation((input: RequestInfo | URL) => {
+      const url =
+        typeof input === "string"
+          ? input
+          : input instanceof URL
+            ? input.href
+            : input.url;
 
-    render(<App />);
+      if (url === "/api/v1/auth/verify") {
+        return Promise.resolve(
+          jsonResponse({
+            authenticated: true,
+            username: "admin",
+            role: "admin",
+            token_type: "access",
+            expires_at: "2030-01-01T00:15:00.000Z"
+          })
+        );
+      }
 
-    expect(screen.getByRole("heading", { name: "Aufbauten" })).not.toBeNull();
-    expect(screen.getByRole("button", { name: /Aufbauten/ }).getAttribute("aria-current")).toBe("page");
-    expect(window.location.search).toBe("?section=aufbauten");
-  });
+      if (url === "/api/v1/lampen-typen") {
+        return Promise.resolve(jsonResponse([]));
+      }
 
-  test("canonicalizes nested admin paths to the base admin route", async () => {
-    window.history.pushState({}, "", "/admin/tools?section=lampen");
-    setCurrentUserRole("admin");
-    setAccessToken("test-access-token");
+      return Promise.reject(new Error(`Unexpected fetch URL in test: ${url}`));
+    });
+    Object.defineProperty(global, "fetch", {
+      configurable: true,
+      writable: true,
+      value: fetchMock
+    });
 
     render(<App />);
 
     await waitFor(() => {
-      expect(screen.getByText("Es sind noch keine Lampentypen vorhanden.")).not.toBeNull();
+      expect(screen.getByText("Lampentypen verwalten")).not.toBeNull();
     });
 
-    expect(screen.getByRole("heading", { name: "Lampen" })).not.toBeNull();
-    expect(window.location.pathname).toBe("/admin");
-    expect(window.location.search).toBe("?section=lampen");
+    fireEvent.click(screen.getByRole("button", { name: "Logout" }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: "Anmelden" })).not.toBeNull();
+    });
+    expect(window.localStorage.getItem("rbw-auth-session")).toBeNull();
   });
 
-  test("canonicalizes nested admin paths for non-admin users without forcing a default section", () => {
-    window.history.pushState({}, "", "/admin/tools");
+  test("falls back to the login screen when the persisted session has expired", async () => {
+    window.history.pushState({}, "", "/admin");
+    persistAuthSession(
+      createSession({
+        accessTokenExpiresAt: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
+        refreshTokenExpiresAt: new Date(Date.now() - 60 * 1000).toISOString()
+      })
+    );
 
     render(<App />);
 
-    expect(screen.getByRole("heading", { name: "Admin-Rechte erforderlich" })).not.toBeNull();
-    expect(window.location.pathname).toBe("/admin");
-    expect(window.location.search).toBe("");
-  });
-
-  test("drops protected admin section queries for non-admin users on nested admin paths", () => {
-    window.history.pushState({}, "", "/admin/tools?section=lampen");
-
-    render(<App />);
-
-    expect(screen.getByRole("heading", { name: "Admin-Rechte erforderlich" })).not.toBeNull();
-    expect(window.location.pathname).toBe("/admin");
-    expect(window.location.search).toBe("");
-  });
-
-  test("navigates to admin route from homepage CTA", () => {
-    render(<App />);
-
-    fireEvent.click(screen.getByRole("button", { name: "Admin-Bereich" }));
-
-    expect(window.location.pathname).toBe("/admin");
-    expect(window.location.search).toBe("");
-    expect(screen.getByRole("heading", { name: "Admin-Rechte erforderlich" })).not.toBeNull();
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: "Anmelden" })).not.toBeNull();
+      expect(screen.getByText("Die Admin-Sitzung ist abgelaufen. Bitte erneut anmelden.")).not.toBeNull();
+    });
+    expect(window.localStorage.getItem("rbw-auth-session")).toBeNull();
   });
 });

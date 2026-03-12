@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import type { UserRole } from "@/lib/auth";
 import { type AdminSection, getAdminSectionHref } from "@/lib/admin";
 import { navigateTo } from "@/lib/navigation";
 
@@ -13,6 +14,9 @@ type AdminLayoutProps = {
   activeSection: AdminSection;
   currentSection: AdminNavigationItem;
   navigationItems: AdminNavigationItem[];
+  username: string;
+  role: UserRole;
+  onLogout: () => void;
   children: ReactNode;
 };
 
@@ -20,6 +24,9 @@ export function AdminLayout({
   activeSection,
   currentSection,
   navigationItems,
+  username,
+  role,
+  onLogout,
   children
 }: AdminLayoutProps) {
   return (
@@ -36,6 +43,11 @@ export function AdminLayout({
                 <p className="mt-2 text-sm leading-6 text-stone-400">
                   Geschützter Bereich für Stammdaten und spätere Verwaltungs-Module.
                 </p>
+              </div>
+              <div className="rounded-2xl border border-stone-800 bg-stone-950/70 p-4">
+                <p className="text-xs uppercase tracking-[0.22em] text-stone-500">Sitzung</p>
+                <p className="mt-2 text-sm font-semibold text-white">{username}</p>
+                <p className="mt-1 text-sm text-stone-400">{role}</p>
               </div>
             </div>
             <nav aria-label="Admin Navigation">
@@ -84,6 +96,13 @@ export function AdminLayout({
                   className="inline-flex items-center justify-center rounded-full border border-stone-700 px-4 py-2 text-sm font-medium text-stone-200 transition hover:border-stone-500 hover:text-white"
                 >
                   Zur Protokollansicht
+                </button>
+                <button
+                  type="button"
+                  onClick={onLogout}
+                  className="inline-flex items-center justify-center rounded-full border border-amber-400/30 bg-amber-300/10 px-4 py-2 text-sm font-medium text-amber-100 transition hover:border-amber-300/50 hover:text-white"
+                >
+                  Logout
                 </button>
               </div>
             </div>

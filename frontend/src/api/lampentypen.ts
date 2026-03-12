@@ -1,4 +1,4 @@
-import { getAccessToken } from "@/lib/auth";
+import { AuthSessionError, fetchWithAuth } from "@/lib/auth";
 
 export type Lampentyp = {
   id: number;
@@ -53,23 +53,6 @@ function isFieldLabelKey(value: string): value is keyof typeof FIELD_LABELS {
 
 function isValidationErrorDetail(value: unknown): value is ValidationErrorDetail {
   return typeof value === "object" && value !== null;
-}
-
-function getAuthHeaders() {
-  const token = getAccessToken();
-
-  if (!token) {
-    throw new LampentypenApiError(
-      "Admin-Sitzung fehlt. Bitte erneut anmelden, bevor du Lampentypen verwaltest.",
-      401,
-      "Authentifizierung erforderlich"
-    );
-  }
-
-  return {
-    Accept: "application/json",
-    Authorization: `Bearer ${token}`
-  };
 }
 
 async function parseApiError(response: Response, fallbackMessage: string) {
@@ -179,8 +162,12 @@ async function requestJson<T>(input: RequestInfo | URL, init: RequestInit, fallb
   let response: Response;
 
   try {
-    response = await fetch(input, init);
-  } catch {
+    response = await fetchWithAuth(input, init);
+  } catch (error) {
+    if (error instanceof AuthSessionError) {
+      throw new LampentypenApiError(error.message, error.status, error.detail);
+    }
+
     throw new LampentypenApiError(
       "Die Lampentypen-API ist momentan nicht erreichbar. Bitte Verbindung pruefen und erneut versuchen.",
       null,
@@ -200,7 +187,6 @@ export async function listLampentypen(signal?: AbortSignal): Promise<Lampentyp[]
     "/api/v1/lampen-typen",
     {
       method: "GET",
-      headers: getAuthHeaders(),
       signal
     },
     "Lampentypen konnten nicht geladen werden."
@@ -213,7 +199,6 @@ export async function createLampentyp(payload: LampentypCreatePayload): Promise<
     {
       method: "POST",
       headers: {
-        ...getAuthHeaders(),
         "Content-Type": "application/json"
       },
       body: JSON.stringify(payload)
@@ -228,7 +213,6 @@ export async function updateLampentyp(lampentypId: number, payload: LampentypUpd
     {
       method: "PATCH",
       headers: {
-        ...getAuthHeaders(),
         "Content-Type": "application/json"
       },
       body: JSON.stringify(payload)
@@ -241,11 +225,14 @@ export async function deleteLampentyp(lampentypId: number, version: number): Pro
   let response: Response;
 
   try {
-    response = await fetch(`/api/v1/lampen-typen/${lampentypId}?version=${version}`, {
+    response = await fetchWithAuth(`/api/v1/lampen-typen/${lampentypId}?version=${version}`, {
       method: "DELETE",
-      headers: getAuthHeaders()
     });
-  } catch {
+  } catch (error) {
+    if (error instanceof AuthSessionError) {
+      throw new LampentypenApiError(error.message, error.status, error.detail);
+    }
+
     throw new LampentypenApiError(
       "Die Lampentypen-API ist momentan nicht erreichbar. Bitte Verbindung pruefen und erneut versuchen.",
       null,
