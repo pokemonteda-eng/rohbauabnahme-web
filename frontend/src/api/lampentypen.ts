@@ -47,6 +47,14 @@ type ValidationErrorDetail = {
   msg?: unknown;
 };
 
+function isFieldLabelKey(value: string): value is keyof typeof FIELD_LABELS {
+  return value in FIELD_LABELS;
+}
+
+function isValidationErrorDetail(value: unknown): value is ValidationErrorDetail {
+  return typeof value === "object" && value !== null;
+}
+
 function getAuthHeaders() {
   const token = getAccessToken();
 
@@ -134,7 +142,7 @@ function formatApiDetail(detail: unknown): string | null {
 
   if (Array.isArray(detail)) {
     const messages = detail
-      .map((entry) => formatValidationDetail(entry as ValidationErrorDetail))
+      .map((entry) => (isValidationErrorDetail(entry) ? formatValidationDetail(entry) : null))
       .filter((message): message is string => Boolean(message));
 
     if (messages.length > 0) {
@@ -150,9 +158,15 @@ function formatValidationDetail(entry: ValidationErrorDetail): string | null {
     return null;
   }
 
-  const location = Array.isArray(entry.loc)
-    ? entry.loc.findLast((segment): segment is string => typeof segment === "string" && segment in FIELD_LABELS)
-    : null;
+  let location: keyof typeof FIELD_LABELS | null = null;
+
+  if (Array.isArray(entry.loc)) {
+    for (const segment of entry.loc) {
+      if (typeof segment === "string" && isFieldLabelKey(segment)) {
+        location = segment;
+      }
+    }
+  }
 
   if (!location) {
     return entry.msg;

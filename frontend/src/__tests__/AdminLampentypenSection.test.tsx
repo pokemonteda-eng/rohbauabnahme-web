@@ -1,10 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
-var mockListLampentypen = jest.fn();
-var mockCreateLampentyp = jest.fn();
-var mockUpdateLampentyp = jest.fn();
-var mockDeleteLampentyp = jest.fn();
-
 jest.mock("@/api/lampentypen", () => {
   class MockLampentypenApiError extends Error {
     status: number | null;
@@ -20,20 +15,26 @@ jest.mock("@/api/lampentypen", () => {
 
   return {
     LampentypenApiError: MockLampentypenApiError,
-    listLampentypen: mockListLampentypen,
-    createLampentyp: mockCreateLampentyp,
-    updateLampentyp: mockUpdateLampentyp,
-    deleteLampentyp: mockDeleteLampentyp
+    listLampentypen: jest.fn(),
+    createLampentyp: jest.fn(),
+    updateLampentyp: jest.fn(),
+    deleteLampentyp: jest.fn()
   };
 });
 
-const { LampentypenApiError } = jest.requireMock("@/api/lampentypen") as {
-  LampentypenApiError: new (message: string, status: number | null, detail?: string | null) => Error;
-};
+import {
+  createLampentyp,
+  deleteLampentyp,
+  LampentypenApiError,
+  listLampentypen,
+  updateLampentyp
+} from "@/api/lampentypen";
+import { AdminLampentypenSection } from "@/components/admin/AdminLampentypenSection";
 
-const { AdminLampentypenSection } = require("@/components/admin/AdminLampentypenSection") as {
-  AdminLampentypenSection: typeof import("@/components/admin/AdminLampentypenSection").AdminLampentypenSection;
-};
+const mockListLampentypen = jest.mocked(listLampentypen);
+const mockCreateLampentyp = jest.mocked(createLampentyp);
+const mockUpdateLampentyp = jest.mocked(updateLampentyp);
+const mockDeleteLampentyp = jest.mocked(deleteLampentyp);
 
 type LampentypApiEntry = {
   id: number;
@@ -179,8 +180,8 @@ describe("AdminLampentypenSection", () => {
       icon_url: "https://cdn.example.com/icons/frontblitzer.png",
       standard_preis: 88.5
     });
-    expect((screen.getByLabelText("Name") as HTMLInputElement).value).toBe("");
-    expect((screen.getByLabelText("Standard-Preis in EUR") as HTMLInputElement).value).toBe("");
+    expect(screen.getByLabelText("Name").value).toBe("");
+    expect(screen.getByLabelText("Standard-Preis in EUR").value).toBe("");
   });
 
   test("keeps form values after an API error and allows immediate retry", async () => {
@@ -209,7 +210,7 @@ describe("AdminLampentypenSection", () => {
       expect(screen.getByText("Lampentyp mit diesem Namen existiert bereits")).not.toBeNull();
     });
 
-    expect((screen.getByLabelText("Name") as HTMLInputElement).value).toBe("Frontblitzer");
+    expect(screen.getByLabelText("Name").value).toBe("Frontblitzer");
 
     fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Frontblitzer Pro" } });
 
@@ -272,7 +273,7 @@ describe("AdminLampentypenSection", () => {
       icon_url: "https://cdn.example.com/icons/heckblitzer.png",
       standard_preis: 149.9
     });
-    expect((screen.getByLabelText("Name") as HTMLInputElement).value).toBe("Heckblitzer Plus");
+    expect(screen.getByLabelText("Name").value).toBe("Heckblitzer Plus");
   });
 
   test("recovers from a delete conflict by reloading the list", async () => {
