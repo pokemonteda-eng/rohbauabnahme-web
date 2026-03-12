@@ -1,7 +1,16 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 import App from "@/App";
-import { clearCurrentUserRole, setCurrentUserRole } from "@/lib/auth";
+import { clearAccessToken, clearCurrentUserRole, setAccessToken, setCurrentUserRole } from "@/lib/auth";
+
+function jsonResponse(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      "Content-Type": "application/json"
+    }
+  });
+}
 
 describe("Admin routing and access control", () => {
   const originalFetch = global.fetch;
@@ -9,6 +18,7 @@ describe("Admin routing and access control", () => {
   beforeEach(() => {
     window.history.pushState({}, "", "/");
     clearCurrentUserRole();
+    clearAccessToken();
     Object.defineProperty(global, "fetch", {
       configurable: true,
       writable: true,
@@ -20,16 +30,17 @@ describe("Admin routing and access control", () => {
               ? input.href
               : input.url;
 
+        if (url === "/api/v1/lampen-typen") {
+          return Promise.resolve(jsonResponse([]));
+        }
+
         if (
           url === "/api/v1/kunden" ||
           url === "/api/v1/master-data/aufbautypen" ||
           url === "/api/v1/master-data/projektleiter" ||
           url === "/api/v1/master-data/vertriebsgebiete"
         ) {
-          return Promise.resolve({
-            ok: true,
-            json: () => Promise.resolve([])
-          } as Response);
+          return Promise.resolve(jsonResponse([]));
         }
 
         return Promise.reject(new Error(`Unexpected fetch URL in test: ${url}`));
@@ -39,6 +50,7 @@ describe("Admin routing and access control", () => {
 
   afterEach(() => {
     clearCurrentUserRole();
+    clearAccessToken();
     jest.restoreAllMocks();
     if (originalFetch === undefined) {
       delete (global as { fetch?: typeof fetch }).fetch;
@@ -73,24 +85,36 @@ describe("Admin routing and access control", () => {
     expect(window.location.search).toBe("");
   });
 
-  test("renders admin layout and navigation for admin users", () => {
+  test("renders admin layout and lampentypen module for admin users", async () => {
     window.history.pushState({}, "", "/admin?section=lampen");
     setCurrentUserRole("admin");
+    setAccessToken("test-access-token");
 
     render(<App />);
 
     expect(screen.getByRole("heading", { name: "Lampen" })).not.toBeNull();
     expect(screen.getByRole("navigation", { name: "Admin Navigation" })).not.toBeNull();
     expect(screen.getByRole("button", { name: /Aufbauten/ })).not.toBeNull();
-    expect(screen.getByRole("button", { name: /Lampen/ }).getAttribute("aria-current")).toBe("page");
-    expect(screen.getByText("nur `admin`")).not.toBeNull();
+    expect(screen.getByRole("button", { name: /Lampen Reservierter Einstiegspunkt/ }).getAttribute("aria-current")).toBe(
+      "page"
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Lampentypen verwalten")).not.toBeNull();
+      expect(screen.getByText("Es sind noch keine Lampentypen vorhanden.")).not.toBeNull();
+    });
   });
 
   test("switches admin sections via query-string navigation", async () => {
     window.history.pushState({}, "", "/admin?section=lampen");
     setCurrentUserRole("admin");
+    setAccessToken("test-access-token");
 
     render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Es sind noch keine Lampentypen vorhanden.")).not.toBeNull();
+    });
 
     fireEvent.click(screen.getByRole("button", { name: /Stammdaten/ }));
 
@@ -114,11 +138,16 @@ describe("Admin routing and access control", () => {
     expect(window.location.search).toBe("?section=aufbauten");
   });
 
-  test("canonicalizes nested admin paths to the base admin route", () => {
+  test("canonicalizes nested admin paths to the base admin route", async () => {
     window.history.pushState({}, "", "/admin/tools?section=lampen");
     setCurrentUserRole("admin");
+    setAccessToken("test-access-token");
 
     render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Es sind noch keine Lampentypen vorhanden.")).not.toBeNull();
+    });
 
     expect(screen.getByRole("heading", { name: "Lampen" })).not.toBeNull();
     expect(window.location.pathname).toBe("/admin");
