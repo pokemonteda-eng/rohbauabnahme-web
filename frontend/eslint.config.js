@@ -6,7 +6,7 @@ import tseslint from "typescript-eslint";
 
 export default tseslint.config(
   {
-    ignores: ["dist"]
+    ignores: ["coverage", "dist"]
   },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommendedTypeChecked],
@@ -15,7 +15,11 @@ export default tseslint.config(
       ecmaVersion: 2020,
       globals: globals.browser,
       parserOptions: {
-        project: ["./tsconfig.app.json", "./tsconfig.node.json"],
+        project: [
+          "./tsconfig.app.json",
+          "./tsconfig.node.json",
+          "./tsconfig.test.json"
+        ],
         tsconfigRootDir: import.meta.dirname
       }
     },
