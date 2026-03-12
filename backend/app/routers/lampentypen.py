@@ -4,6 +4,7 @@ from decimal import Decimal, InvalidOperation
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.auth import require_admin_access_token
@@ -90,6 +91,17 @@ def _ensure_unique_name(db: Session, name: str, lampentyp_id: int | None = None)
     )
 
 
+def _commit_lampentyp_change(db: Session) -> None:
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Lampentyp mit diesem Namen existiert bereits",
+        ) from None
+
+
 @router.get("", response_model=list[LampentypRead])
 def list_lampentypen(db: Session = Depends(get_db)) -> list[LampentypRead]:
     lampentypen = db.scalars(select(Lampentyp).order_by(Lampentyp.name.asc(), Lampentyp.id.asc())).all()
@@ -107,7 +119,7 @@ def create_lampentyp(payload: LampentypPayload, db: Session = Depends(get_db)) -
         standard_preis=Decimal(str(normalized.standard_preis)),
     )
     db.add(lampentyp)
-    db.commit()
+    _commit_lampentyp_change(db)
     db.refresh(lampentyp)
     return _serialize_lampentyp(lampentyp)
 
@@ -128,6 +140,6 @@ def update_lampentyp(
     lampentyp.beschreibung = normalized.beschreibung
     lampentyp.icon_url = normalized.icon_url
     lampentyp.standard_preis = Decimal(str(normalized.standard_preis))
-    db.commit()
+    _commit_lampentyp_change(db)
     db.refresh(lampentyp)
     return _serialize_lampentyp(lampentyp)

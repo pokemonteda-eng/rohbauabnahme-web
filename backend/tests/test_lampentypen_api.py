@@ -9,6 +9,7 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, inspect
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
@@ -97,7 +98,7 @@ def _run_alembic(backend_dir: Path, *args: str, env: dict[str, str] | None = Non
     )
 
 
-def test_lampentyp_mutations_require_admin_authentication() -> None:
+def test_lampentyp_routes_require_admin_authentication() -> None:
     client = TestClient(app)
     payload = {
         "name": "Heckblitzer",
@@ -106,9 +107,20 @@ def test_lampentyp_mutations_require_admin_authentication() -> None:
         "standard_preis": 149.9,
     }
 
+    missing_list_response = client.get(API_PREFIX)
+    assert missing_list_response.status_code == 401
+    assert missing_list_response.json()["detail"] == "Authentifizierung erforderlich"
+
     missing_auth_response = client.post(API_PREFIX, json=payload)
     assert missing_auth_response.status_code == 401
     assert missing_auth_response.json()["detail"] == "Authentifizierung erforderlich"
+
+    forbidden_list_response = client.get(
+        API_PREFIX,
+        headers=_auth_header(role="viewer"),
+    )
+    assert forbidden_list_response.status_code == 403
+    assert forbidden_list_response.json()["detail"] == "Admin-Berechtigung erforderlich"
 
     forbidden_response = client.post(
         API_PREFIX,
@@ -254,6 +266,42 @@ def test_lampentypen_reject_duplicate_names_and_missing_records() -> None:
         assert missing_response.status_code == 404
         assert missing_response.json()["detail"] == "Lampentyp nicht gefunden"
     finally:
+        app.dependency_overrides.clear()
+
+
+def test_lampentypen_returns_conflict_when_commit_hits_unique_constraint() -> None:
+    session_local = _session_factory()
+    db = session_local()
+
+    def override_db() -> Generator[Session, None, None]:
+        try:
+            yield db
+        finally:
+            db.close()
+
+    def failing_commit() -> None:
+        raise IntegrityError("insert into lampen_typen", {}, Exception("duplicate key"))
+
+    app.dependency_overrides[get_db] = override_db
+    original_commit = db.commit
+    db.commit = failing_commit  # type: ignore[method-assign]
+    client = TestClient(app)
+
+    try:
+        response = client.post(
+            API_PREFIX,
+            json={
+                "name": "Frontblitzer",
+                "beschreibung": "Frontwarnleuchte mit schmalem Aufbau.",
+                "icon_url": "https://cdn.example.com/icons/frontblitzer.png",
+                "standard_preis": 79.5,
+            },
+            headers=_auth_header(),
+        )
+        assert response.status_code == 409
+        assert response.json()["detail"] == "Lampentyp mit diesem Namen existiert bereits"
+    finally:
+        db.commit = original_commit  # type: ignore[method-assign]
         app.dependency_overrides.clear()
 
 
