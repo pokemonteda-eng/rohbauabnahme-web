@@ -54,6 +54,22 @@
 ## Tests
 - Frontend-Tests für Lampentypen-Laden, Validierung, Create/Edit, API-Konflikte und Recovery ergänzt
 
+# Ticket TASK-117
+
+## Jest / Stabilitaet
+- Zentrales Jest-Setup `frontend/jest.setup.ts` ergaenzt
+- Browserzustand wird nach jedem Test deterministisch zurueckgesetzt: URL, `localStorage`, `sessionStorage`, Mock- und Timer-Zustand
+- `frontend/jest.config.js` setzt die jsdom-Basis-URL explizit auf `http://localhost/` und bindet das gemeinsame Setup ueber `setupFilesAfterEnv` ein
+
+## Ursachenanalyse
+- Die Admin-Lampentypen-Tests haengen an Browserzustand (`window.location`, `localStorage`, globalen Mocks fuer `fetch`) und asynchronen Effects
+- Vor TASK-117 gab es dafuer kein gemeinsames Jest-Setup; die Isolation hing damit an einzelnen Testdateien und der jeweiligen Ausfuehrungsreihenfolge
+- Das war kein reproduzierbarer Fachfehler im Lampentypen-Code, sondern ein Setup-Risiko fuer flakey Tests bei Suite-Kombinationen und CI-Reihenfolgen
+
+## Testnachweis
+- Lokal stabil: `npm test -- --runInBand --runTestsByPath src/__tests__/AdminLampentypenSection.test.tsx src/__tests__/AdminPage.test.tsx` fuenfmal in Folge gruen
+- CI-nah lokal stabil: `npm run test:coverage -- --runInBand` mit 19/19 Suites und 83/83 Tests gruen
+
 # Ticket TASK-118
 
 ## Auth Backend
