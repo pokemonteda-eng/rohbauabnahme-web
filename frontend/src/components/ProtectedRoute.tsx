@@ -32,7 +32,6 @@ export function ProtectedRoute({
   }
 
   if (!isAuthenticated) {
-    // Navigate to fallback using custom navigation
     window.history.pushState({}, "", fallback);
     window.dispatchEvent(new Event("app:navigate"));
     return (
@@ -42,7 +41,6 @@ export function ProtectedRoute({
     );
   }
 
-  // Check role requirements
   if (requiredRole === "admin" && !isAdminRole(role)) {
     window.history.pushState({}, "", "/");
     window.dispatchEvent(new Event("app:navigate"));

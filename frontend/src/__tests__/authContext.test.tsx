@@ -62,7 +62,6 @@ describe('AuthContext', () => {
       </AuthProvider>
     );
 
-    // First login
     act(() => {
       getByText('Login').click();
     });
@@ -71,7 +70,6 @@ describe('AuthContext', () => {
       expect(getByTestId('user').textContent).toBe('test@example.com');
     });
 
-    // Then logout
     act(() => {
       getByText('Logout').click();
     });
@@ -143,7 +141,6 @@ describe('AuthContext', () => {
       </AuthProvider>
     );
 
-    // First login
     act(() => {
       getByText('Login').click();
     });
@@ -152,7 +149,6 @@ describe('AuthContext', () => {
       expect(getByTestId('user').textContent).toBe('test@example.com');
     });
 
-    // Then logout
     act(() => {
       getByText('Logout').click();
     });
@@ -179,7 +175,7 @@ describe('AuthContext', () => {
     const expiredUser = {
       email: 'expired@example.com',
       token: 'expired-token',
-      expiresAt: Date.now() - 1000 // Already expired
+      expiresAt: Date.now() - 1000
     };
 
     localStorage.setItem('user', JSON.stringify(expiredUser));
