@@ -1,0 +1,95 @@
+import { render, screen, waitFor } from "@testing-library/react";
+
+import App from "@/App";
+import { clearAccessToken, clearCurrentUserRole, setAccessToken, setCurrentUserRole } from "@/lib/auth";
+
+// Mock Auth API
+jest.mock("@/api/auth", () => ({
+  login: jest.fn(),
+  refresh: jest.fn(),
+  verify: jest.fn().mockResolvedValue({
+    authenticated: true,
+    username: "admin",
+    role: "admin",
+    token_type: "access",
+    expires_at: "2024-12-31T23:59:59Z"
+  }),
+  AuthApiError: class AuthApiError extends Error {
+    status: number;
+    constructor(message: string, status: number) {
+      super(message);
+      this.status = status;
+    }
+  }
+}));
+
+function jsonResponse(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      "Content-Type": "application/json"
+    }
+  });
+}
+
+describe("Admin routing and access control", () => {
+  const originalFetch = global.fetch;
+
+  beforeEach(() => {
+    window.history.pushState({}, "", "/");
+    clearCurrentUserRole();
+    clearAccessToken();
+    jest.clearAllMocks();
+    Object.defineProperty(global, "fetch", {
+      configurable: true,
+      writable: true,
+      value: jest.fn().mockImplementation((input: RequestInfo | URL) => {
+        const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+        if (url === "/api/v1/lampen-typen") return Promise.resolve(jsonResponse([]));
+        if (url === "/api/v1/kunden" || url === "/api/v1/master-data/aufbautypen" || 
+            url === "/api/v1/master-data/projektleiter" || url === "/api/v1/master-data/vertriebsgebiete") {
+          return Promise.resolve(jsonResponse([]));
+        }
+        return Promise.reject(new Error(`Unexpected fetch URL: ${url}`));
+      })
+    });
+  });
+
+  afterEach(() => {
+    clearCurrentUserRole();
+    clearAccessToken();
+    jest.restoreAllMocks();
+    Object.defineProperty(global, "fetch", { configurable: true, writable: true, value: originalFetch });
+  });
+
+  test("redirects non-authenticated users from /admin to /login", () => {
+    window.history.pushState({}, "", "/admin");
+    render(<App />);
+    expect(window.location.pathname).toBe("/login");
+  });
+
+  test("redirects non-authenticated users with admin section queries to /login", () => {
+    window.history.pushState({}, "", "/admin?section=lampen");
+    render(<App />);
+    expect(window.location.pathname).toBe("/login");
+  });
+
+  test("renders admin layout for authenticated admin users", async () => {
+    window.history.pushState({}, "", "/admin?section=lampen");
+    setCurrentUserRole("admin");
+    setAccessToken("test-access-token");
+    render(<App />);
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: "Lampen" })).not.toBeNull();
+    });
+    expect(screen.getByRole("navigation", { name: "Admin Navigation" })).not.toBeNull();
+  });
+
+  test("shows login form on /login route", () => {
+    window.history.pushState({}, "", "/login");
+    render(<App />);
+    expect(screen.getByRole("heading", { name: "Anmelden" })).not.toBeNull();
+    expect(screen.getByLabelText("Benutzername")).not.toBeNull();
+    expect(screen.getByLabelText("Passwort")).not.toBeNull();
+  });
+});

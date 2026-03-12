@@ -1,3 +1,4 @@
+```
 declare const __API_BASE_URL__: string | undefined;
 
 const API_BASE_URL: string =
@@ -42,15 +43,15 @@ export class AuthApiError extends Error {
 
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
-    const data = await response.json().catch(() => ({}));
-    const message = data.detail || `HTTP ${response.status}: ${response.statusText}`;
+    const data: { detail?: string } = await response.json().catch(() => ({}));
+    const message: string = data.detail || `HTTP ${response.status}: ${response.statusText}`;
     throw new AuthApiError(message, response.status);
   }
   return response.json() as Promise<T>;
 }
 
 export async function login(credentials: LoginCredentials): Promise<TokenResponse> {
-  const response = await fetch(`${API_BASE_URL}/auth/login`, {
+  const response: Response = await fetch(`${API_BASE_URL}/auth/login`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -61,7 +62,7 @@ export async function login(credentials: LoginCredentials): Promise<TokenRespons
 }
 
 export async function refresh(refreshToken: string): Promise<TokenResponse> {
-  const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+  const response: Response = await fetch(`${API_BASE_URL}/auth/refresh`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -72,7 +73,7 @@ export async function refresh(refreshToken: string): Promise<TokenResponse> {
 }
 
 export async function verify(accessToken: string): Promise<VerifyResponse> {
-  const response = await fetch(`${API_BASE_URL}/auth/verify`, {
+  const response: Response = await fetch(`${API_BASE_URL}/auth/verify`, {
     method: "GET",
     headers: {
       Authorization: `Bearer ${accessToken}`
@@ -80,3 +81,4 @@ export async function verify(accessToken: string): Promise<VerifyResponse> {
   });
   return handleResponse<VerifyResponse>(response);
 }
+```
