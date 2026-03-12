@@ -1,4 +1,5 @@
 import base64
+from datetime import UTC, datetime, timedelta
 import hashlib
 import hmac
 import importlib
@@ -117,6 +118,7 @@ def test_login_verify_and_refresh_with_env_config(monkeypatch: pytest.MonkeyPatc
     assert verify_payload["username"] == TEST_USERNAME
     assert verify_payload["role"] == "admin"
     assert verify_payload["token_type"] == "access"
+    assert datetime.fromisoformat(verify_payload["expires_at"]).tzinfo == UTC
 
     refresh_response = client.post(
         f"{API_PREFIX}/auth/refresh",
@@ -126,6 +128,11 @@ def test_login_verify_and_refresh_with_env_config(monkeypatch: pytest.MonkeyPatc
     refresh_payload = refresh_response.json()
     assert refresh_payload["access_token"] != login_payload["access_token"]
     assert refresh_payload["refresh_token"] != login_payload["refresh_token"]
+    assert refresh_payload["token_type"] == "bearer"
+    assert refresh_payload["username"] == TEST_USERNAME
+    assert refresh_payload["role"] == "admin"
+    assert refresh_payload["expires_in"] == settings.jwt_access_token_expire_minutes * 60
+    assert refresh_payload["refresh_expires_in"] == settings.jwt_refresh_token_expire_minutes * 60
     assert settings.jwt_secret_key == TEST_JWT_SECRET
 
 
@@ -172,6 +179,79 @@ def test_verify_rejects_malformed_token_payload_shape(monkeypatch: pytest.Monkey
     response = client.get(
         f"{API_PREFIX}/auth/verify",
         headers={"Authorization": f"Bearer {malformed_token}"},
+    )
+
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Ungueltiges Zugriffstoken"
+
+
+def test_verify_rejects_expired_access_token(monkeypatch: pytest.MonkeyPatch) -> None:
+    _config_module, settings, _auth_module, app = _load_auth_app(monkeypatch)
+    client = TestClient(app)
+    now = datetime.now(UTC)
+    expired_token = _sign_test_token(
+        header={"alg": "HS256", "typ": "JWT"},
+        payload={
+            "sub": TEST_USERNAME,
+            "role": "admin",
+            "type": "access",
+            "jti": "expired-access-jti",
+            "iat": int((now - timedelta(minutes=2)).timestamp()),
+            "exp": int((now - timedelta(minutes=1)).timestamp()),
+        },
+        jwt_secret_key=settings.jwt_secret_key,
+    )
+
+    response = client.get(
+        f"{API_PREFIX}/auth/verify",
+        headers={"Authorization": f"Bearer {expired_token}"},
+    )
+
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Token abgelaufen"
+
+
+def test_refresh_rejects_token_with_invalid_signature(monkeypatch: pytest.MonkeyPatch) -> None:
+    _config_module, _settings, _auth_module, app = _load_auth_app(monkeypatch)
+    client = TestClient(app)
+    login_response = client.post(
+        f"{API_PREFIX}/auth/login",
+        json={"username": TEST_USERNAME, "password": TEST_PASSWORD},
+    )
+    assert login_response.status_code == 200
+
+    refresh_token = login_response.json()["refresh_token"]
+    invalid_signature_token = f"{refresh_token.rsplit('.', 1)[0]}.invalid-signature"
+
+    response = client.post(
+        f"{API_PREFIX}/auth/refresh",
+        json={"refresh_token": invalid_signature_token},
+    )
+
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Ungueltiges Zugriffstoken"
+
+
+def test_verify_rejects_token_with_invalid_header(monkeypatch: pytest.MonkeyPatch) -> None:
+    _config_module, settings, _auth_module, app = _load_auth_app(monkeypatch)
+    client = TestClient(app)
+    now = datetime.now(UTC)
+    token = _sign_test_token(
+        header={"alg": "HS512", "typ": "JWT"},
+        payload={
+            "sub": TEST_USERNAME,
+            "role": "admin",
+            "type": "access",
+            "jti": "invalid-header-jti",
+            "iat": int(now.timestamp()),
+            "exp": int((now + timedelta(minutes=5)).timestamp()),
+        },
+        jwt_secret_key=settings.jwt_secret_key,
+    )
+
+    response = client.get(
+        f"{API_PREFIX}/auth/verify",
+        headers={"Authorization": f"Bearer {token}"},
     )
 
     assert response.status_code == 401
