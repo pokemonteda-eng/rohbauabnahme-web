@@ -1,6 +1,6 @@
 ```tsx
 import React from 'react';
-import { render, act, waitFor } from '@testing-library/react';
+import { render, act, waitFor, screen } from '@testing-library/react';
 import { AuthProvider, useAuth } from '../contexts/AuthContext';
 import { mockLocalStorage } from '../../test-utils/mockLocalStorage';
 
@@ -116,6 +116,84 @@ describe('AuthContext', () => {
     });
 
     global.fetch = originalFetch;
+  });
+
+  it('should show loading state during login', async () => {
+    const { getByTestId, getByText } = render(
+      <AuthProvider>
+        <TestComponent />
+      </AuthProvider>
+    );
+
+    act(() => {
+      getByText('Login').click();
+    });
+
+    expect(getByTestId('loading').textContent).toBe('Loading');
+
+    await waitFor(() => {
+      expect(getByTestId('loading').textContent).toBe('Not loading');
+    });
+  });
+
+  it('should show loading state during logout', async () => {
+    const { getByTestId, getByText } = render(
+      <AuthProvider>
+        <TestComponent />
+      </AuthProvider>
+    );
+
+    // First login
+    act(() => {
+      getByText('Login').click();
+    });
+
+    await waitFor(() => {
+      expect(getByTestId('user').textContent).toBe('test@example.com');
+    });
+
+    // Then logout
+    act(() => {
+      getByText('Logout').click();
+    });
+
+    expect(getByTestId('loading').textContent).toBe('Loading');
+
+    await waitFor(() => {
+      expect(getByTestId('loading').textContent).toBe('Not loading');
+    });
+  });
+
+  it('should throw error when useAuth is used outside AuthProvider', () => {
+    const TestComponentWithoutProvider = () => {
+      const { user } = useAuth();
+      return <div>{user?.email}</div>;
+    };
+
+    expect(() => render(<TestComponentWithoutProvider />)).toThrow(
+      'useAuth must be used within an AuthProvider'
+    );
+  });
+
+  it('should handle token expiration', async () => {
+    const expiredUser = {
+      email: 'expired@example.com',
+      token: 'expired-token',
+      expiresAt: Date.now() - 1000 // Already expired
+    };
+
+    localStorage.setItem('user', JSON.stringify(expiredUser));
+
+    const { getByTestId } = render(
+      <AuthProvider>
+        <TestComponent />
+      </AuthProvider>
+    );
+
+    await waitFor(() => {
+      expect(getByTestId('user').textContent).toBe('No user');
+      expect(localStorage.getItem('user')).toBeNull();
+    });
   });
 });
 ```

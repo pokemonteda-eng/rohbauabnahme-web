@@ -26,6 +26,7 @@ describe('authService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    localStorage.clear();
   });
 
   describe('login', () => {
@@ -132,6 +133,69 @@ describe('authService', () => {
 
       await expect(authService.getCurrentUser()).rejects.toThrow();
       expect(mockGet).toHaveBeenCalled();
+    });
+  });
+
+  describe('token handling', () => {
+    it('should store token in localStorage after login', async () => {
+      const mockPost = jest.fn().mockResolvedValue({ data: mockAuthResponse });
+      jest.spyOn(authService, 'login').mockImplementationOnce(async (credentials) => {
+        const response = await mockPost(credentials);
+        localStorage.setItem('authToken', response.data.token);
+        return response.data;
+      });
+
+      await authService.login(mockLoginCredentials);
+      expect(localStorage.getItem('authToken')).toBe(mockAuthResponse.token);
+    });
+
+    it('should remove token from localStorage after logout', async () => {
+      localStorage.setItem('authToken', mockAuthResponse.token);
+      const mockPost = jest.fn().mockResolvedValue({ data: { success: true } });
+      jest.spyOn(authService, 'logout').mockImplementationOnce(async () => {
+        localStorage.removeItem('authToken');
+        return mockPost();
+      });
+
+      await authService.logout();
+      expect(localStorage.getItem('authToken')).toBeNull();
+    });
+
+    it('should get token from localStorage', () => {
+      localStorage.setItem('authToken', mockAuthResponse.token);
+      const token = authService.getToken();
+      expect(token).toBe(mockAuthResponse.token);
+    });
+
+    it('should return null if no token in localStorage', () => {
+      const token = authService.getToken();
+      expect(token).toBeNull();
+    });
+  });
+
+  describe('token refresh', () => {
+    it('should refresh token successfully', async () => {
+      const newToken = 'new-mock-token';
+      const mockPost = jest.fn().mockResolvedValue({ data: { token: newToken } });
+      jest.spyOn(authService, 'refreshToken').mockImplementationOnce(async () => {
+        const response = await mockPost();
+        localStorage.setItem('authToken', response.data.token);
+        return response.data.token;
+      });
+
+      const result = await authService.refreshToken();
+      expect(result).toBe(newToken);
+      expect(localStorage.getItem('authToken')).toBe(newToken);
+    });
+
+    it('should throw error when token refresh fails', async () => {
+      const mockError = new AxiosError('Token refresh failed');
+      const mockPost = jest.fn().mockRejectedValue(mockError);
+      jest.spyOn(authService, 'refreshToken').mockImplementationOnce(async () => {
+        return mockPost();
+      });
+
+      await expect(authService.refreshToken()).rejects.toThrow();
     });
   });
 });

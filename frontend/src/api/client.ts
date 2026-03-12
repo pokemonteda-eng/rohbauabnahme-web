@@ -1,24 +1,27 @@
 ```typescript
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 
 class ApiClient {
   private instance: AxiosInstance;
   private token: string | null = null;
+  private refreshTokenPromise: Promise<string> | null = null;
+  private refreshTokenUrl: string;
 
-  constructor(baseURL: string) {
+  constructor(baseURL: string, refreshTokenUrl: string = '/auth/refresh') {
     this.instance = axios.create({
       baseURL,
       headers: {
         'Content-Type': 'application/json',
       },
     });
+    this.refreshTokenUrl = refreshTokenUrl;
 
     this.initializeInterceptors();
   }
 
   private initializeInterceptors(): void {
     this.instance.interceptors.request.use(
-      (config: AxiosRequestConfig) => {
+      (config: InternalAxiosRequestConfig) => {
         if (this.token) {
           config.headers = config.headers || {};
           config.headers.Authorization = `Bearer ${this.token}`;
@@ -32,13 +35,48 @@ class ApiClient {
 
     this.instance.interceptors.response.use(
       (response: AxiosResponse) => response,
-      (error) => {
-        if (error.response && error.response.status === 401) {
+      async (error) => {
+        const originalRequest = error.config;
+
+        if (error.response?.status === 401 && !originalRequest._retry) {
+          if (error.response.data?.message === 'Token expired') {
+            originalRequest._retry = true;
+
+            try {
+              const newToken = await this.refreshToken();
+              this.setToken(newToken);
+              originalRequest.headers.Authorization = `Bearer ${newToken}`;
+              return this.instance(originalRequest);
+            } catch (refreshError) {
+              this.clearToken();
+              return Promise.reject(refreshError);
+            }
+          }
+        }
+
+        if (error.response?.status === 401) {
           this.clearToken();
         }
+
         return Promise.reject(error);
       }
     );
+  }
+
+  private async refreshToken(): Promise<string> {
+    if (!this.refreshTokenPromise) {
+      this.refreshTokenPromise = this.instance.post<{ token: string }>(this.refreshTokenUrl)
+        .then(response => {
+          this.refreshTokenPromise = null;
+          return response.data.token;
+        })
+        .catch(error => {
+          this.refreshTokenPromise = null;
+          throw error;
+        });
+    }
+
+    return this.refreshTokenPromise;
   }
 
   public setToken(token: string): void {

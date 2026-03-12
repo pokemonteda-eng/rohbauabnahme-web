@@ -20,8 +20,6 @@ interface SessionData {
   expiresAt: number;
 }
 
-const ACCESS_TOKEN_KEY = 'access_token';
-const REFRESH_TOKEN_KEY = 'refresh_token';
 const SESSION_STORAGE_KEY = 'auth_session';
 const TOKEN_REFRESH_THRESHOLD = 5 * 60 * 1000; // 5 minutes before expiration
 
@@ -77,8 +75,19 @@ class AuthService {
   private clearSession(): void {
     this.session = null;
     sessionStorage.removeItem(SESSION_STORAGE_KEY);
-    sessionStorage.removeItem(ACCESS_TOKEN_KEY);
-    sessionStorage.removeItem(REFRESH_TOKEN_KEY);
+    // Clear cookies by making a request to the logout endpoint
+    this.performLogoutRequest();
+  }
+
+  private async performLogoutRequest(): Promise<void> {
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+    } catch (error) {
+      console.error('Logout request failed:', error);
+    }
   }
 
   public isAuthenticated(): boolean {
@@ -133,7 +142,6 @@ class AuthService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.session.refreshToken}`,
         },
         credentials: 'include',
       });
