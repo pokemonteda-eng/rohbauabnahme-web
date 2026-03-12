@@ -7,8 +7,8 @@ import sys
 from pathlib import Path
 
 import pytest
-from pydantic import ValidationError
 from fastapi.testclient import TestClient
+from pydantic import ValidationError
 
 API_PREFIX = "/api/v1"
 TEST_USERNAME = "admin"
@@ -17,7 +17,6 @@ TEST_PASSWORD_HASH = "$2b$12$C5WmrDo6ftE/lFt/w5klsOdAYeLRamb6Lo4fKi9KXUujXFwN2BB
 TEST_JWT_SECRET = "test-jwt-secret-for-auth-api"
 BACKEND_ROOT = Path(__file__).resolve().parents[1]
 AUTH_ENV_VARS = (
-    "AUTH_ALLOW_INSECURE_DEV_DEFAULTS",
     "AUTH_LOGIN_USERNAME",
     "AUTH_LOGIN_PASSWORD_HASH",
     "JWT_SECRET_KEY",
@@ -46,15 +45,12 @@ def _load_auth_app(
     username: str | None = TEST_USERNAME,
     password_hash: str | None = TEST_PASSWORD_HASH,
     jwt_secret_key: str | None = TEST_JWT_SECRET,
-    allow_insecure_dev_defaults: bool = False,
-) -> tuple[object, object, object]:
+) -> tuple[object, object, object, object]:
     _ensure_backend_on_syspath()
 
     for env_var in AUTH_ENV_VARS:
         monkeypatch.delenv(env_var, raising=False)
 
-    if allow_insecure_dev_defaults:
-        monkeypatch.setenv("AUTH_ALLOW_INSECURE_DEV_DEFAULTS", "true")
     if username is not None:
         monkeypatch.setenv("AUTH_LOGIN_USERNAME", username)
     if password_hash is not None:
@@ -67,7 +63,7 @@ def _load_auth_app(
     config_module = importlib.import_module("app.config")
     auth_module = importlib.import_module("app.auth")
     main_module = importlib.import_module("app.main")
-    return config_module.settings, auth_module, main_module.app
+    return config_module, config_module.get_settings(), auth_module, main_module.app
 
 
 def _sign_test_token(header: object, payload: object, jwt_secret_key: str) -> str:
@@ -93,14 +89,11 @@ def test_app_start_fails_without_required_auth_env(monkeypatch: pytest.MonkeyPat
     with pytest.raises(ValidationError) as exc_info:
         importlib.import_module("app.main")
 
-    error_message = str(exc_info.value)
-    assert "AUTH_LOGIN_USERNAME" in error_message
-    assert "AUTH_LOGIN_PASSWORD_HASH" in error_message
-    assert "JWT_SECRET_KEY" in error_message
+    assert "AUTH_LOGIN_USERNAME muss gesetzt sein." in str(exc_info.value)
 
 
 def test_login_verify_and_refresh_with_env_config(monkeypatch: pytest.MonkeyPatch) -> None:
-    settings, _auth_module, app = _load_auth_app(monkeypatch)
+    _config_module, settings, _auth_module, app = _load_auth_app(monkeypatch)
     client = TestClient(app)
 
     login_response = client.post(
@@ -133,12 +126,13 @@ def test_login_verify_and_refresh_with_env_config(monkeypatch: pytest.MonkeyPatc
     refresh_payload = refresh_response.json()
     assert refresh_payload["access_token"] != login_payload["access_token"]
     assert refresh_payload["refresh_token"] != login_payload["refresh_token"]
+    assert settings.jwt_secret_key == TEST_JWT_SECRET
 
 
 def test_auth_rejects_invalid_credentials_and_wrong_token_type(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    _settings, _auth_module, app = _load_auth_app(monkeypatch)
+    _config_module, _settings, _auth_module, app = _load_auth_app(monkeypatch)
     client = TestClient(app)
 
     invalid_login_response = client.post(
@@ -167,7 +161,7 @@ def test_auth_rejects_invalid_credentials_and_wrong_token_type(
 
 
 def test_verify_rejects_malformed_token_payload_shape(monkeypatch: pytest.MonkeyPatch) -> None:
-    settings, _auth_module, app = _load_auth_app(monkeypatch)
+    _config_module, settings, _auth_module, app = _load_auth_app(monkeypatch)
     client = TestClient(app)
     malformed_token = _sign_test_token(
         header={"alg": "HS256", "typ": "JWT"},
@@ -185,7 +179,7 @@ def test_verify_rejects_malformed_token_payload_shape(monkeypatch: pytest.Monkey
 
 
 def test_verify_password_prefers_bcrypt_for_bcrypt_hashes(monkeypatch: pytest.MonkeyPatch) -> None:
-    _settings, auth_module, _app = _load_auth_app(monkeypatch)
+    _config_module, _settings, auth_module, _app = _load_auth_app(monkeypatch)
     bcrypt = pytest.importorskip("bcrypt")
 
     password_hash = bcrypt.hashpw(b"admin", bcrypt.gensalt()).decode("utf-8")
@@ -199,7 +193,7 @@ def test_verify_password_prefers_bcrypt_for_bcrypt_hashes(monkeypatch: pytest.Mo
 
 
 def test_login_rejects_invalid_bcrypt_hash_configuration(monkeypatch: pytest.MonkeyPatch) -> None:
-    settings, _auth_module, app = _load_auth_app(monkeypatch)
+    _config_module, settings, _auth_module, app = _load_auth_app(monkeypatch)
     client = TestClient(app)
     monkeypatch.setattr(settings, "auth_login_password_hash", "$2b$12$invalid")
 
@@ -212,8 +206,61 @@ def test_login_rejects_invalid_bcrypt_hash_configuration(monkeypatch: pytest.Mon
     assert response.json()["detail"] == "Ungueltige Zugangsdaten"
 
 
-def test_login_rejects_when_admin_credentials_are_not_configured(
+@pytest.mark.parametrize(
+    ("env_var", "env_value", "expected_message"),
+    [
+        ("AUTH_LOGIN_USERNAME", None, "AUTH_LOGIN_USERNAME muss gesetzt sein."),
+        ("AUTH_LOGIN_USERNAME", "   ", "AUTH_LOGIN_USERNAME darf nicht leer sein."),
+        ("AUTH_LOGIN_PASSWORD_HASH", None, "AUTH_LOGIN_PASSWORD_HASH muss gesetzt sein."),
+        ("AUTH_LOGIN_PASSWORD_HASH", "   ", "AUTH_LOGIN_PASSWORD_HASH darf nicht leer sein."),
+        ("JWT_SECRET_KEY", None, "JWT_SECRET_KEY muss gesetzt sein."),
+        ("JWT_SECRET_KEY", "", "JWT_SECRET_KEY darf nicht leer sein."),
+    ],
+)
+def test_app_start_rejects_missing_or_empty_auth_env_values(
+    monkeypatch: pytest.MonkeyPatch,
+    env_var: str,
+    env_value: str | None,
+    expected_message: str,
+) -> None:
+    _ensure_backend_on_syspath()
+
+    monkeypatch.setenv("AUTH_LOGIN_USERNAME", TEST_USERNAME)
+    monkeypatch.setenv("AUTH_LOGIN_PASSWORD_HASH", TEST_PASSWORD_HASH)
+    monkeypatch.setenv("JWT_SECRET_KEY", TEST_JWT_SECRET)
+
+    if env_value is None:
+        monkeypatch.delenv(env_var, raising=False)
+    else:
+        monkeypatch.setenv(env_var, env_value)
+
+    _clear_app_modules()
+
+    with pytest.raises(ValidationError) as exc_info:
+        importlib.import_module("app.main")
+
+    assert expected_message in str(exc_info.value)
+
+
+def test_issue_token_pair_fails_at_runtime_when_jwt_secret_is_empty(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    with pytest.raises(ValidationError):
-        _load_auth_app(monkeypatch, username=None, password_hash=None)
+    _config_module, settings, auth_module, _app = _load_auth_app(monkeypatch)
+    monkeypatch.setattr(settings, "jwt_secret_key", "   ")
+
+    with pytest.raises(RuntimeError) as exc_info:
+        auth_module.issue_token_pair(subject=TEST_USERNAME, role="admin")
+
+    assert "JWT_SECRET_KEY darf nicht leer sein." in str(exc_info.value)
+
+
+def test_authenticate_configured_user_fails_at_runtime_when_password_hash_is_empty(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _config_module, settings, auth_module, _app = _load_auth_app(monkeypatch)
+    monkeypatch.setattr(settings, "auth_login_password_hash", "")
+
+    with pytest.raises(RuntimeError) as exc_info:
+        auth_module.authenticate_configured_user(TEST_USERNAME, TEST_PASSWORD)
+
+    assert "AUTH_LOGIN_PASSWORD_HASH muss gesetzt sein." in str(exc_info.value)

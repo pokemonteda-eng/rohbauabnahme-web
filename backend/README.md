@@ -9,6 +9,8 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
+Vor dem Start muessen `AUTH_LOGIN_PASSWORD_HASH` und `JWT_SECRET_KEY` gesetzt sein. Leere oder fehlende Werte brechen den App-Start mit einer klaren Validierungsfehlermeldung ab.
+
 Healthcheck: `GET /health`
 
 ## Auth-Konfiguration
