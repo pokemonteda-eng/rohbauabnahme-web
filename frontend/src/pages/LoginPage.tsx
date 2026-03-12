@@ -20,7 +20,6 @@ export function LoginPage(): JSX.Element {
 
     try {
       await login({ username: username.trim(), password });
-      // Redirect to admin after successful login
       navigateTo("/admin");
     } catch {
       // Error is handled by AuthContext

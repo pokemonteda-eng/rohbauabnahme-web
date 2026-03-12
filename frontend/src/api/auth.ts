@@ -1,6 +1,7 @@
+```
 declare const __API_BASE_URL__: string | undefined;
 
-const API_BASE_URL =
+const API_BASE_URL: string =
   (typeof __API_BASE_URL__ !== "undefined" && __API_BASE_URL__) || "";
 
 export interface LoginCredentials {
@@ -80,3 +81,4 @@ export async function verify(accessToken: string): Promise<VerifyResponse> {
   });
   return handleResponse<VerifyResponse>(response);
 }
+```

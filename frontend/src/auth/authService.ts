@@ -21,7 +21,7 @@ interface SessionData {
 }
 
 const SESSION_STORAGE_KEY = 'auth_session';
-const TOKEN_REFRESH_THRESHOLD = 5 * 60 * 1000; // 5 minutes before expiration
+const TOKEN_REFRESH_THRESHOLD = 5 * 60 * 1000;
 
 class AuthService {
   private static instance: AuthService;
@@ -44,7 +44,6 @@ class AuthService {
       const sessionData = sessionStorage.getItem(SESSION_STORAGE_KEY);
       if (sessionData) {
         this.session = JSON.parse(sessionData);
-        // Validate the loaded session
         if (!this.isSessionValid()) {
           this.clearSession();
         }
@@ -75,7 +74,6 @@ class AuthService {
   private clearSession(): void {
     this.session = null;
     sessionStorage.removeItem(SESSION_STORAGE_KEY);
-    // Clear cookies by making a request to the logout endpoint
     this.performLogoutRequest();
   }
 
@@ -178,7 +176,6 @@ class AuthService {
         const expiresAt = decoded.exp * 1000;
         const now = Date.now();
 
-        // Refresh if token is about to expire
         if (expiresAt - now < TOKEN_REFRESH_THRESHOLD) {
           return this.refreshToken();
         }
