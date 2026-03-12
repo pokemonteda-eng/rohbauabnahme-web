@@ -58,12 +58,13 @@
 
 ## Jest / Stabilitaet
 - Zentrales Jest-Setup `frontend/jest.setup.ts` ergaenzt
-- Browserzustand wird nach jedem Test deterministisch zurueckgesetzt: URL, `localStorage`, `sessionStorage`, Mock- und Timer-Zustand
+- Browserzustand wird nach jedem Test deterministisch zurueckgesetzt: URL, `localStorage`, `sessionStorage`, globales `fetch`, Mock- und Timer-Zustand
 - `frontend/jest.config.js` setzt die jsdom-Basis-URL explizit auf `http://localhost/` und bindet das gemeinsame Setup ueber `setupFilesAfterEnv` ein
 
 ## Ursachenanalyse
 - Die Admin-Lampentypen-Tests haengen an Browserzustand (`window.location`, `localStorage`, globalen Mocks fuer `fetch`) und asynchronen Effects
 - Vor TASK-117 gab es dafuer kein gemeinsames Jest-Setup; die Isolation hing damit an einzelnen Testdateien und der jeweiligen Ausfuehrungsreihenfolge
+- Besonders kritisch war die inkonsistente Behandlung von `global.fetch`: mehrere Dateien ersetzten den Stub direkt, aber nur dateilokal und nicht zentral ruecksetzbar
 - Das war kein reproduzierbarer Fachfehler im Lampentypen-Code, sondern ein Setup-Risiko fuer flakey Tests bei Suite-Kombinationen und CI-Reihenfolgen
 
 ## Testnachweis
