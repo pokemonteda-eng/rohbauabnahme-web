@@ -42,3 +42,14 @@
 - Admin-Layout mit responsiver Navigation für Aufbauten, Lampen, Benutzer und Stammdaten ergänzt
 - Rollenprüfung auf Frontend-Seite vorbereitet über lokale Benutzerrolle mit Zugriff nur für `admin`
 
+# Ticket TASK-116
+
+## Frontend
+- Admin-Bereich `Lampen` mit echter Lampentypen-Verwaltung vervollständigt
+- Formular für Anlegen und Bearbeiten mit Feldvalidierung für Pflichtfelder, URL und Preis ergänzt
+- API-Anbindung für Laden, Anlegen, Bearbeiten und Löschen gegen `/api/v1/lampen-typen` ergänzt
+- Robuste Fehlerbehandlung für fehlende Session, fehlende Berechtigung, gelöschte Datensätze, Versionskonflikte und Netzwerk-/Serverfehler ergänzt
+- Erfolgs- und Fehlerzustände sind im Formular klar sichtbar und per Reload/Abbrechen sauber recoverbar
+
+## Tests
+- Frontend-Tests für Lampentypen-Laden, Validierung, Create/Edit, API-Konflikte und Recovery ergänzt

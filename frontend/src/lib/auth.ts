@@ -1,4 +1,5 @@
 const AUTH_ROLE_STORAGE_KEY = "rbw-user-role";
+const AUTH_ACCESS_TOKEN_STORAGE_KEY = "rbw-access-token";
 
 export type UserRole = "admin" | "projektleiter" | "bearbeiter" | "viewer" | "anonymous";
 
@@ -24,4 +25,17 @@ export function clearCurrentUserRole() {
 
 export function isAdminRole(role: UserRole) {
   return role === "admin";
+}
+
+export function getAccessToken() {
+  const token = window.localStorage.getItem(AUTH_ACCESS_TOKEN_STORAGE_KEY);
+  return token?.trim() || null;
+}
+
+export function setAccessToken(token: string) {
+  window.localStorage.setItem(AUTH_ACCESS_TOKEN_STORAGE_KEY, token);
+}
+
+export function clearAccessToken() {
+  window.localStorage.removeItem(AUTH_ACCESS_TOKEN_STORAGE_KEY);
 }
