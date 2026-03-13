@@ -148,7 +148,7 @@ class AuthService {
         throw new Error('Failed to refresh token');
       }
 
-      const { accessToken, refreshToken } = await response.json() as AuthTokens;
+      const { accessToken, refreshToken } = (await response.json()) as AuthTokens;
       await this.login(accessToken, refreshToken);
       return accessToken;
     } catch (error) {
