@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import React, { useState } from react;
+import { useNavigate } from react-router-dom;
+import { useAuth } from ../contexts/AuthContext;
 
 export const LoginPage: React.FC = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [username, setUsername] = useState();
+  const [password, setPassword] = useState();
+  const [error, setError] = useState();
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -13,9 +13,9 @@ export const LoginPage: React.FC = () => {
     e.preventDefault();
     try {
       await login(username, password);
-      navigate('/admin');
+      navigate(/admin);
     } catch (err) {
-      setError('Login failed');
+      setError(Login failed);
     }
   };
 

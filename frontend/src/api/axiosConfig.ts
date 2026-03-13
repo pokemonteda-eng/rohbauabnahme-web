@@ -1,8 +1,8 @@
-import axios from 'axios';
-import { authService } from '../services/authService';
+import axios from axios;
+import { authService } from ../services/authService;
 
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: /api,
 });
 
 api.interceptors.request.use((config) => {
@@ -22,7 +22,7 @@ api.interceptors.response.use(
         return api.request(error.config);
       } catch {
         authService.logout();
-        window.location.href = '/login';
+        window.location.href = /login;
       }
     }
     return Promise.reject(error);
