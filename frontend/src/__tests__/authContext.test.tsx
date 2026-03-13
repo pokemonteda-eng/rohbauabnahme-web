@@ -1,4 +1,3 @@
-```tsx
 import React from 'react';
 import { render, act, waitFor, screen } from '@testing-library/react';
 import { AuthProvider, useAuth } from '../contexts/AuthContext';
@@ -192,4 +191,3 @@ describe('AuthContext', () => {
     });
   });
 });
-```

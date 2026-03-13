@@ -1,4 +1,3 @@
-```
 import { useAuth } from "@/context/AuthContext";
 import { isAdminRole, type UserRole } from "@/lib/auth";
 
@@ -63,4 +62,3 @@ export function ProtectedRoute({
 
   return <>{children}</>;
 }
-```

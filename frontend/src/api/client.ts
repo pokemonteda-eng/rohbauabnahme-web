@@ -1,4 +1,3 @@
-```typescript
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 
 class ApiClient {
@@ -119,4 +118,3 @@ class ApiClient {
 
 export const apiClient = new ApiClient(import.meta.env.VITE_API_BASE_URL || '/api');
 export default ApiClient;
-```

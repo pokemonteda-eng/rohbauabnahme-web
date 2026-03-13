@@ -1,4 +1,3 @@
-```
 import React, {
   createContext,
   useContext,
@@ -242,4 +241,3 @@ export function useAuth(): AuthContextType {
   }
   return context;
 }
-```

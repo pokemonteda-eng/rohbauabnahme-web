@@ -1,4 +1,3 @@
-```
 import { useEffect, useState } from "react";
 
 import { AdminPage } from "@/pages/AdminPage";
@@ -70,4 +69,3 @@ function App() {
 }
 
 export default App;
-```

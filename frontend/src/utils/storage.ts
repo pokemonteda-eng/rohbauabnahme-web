@@ -1,4 +1,3 @@
-```typescript
 import * as CryptoJS from 'crypto-js';
 
 const SECRET_KEY = import.meta.env.VITE_STORAGE_SECRET_KEY || 'default-secret-key-12345';
@@ -43,4 +42,3 @@ export const getSecureToken = (): string | null => {
 export const removeSecureToken = (): void => {
   secureStorage.removeItem('auth_token');
 };
-```

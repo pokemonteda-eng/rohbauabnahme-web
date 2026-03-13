@@ -1,4 +1,3 @@
-```
 import { useState, FormEvent } from "react";
 
 import { useAuth } from "@/context/AuthContext";
@@ -125,4 +124,3 @@ export function LoginPage(): JSX.Element {
     </div>
   );
 }
-```

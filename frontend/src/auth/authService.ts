@@ -1,4 +1,3 @@
-```typescript
 import { jwtDecode } from 'jwt-decode';
 
 interface JwtPayload {
@@ -190,4 +189,3 @@ class AuthService {
 }
 
 export const authService = AuthService.getInstance();
-```

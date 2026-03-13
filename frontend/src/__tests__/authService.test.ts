@@ -1,4 +1,3 @@
-```typescript
 import { authService } from '../services/authService';
 import { AuthResponse, LoginCredentials, SignupCredentials } from '../types/auth';
 import { AxiosError } from 'axios';
@@ -199,4 +198,3 @@ describe('authService', () => {
     });
   });
 });
-```
