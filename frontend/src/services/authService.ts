@@ -29,8 +29,8 @@ export const authService = {
     const refreshToken = localStorage.getItem('refresh_token');
     if (!refreshToken) throw new Error('No refresh token');
     const response = await fetch(`${API_URL}/refresh`, {
-      method: POST,
-      headers: { Content-Type: application/json },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ refresh_token: refreshToken }),
     });
     if (!response.ok) throw new Error('Refresh failed');
