@@ -2,13 +2,14 @@
   "name": "rohbauabnahme-web",
   "version": "0.1.0",
   "private": true,
-  "workspaces": [
-    "frontend"
-  ],
   "scripts": {
-    "start": "npm run start --workspace frontend",
-    "dev": "npm run dev --workspace frontend",
-    "build": "npm run build --workspace frontend",
-    "test": "npm run test --workspace frontend"
+    "start": "cd frontend && npm start",
+    "dev": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "test": "cd frontend && npm test"
+  },
+  "dependencies": {
+    "@swc/core": "^1.15.18",
+    "@swc/jest": "^0.2.39"
   }
 }

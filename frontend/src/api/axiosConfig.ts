@@ -1,4 +1,4 @@
-import axios from axios;
+import axios from 'axios';
 import { authService } from ../services/authService;
 
 const api = axios.create({
