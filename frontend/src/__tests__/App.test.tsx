@@ -1,14 +1,13 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import React from "react";
 
 import App from "@/App";
 
 describe("App with Authentication", () => {
   test("redirects to login when not authenticated", async () => {
     render(
-      <MemoryRouter initialEntries=["/"]>
-        <App />
-      </MemoryRouter>
+      React.createElement(MemoryRouter, { initialEntries: ["/"] }, React.createElement(App))
     );
 
     // Should redirect to login page
@@ -24,9 +23,7 @@ describe("App with Authentication", () => {
 
   test("login page shows required elements", async () => {
     render(
-      <MemoryRouter initialEntries=["/login"]>
-        <App />
-      </MemoryRouter>
+      React.createElement(MemoryRouter, { initialEntries: ["/login"] }, React.createElement(App))
     );
 
     await waitFor(() => {
