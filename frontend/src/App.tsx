@@ -1,45 +1,37 @@
-import { useEffect, useState } from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 import { AdminPage } from "@/pages/AdminPage";
 import { HomePage } from "@/pages/HomePage";
-
-type AppRoute = "/" | "/admin";
-
-function getLocationState() {
-  return `${window.location.pathname}${window.location.search}${window.location.hash}`;
-}
-
-function normalizeRoute(pathname: string): AppRoute {
-  if (pathname === "/admin" || pathname.startsWith("/admin/")) {
-    return "/admin";
-  }
-
-  return "/";
-}
+import { LoginPage } from "@/pages/LoginPage";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 function App() {
-  const [locationState, setLocationState] = useState(() => getLocationState());
-  const route = normalizeRoute(new URL(locationState, window.location.origin).pathname);
-
-  useEffect(() => {
-    const handleLocationChange = () => {
-      setLocationState(getLocationState());
-    };
-
-    window.addEventListener("popstate", handleLocationChange);
-    window.addEventListener("app:navigate", handleLocationChange as EventListener);
-
-    return () => {
-      window.removeEventListener("popstate", handleLocationChange);
-      window.removeEventListener("app:navigate", handleLocationChange as EventListener);
-    };
-  }, []);
-
-  if (route === "/admin") {
-    return <AdminPage />;
-  }
-
-  return <HomePage />;
+  return (
+    <Router>
+      <AuthProvider>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute>
+                <AdminPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <HomePage />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </AuthProvider>
+    </Router>
+  );
 }
 
 export default App;
