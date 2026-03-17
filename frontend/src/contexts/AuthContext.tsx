@@ -28,9 +28,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       try {
         const userData = localStorage.getItem("user");
         if (userData) {
-          const parsedUser: User = JSON.parse(userData);
-          setUser(parsedUser);
-          setIsAuthenticated(true);
+          const parsedUser: unknown = JSON.parse(userData);
+          if (parsedUser && typeof parsedUser === "object" && "id" in parsedUser && "email" in parsedUser) {
+            setUser(parsedUser as User);
+            setIsAuthenticated(true);
+          }
         }
       } catch (error) {
         console.error("Failed to parse user data:", error);
@@ -54,17 +56,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         throw new Error("Login failed");
       }
 
-      const data: { token: string; user: User } = await response.json();
-
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
-
-      setToken(data.token);
-      setUser(data.user);
-      setIsAuthenticated(true);
+      const data: unknown = await response.json();
+      if (data && typeof data === "object" && "token" in data && "user" in data) {
+        const typedData = data as { token: string; user: User };
+        localStorage.setItem("token", typedData.token);
+        localStorage.setItem("user", JSON.stringify(typedData.user));
+        setToken(typedData.token);
+        setUser(typedData.user);
+        setIsAuthenticated(true);
+      }
     } catch (error) {
       console.error("Login error:", error);
-      throw error;
+      throw error instanceof Error ? error : new Error(String(error));
     }
   };
 

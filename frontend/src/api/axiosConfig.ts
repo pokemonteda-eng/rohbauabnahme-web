@@ -1,6 +1,6 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
+import axios from "axios";
 
-const axiosInstance: AxiosInstance = axios.create({
+const axiosInstance = axios.create({
   baseURL: "/api/v1",
   headers: {
     "Content-Type": "application/json",
@@ -8,29 +8,34 @@ const axiosInstance: AxiosInstance = axios.create({
 });
 
 axiosInstance.interceptors.request.use(
-  (config: AxiosRequestConfig) => {
+  (config) => {
     const token = localStorage.getItem("token");
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
+    if (token) {
+      config.headers = {
+        ...config.headers,
+        Authorization: `Bearer ${token}`,
+      };
     }
     return config;
   },
-  (error: AxiosError) => {
-    return Promise.reject(error);
+  (error) => {
+    return Promise.reject(new Error(String(error)));
   }
 );
 
 axiosInstance.interceptors.response.use(
-  (response: AxiosResponse) => {
+  (response) => {
     return response;
   },
-  (error: AxiosError) => {
-    if (error.response && error.response.status === 401) {
+  (error) => {
+    // Simple 401 handling without complex type checking
+    const errorObj = error as { response?: { status?: number } };
+    if (errorObj.response?.status === 401) {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
       window.location.href = "/login";
     }
-    return Promise.reject(error);
+    return Promise.reject(new Error(String(error)));
   }
 );
 

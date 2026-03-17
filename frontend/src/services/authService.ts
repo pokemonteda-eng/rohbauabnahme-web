@@ -20,8 +20,11 @@ export const login = async (email: string, password: string): Promise<LoginRespo
     throw new Error("Login failed");
   }
 
-  const data: LoginResponse = await response.json();
-  return data;
+  const data: unknown = await response.json();
+  if (data && typeof data === "object" && "token" in data && "user" in data) {
+    return data as LoginResponse;
+  }
+  throw new Error("Invalid response format");
 };
 
 export const logout = async (token: string): Promise<void> => {
@@ -47,6 +50,9 @@ export const refreshToken = async (token: string): Promise<{ token: string }> =>
     throw new Error("Token refresh failed");
   }
 
-  const data: { token: string } = await response.json();
-  return data;
+  const data: unknown = await response.json();
+  if (data && typeof data === "object" && "token" in data) {
+    return data as { token: string };
+  }
+  throw new Error("Invalid response format");
 };

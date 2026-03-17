@@ -1,16 +1,16 @@
-import { useState } from "react";
+import { useState, FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
-export const LoginPage = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+export const LoginPage = (): JSX.Element => {
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
@@ -19,9 +19,10 @@ export const LoginPage = () => {
       .then(() => {
         navigate("/");
       })
-      .catch((err) => {
-        setError("Login failed. Please check your credentials and try again.");
-        console.error("Login error:", err);
+      .catch((err: unknown) => {
+        const errorMessage = err instanceof Error ? err.message : "Unknown error";
+        setError(`Login failed. Please check your credentials and try again. ${errorMessage}`);
+        console.error("Login error:", err instanceof Error ? err : new Error(String(err)));
       })
       .finally(() => {
         setIsLoading(false);
