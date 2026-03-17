@@ -1,26 +1,19 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("Homepage smoke tests", () => {
-  test.beforeEach(async ({ page }) => {
+  test("redirects to login when not authenticated", async ({ page }) => {
     await page.goto("/");
+    
+    // Should redirect to login page
+    await expect(page).toHaveURL("/login");
+    await expect(page.getByRole("heading", { name: "Login" })).toBeVisible();
   });
 
-  test("renders application header", async ({ page }) => {
-    await expect(page).toHaveTitle(/rohbauabnahme/i);
-    await expect(page.getByText("rohbauabnahme-web")).toBeVisible();
-  });
-
-  test("shows setup section content", async ({ page }) => {
-    await expect(
-      page.getByRole("heading", { name: "React Frontend Setup" })
-    ).toBeVisible();
-    await expect(
-      page.getByText("Vite, TypeScript, Tailwind und shadcn/ui Basis sind initialisiert.")
-    ).toBeVisible();
-  });
-
-  test("shows primary and secondary actions", async ({ page }) => {
-    await expect(page.getByRole("button", { name: "Primary Action" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Sekundär" })).toBeVisible();
+  test("login page shows required elements", async ({ page }) => {
+    await page.goto("/login");
+    
+    await expect(page.getByLabel("Email address")).toBeVisible();
+    await expect(page.getByLabel("Password")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Sign in" })).toBeVisible();
   });
 });
