@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 
 import { AdminLampentypenSection } from "@/components/admin/AdminLampentypenSection";
+import { AdminVertriebsgebieteSection } from "@/components/admin/AdminVertriebsgebieteSection";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { isAdminRole, getCurrentUserRole, type UserRole } from "@/lib/auth";
 import {
@@ -85,6 +86,7 @@ export function AdminPage() {
 
   const currentSection = ADMIN_SECTIONS[activeSection];
   const isLampenSection = activeSection === "lampen";
+  const isVertriebsgebieteSection = activeSection === "vertriebsgebiete";
 
   return (
     <AdminLayout
@@ -102,6 +104,8 @@ export function AdminPage() {
     >
       {isLampenSection ? (
         <AdminLampentypenSection />
+      ) : isVertriebsgebieteSection ? (
+        <AdminVertriebsgebieteSection />
       ) : (
         <section className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(280px,0.9fr)]">
           <article className="rounded-3xl border border-stone-800 bg-stone-950/70 p-6">

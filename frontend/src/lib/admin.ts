@@ -1,4 +1,4 @@
-export type AdminSection = "aufbauten" | "lampen" | "benutzer" | "stammdaten";
+export type AdminSection = "aufbauten" | "lampen" | "benutzer" | "stammdaten" | "vertriebsgebiete";
 
 export type AdminSectionContent = {
   label: string;
@@ -38,6 +38,13 @@ export const ADMIN_SECTIONS: Record<AdminSection, AdminSectionContent> = {
     eyebrow: "TASK-103 Vorbereitung",
     title: "Stammdaten konsolidieren",
     body: "Bestehende Stammdaten-Endpunkte können hier später direkt angebunden werden. Das Layout bietet dafür bereits eine eigenständige Content-Fläche."
+  },
+  vertriebsgebiete: {
+    label: "Vertriebsgebiete",
+    description: "Verwaltung von Vertriebsgebieten mit CRUD-Operationen.",
+    eyebrow: "TASK-122",
+    title: "Vertriebsgebiete verwalten",
+    body: "Anlegen, bearbeiten und löschen von Vertriebsgebieten mit Versionsprüfung."
   }
 };
 
